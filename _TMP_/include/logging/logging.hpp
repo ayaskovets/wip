@@ -8,23 +8,26 @@
 namespace _TMP_::logging {
 
 template <typename... Args>
-constexpr void debug(std::format_string<Args...> fmt, Args&&... args) {
-  logger::kDefault()(level::kDebug, fmt, std::forward<Args>(args)...);
+constexpr decltype(auto) debug(std::format_string<Args...> fmt,
+                               Args&&... args) {
+  return logger::kDefault()(level::kDebug, fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-constexpr void info(std::format_string<Args...> fmt, Args&&... args) {
-  logger::kDefault()(level::kInfo, fmt, std::forward<Args>(args)...);
+constexpr decltype(auto) info(std::format_string<Args...> fmt, Args&&... args) {
+  return logger::kDefault()(level::kInfo, fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-constexpr void warning(std::format_string<Args...> fmt, Args&&... args) {
-  logger::kDefault()(level::kWarn, fmt, std::forward<Args>(args)...);
+constexpr decltype(auto) warning(std::format_string<Args...> fmt,
+                                 Args&&... args) {
+  return logger::kDefault()(level::kWarn, fmt, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-constexpr void error(std::format_string<Args...> fmt, Args&&... args) {
-  logger::kDefault()(level::kError, fmt, std::forward<Args>(args)...);
+constexpr decltype(auto) error(std::format_string<Args...> fmt,
+                               Args&&... args) {
+  return logger::kDefault()(level::kError, fmt, std::forward<Args>(args)...);
 }
 
 }  // namespace _TMP_::logging
