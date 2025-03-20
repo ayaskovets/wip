@@ -3,7 +3,6 @@
 #include <condition_variable>
 #include <deque>
 #include <mutex>
-#include <optional>
 #include <span>
 #include <type_traits>
 
