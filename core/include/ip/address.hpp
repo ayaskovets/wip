@@ -11,31 +11,22 @@
 namespace core::ip {
 
 class address final {
- private:
-  address(const std::uint8_t& data, std::size_t size) noexcept(false);
+ public:
+  static const address& kLocalhost(ip::version version) noexcept;
+  static const address& kNonRoutable(ip::version version) noexcept;
 
  public:
-  static const address& kLocalhost(ip::version version);
-  static const address& kNonRoutable(ip::version version);
-
- public:
-  explicit address(std::string_view string_view) noexcept(false);
-
-  template <std::ranges::contiguous_range Range>
-    requires(std::same_as<std::ranges::range_value_t<Range>, std::uint8_t>)
-  constexpr explicit address(const Range& range)
-      : address(*std::data(range), std::size(range)) {}
+  explicit address(std::span<const std::uint8_t> bytes);
+  explicit address(std::string_view string_view);
 
  public:
   bool operator==(const address& that) const noexcept;
-  constexpr bool operator!=(const address& that) const noexcept {
-    return !operator==(that);
-  }
+  bool operator!=(const address& that) const noexcept;
 
  public:
   std::span<const std::uint8_t> get_bytes() const noexcept;
+  std::string to_string() const;
   ip::version get_version() const noexcept;
-  std::string to_string() const noexcept(false);
 
  private:
   std::array<std::uint8_t, 16> data_;

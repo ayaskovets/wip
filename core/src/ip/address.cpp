@@ -14,22 +14,7 @@ constexpr std::size_t kIpV6Bytes = 16;
 
 }  // namespace
 
-address::address(const std::uint8_t& data, std::size_t size) noexcept(false) {
-  switch (size) {
-    case kIpV4Bytes:
-      std::memcpy(data_.begin(), &data, size);
-      version_ = ip::version::kIpV4;
-      break;
-    case kIpV6Bytes:
-      std::memcpy(data_.begin(), &data, size);
-      version_ = ip::version::kIpV6;
-      break;
-    default:
-      throw std::invalid_argument(std::format("invalid address size {}", size));
-  }
-}
-
-const address& address::kLocalhost(ip::version version) {
+const address& address::kLocalhost(ip::version version) noexcept {
   switch (version) {
     case ip::version::kIpV4: {
       static address address("127.0.0.1");
@@ -42,7 +27,7 @@ const address& address::kLocalhost(ip::version version) {
   }
 }
 
-const address& address::kNonRoutable(ip::version version) {
+const address& address::kNonRoutable(ip::version version) noexcept {
   switch (version) {
     case ip::version::kIpV4: {
       static address address("192.0.2.0");
@@ -55,7 +40,23 @@ const address& address::kNonRoutable(ip::version version) {
   }
 }
 
-address::address(std::string_view string_view) noexcept(false) {
+address::address(std::span<const std::uint8_t> data) {
+  switch (data.size()) {
+    case kIpV4Bytes:
+      std::memcpy(data_.begin(), data.data(), data.size());
+      version_ = ip::version::kIpV4;
+      break;
+    case kIpV6Bytes:
+      std::memcpy(data_.begin(), data.data(), data.size());
+      version_ = ip::version::kIpV6;
+      break;
+    default:
+      throw std::invalid_argument(
+          std::format("invalid address size {}", data.size()));
+  }
+}
+
+address::address(std::string_view string_view) {
   if (string_view.size() <= INET_ADDRSTRLEN &&
       ::inet_pton(AF_INET, string_view.data(), data_.begin())) {
     version_ = ip::version::kIpV4;
@@ -79,6 +80,10 @@ bool address::operator==(const address& that) const noexcept {
   }
 }
 
+bool address::operator!=(const address& that) const noexcept {
+  return operator==(that);
+}
+
 std::span<const std::uint8_t> address::get_bytes() const noexcept {
   switch (version_) {
     case ip::version::kIpV4:
@@ -88,9 +93,7 @@ std::span<const std::uint8_t> address::get_bytes() const noexcept {
   }
 }
 
-ip::version address::get_version() const noexcept { return version_; }
-
-std::string address::to_string() const noexcept(false) {
+std::string address::to_string() const {
   std::string string;
 
   int family;
@@ -113,5 +116,7 @@ std::string address::to_string() const noexcept(false) {
   throw std::runtime_error(
       std::format("could not serialize address: {}", std::strerror(errno)));
 }
+
+ip::version address::get_version() const noexcept { return version_; }
 
 }  // namespace core::ip
