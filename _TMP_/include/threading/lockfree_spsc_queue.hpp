@@ -25,16 +25,27 @@ class lockfree_spsc_queue final {
  public:
   constexpr lockfree_spsc_queue()
     requires(Capacity != std::dynamic_extent)
-      : ring_buffer_(new AlignedItemType[Capacity + 1]) {}
+      : ring_buffer_(static_cast<AlignedItemType*>(
+            std::malloc(sizeof(AlignedItemType) * (Capacity + 1)))) {
+    if (!ring_buffer_) {
+      throw std::runtime_error("failed to allocate memory");
+    }
+  }
 
   constexpr explicit lockfree_spsc_queue(std::size_t capacity)
     requires(Capacity == std::dynamic_extent)
-      : ring_buffer_(new AlignedItemType[capacity + 1]), capacity_(capacity) {}
+      : ring_buffer_(static_cast<AlignedItemType*>(
+            std::malloc(sizeof(AlignedItemType) * (capacity + 1)))),
+        capacity_(capacity) {
+    if (!ring_buffer_) {
+      throw std::runtime_error("failed to allocate memory");
+    }
+  }
 
   constexpr ~lockfree_spsc_queue() {
     while (try_pop().has_value()) {
     }
-    delete[] ring_buffer_;
+    std::free(ring_buffer_);
   }
 
  public:
