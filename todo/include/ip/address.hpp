@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "ip/version.hpp"
+
 namespace todo::ip {
 
 class address final {
@@ -11,7 +13,10 @@ class address final {
   explicit address(std::vector<std::uint8_t> address);
 
  public:
-  bool operator==(const address&) const = default;
+  bool operator==(const address&) const noexcept = default;
+
+ public:
+  version version() const;
 
  public:
   std::string as_string() const;
