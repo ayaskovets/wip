@@ -18,6 +18,16 @@ TEST(ip, acceptor_try_accept_ip6) {
   EXPECT_FALSE(acceptor.try_accept().has_value());
 }
 
+TEST(ip, acceptor_copy) {
+  auto original = core::ip::acceptor(
+      core::ip::address::kLocalhost(core::ip::version::kIpV4),
+      core::ip::port(9996));
+
+  core::ip::acceptor copy = original;
+  EXPECT_FALSE(original.try_accept().has_value());
+  EXPECT_FALSE(copy.try_accept().has_value());
+}
+
 TEST(ip, acceptor_move_operations) {
   auto moved_from1 = core::ip::acceptor(
       core::ip::address::kLocalhost(core::ip::version::kIpV4),
