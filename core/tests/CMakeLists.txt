@@ -6,6 +6,7 @@ add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_test.cpp
+    ip/acceptor_test.cpp
     ip/address_test.cpp
     ip/dns_test.cpp
     logging/logging_test.cpp
