@@ -1,0 +1,8 @@
+# garbage
+.DS_Store
+
+# env
+.vscode
+
+# build
+build
