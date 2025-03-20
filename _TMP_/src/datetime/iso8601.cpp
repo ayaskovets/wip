@@ -3,7 +3,8 @@
 namespace _TMP_::datetime {
 
 std::string as_iso8601(std::chrono::system_clock::time_point time_point) {
-  constexpr auto kIso8601Fmt = "{}-{:0>2}-{:0>2}T{:0>2}:{:0>2}:{:0>2}.{:0>6}Z";
+  constexpr auto kIso8601Fmt =
+      "{:0>4}-{:0>2}-{:0>2}T{:0>2}:{:0>2}:{:0>2}.{:0>6}Z";
 
   const std::time_t time = std::chrono::system_clock::to_time_t(time_point);
   std::tm tm;
