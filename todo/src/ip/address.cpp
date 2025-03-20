@@ -59,6 +59,6 @@ std::string address::as_string() const {
       std::format("could not serialize address: {}", strerror(errno)));
 }
 
-const std::vector<std::uint8_t>& address::as_vector() const { return address_; }
+const std::vector<std::uint8_t>& address::as_bytes() const { return address_; }
 
 }  // namespace todo::ip
