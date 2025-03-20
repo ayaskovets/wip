@@ -7,10 +7,20 @@ namespace core::ip {
 
 class port final {
  public:
+  struct network_byte_order_t {};
+  constinit static inline network_byte_order_t network_byte_order{};
+
+ public:
   explicit port(std::uint16_t port) noexcept;
+  port(std::uint16_t port, network_byte_order_t) noexcept;
+
+ public:
+  constexpr bool operator==(const port&) const = default;
+  constexpr bool operator!=(const port&) const = default;
 
  public:
   std::uint16_t get_bytes() const noexcept;
+  std::uint16_t get_bytes(network_byte_order_t) const noexcept;
 
  private:
   std::uint16_t port_;
