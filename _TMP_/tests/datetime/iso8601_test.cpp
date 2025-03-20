@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-namespace tests::logging {
+namespace tests::datetime {
 
 class _TMP__datetime
     : public ::testing::TestWithParam<
@@ -28,4 +28,4 @@ INSTANTIATE_TEST_SUITE_P(
                             12h + 35min + 34s + 125ms + 322us,
                         "3235-01-09T12:35:34.125322Z")));
 
-}  // namespace tests::logging
+}  // namespace tests::datetime
