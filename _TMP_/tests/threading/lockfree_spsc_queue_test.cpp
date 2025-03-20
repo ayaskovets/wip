@@ -64,6 +64,64 @@ TEST(_TMP__threading, lockfree_spsc_queue_non_copyable_item_type) {
   }
 }
 
+TEST(_TMP__threading, lockfree_spsc_queue_item_destructor) {
+  struct non_copyable_counter {
+    constexpr non_copyable_counter(std::size_t& constructed,
+                                   std::size_t& move_constructed,
+                                   std::size_t& destructed) noexcept
+        : constructed(constructed),
+          move_constructed(move_constructed),
+          destructed(destructed) {
+      ++constructed;
+    }
+    constexpr ~non_copyable_counter() noexcept { ++destructed; }
+    constexpr non_copyable_counter(non_copyable_counter&& that) noexcept
+        : non_copyable_counter(that.constructed, that.move_constructed,
+                               that.destructed) {
+      move_constructed += 1;
+    }
+
+    constexpr non_copyable_counter(const non_copyable_counter&) = delete;
+    constexpr non_copyable_counter& operator=(const non_copyable_counter&) =
+        delete;
+    constexpr non_copyable_counter& operator=(non_copyable_counter&&) = delete;
+
+    std::size_t& constructed;
+    std::size_t& move_constructed;
+    std::size_t& destructed;
+  };
+
+  std::size_t constructed = 0;
+  std::size_t move_constructed = 0;
+  std::size_t destructed = 0;
+
+  {
+    _TMP_::threading::lockfree_spsc_queue<non_copyable_counter> queue(1);
+
+    non_copyable_counter pushed_item(constructed, move_constructed, destructed);
+
+    EXPECT_EQ(constructed, 1);
+    EXPECT_EQ(move_constructed, 0);
+    EXPECT_EQ(destructed, 0);
+
+    EXPECT_TRUE(queue.try_push(std::move(pushed_item)));
+
+    EXPECT_EQ(constructed, 3);
+    EXPECT_EQ(move_constructed, 2);
+    EXPECT_EQ(destructed, 1);
+
+    EXPECT_TRUE(queue.try_pop());
+
+    EXPECT_EQ(constructed, 4);
+    EXPECT_EQ(move_constructed, 3);
+    EXPECT_EQ(destructed, 3);
+  }
+
+  EXPECT_EQ(constructed, 4);
+  EXPECT_EQ(move_constructed, 3);
+  EXPECT_EQ(destructed, 4);
+}
+
 class _TMP__threading_lockfree_spsc_queue
     : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
 
