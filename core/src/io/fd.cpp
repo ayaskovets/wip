@@ -69,7 +69,7 @@ fd::~fd() noexcept {
 }
 
 bool fd::operator==(const fd& that) const noexcept {
-  return fd_ == that.fd_ && fd_ != kInvalidFd && that != kInvalidFd;
+  return fd_ == that.fd_ && fd_ != kInvalidFd && that.fd_ != kInvalidFd;
 }
 
 bool fd::operator!=(const fd& that) const noexcept { return !operator==(that); }
