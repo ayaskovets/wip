@@ -7,10 +7,10 @@ namespace core::logging {
 
 const writer& writer::kStdout() {
   static writer writer(
-      []([[maybe_unused]] level level, std::string_view message) {
-        if (fputs(message.data(), stdout) == EOF) [[unlikely]] {
-          throw std::runtime_error(std::format("fputs(stdout) failed: {}",
-                                               strerror(ferror(stdout))));
+      []([[maybe_unused]] logging::level level, std::string_view message) {
+        if (std::fputs(message.data(), stdout) == EOF) [[unlikely]] {
+          throw std::runtime_error(std::format(
+              "fputs(stdout) failed: {}", std::strerror(std::ferror(stdout))));
         }
       });
   return writer;
@@ -18,17 +18,17 @@ const writer& writer::kStdout() {
 
 const writer& writer::kStderr() {
   static writer writer(
-      []([[maybe_unused]] level level, std::string_view message) {
-        if (fputs(message.data(), stderr) == EOF) [[unlikely]] {
-          throw std::runtime_error(std::format("fputs(stderr) failed: {}",
-                                               strerror(ferror(stderr))));
+      []([[maybe_unused]] logging::level level, std::string_view message) {
+        if (std::fputs(message.data(), stderr) == EOF) [[unlikely]] {
+          throw std::runtime_error(std::format(
+              "fputs(stderr) failed: {}", std::strerror(std::ferror(stderr))));
         }
       });
   return writer;
 }
 
 const writer& writer::kNoop() {
-  static writer writer([]([[maybe_unused]] level level,
+  static writer writer([]([[maybe_unused]] logging::level level,
                           [[maybe_unused]] std::string_view message) {});
   return writer;
 }

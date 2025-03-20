@@ -6,18 +6,18 @@ namespace core::logging {
 
 namespace {
 
-constexpr auto kSetColor(level level) noexcept {
+constexpr auto kSetColor(logging::level level) noexcept {
   constexpr auto kGreenColor = "\x1B[32m";
   constexpr auto kRedColor = "\x1B[31m";
   constexpr auto kYellowColor = "\x1B[33m";
   switch (level) {
-    case level::kDebug:
+    case logging::level::kDebug:
       return "";
-    case level::kInfo:
+    case logging::level::kInfo:
       return kGreenColor;
-    case level::kWarn:
+    case logging::level::kWarn:
       return kYellowColor;
-    case level::kError:
+    case logging::level::kError:
       return kRedColor;
   }
 }
@@ -27,13 +27,13 @@ constexpr auto kResetColor = "\033[0m";
 
 const renderer& renderer::kNoop() {
   static renderer renderer(
-      []([[maybe_unused]] level level, std::string_view fmt,
+      []([[maybe_unused]] logging::level level, std::string_view fmt,
          std::format_args args) { return std::vformat(fmt, std::move(args)); });
   return renderer;
 }
 
 const renderer& renderer::kColoredLeveled() {
-  static renderer renderer([](level level, std::string_view fmt,
+  static renderer renderer([](logging::level level, std::string_view fmt,
                               std::format_args args) {
     return std::vformat(
         std::format("{}{}{}\t{}\n", kSetColor(level), level, kResetColor, fmt),
@@ -44,10 +44,10 @@ const renderer& renderer::kColoredLeveled() {
 
 const renderer& renderer::kColoredLeveledTimestamped() {
   static renderer renderer(
-      [](level level, std::string_view fmt, std::format_args args) {
+      [](logging::level level, std::string_view fmt, std::format_args args) {
         return std::vformat(
             std::format("{}\t{}{}{}\t{}\n",
-                        datetime::as_iso8601(std::chrono::system_clock::now()),
+                        datetime::to_iso8601(std::chrono::system_clock::now()),
                         kSetColor(level), level, kResetColor, fmt),
             std::move(args));
       });

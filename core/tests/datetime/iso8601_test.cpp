@@ -9,9 +9,9 @@ class datetime
           std::tuple<std::chrono::system_clock::time_point, std::string_view>> {
 };
 
-TEST_P(datetime, as_iso8601) {
+TEST_P(datetime, to_iso8601) {
   const auto& [time_point, string] = GetParam();
-  EXPECT_EQ(core::datetime::as_iso8601(time_point), string);
+  EXPECT_EQ(core::datetime::to_iso8601(time_point), string);
 }
 
 using namespace std::chrono_literals;

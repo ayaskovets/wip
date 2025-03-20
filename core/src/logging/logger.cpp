@@ -3,7 +3,8 @@
 namespace core::logging {
 
 const logger &logger::kColoredLeveledTimestampedStderr() {
-  static logger logger(level::kInfo, renderer::kDefault(), writer::kDefault());
+  static logger logger(logging::level::kInfo, logging::renderer::kDefault(),
+                       logging::writer::kDefault());
   return logger;
 }
 

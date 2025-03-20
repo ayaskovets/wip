@@ -11,22 +11,22 @@ namespace core::ip {
 
 namespace {
 
-std::vector<std::uint8_t> as_bytes(const addrinfo &addrinfo) {
+std::vector<std::uint8_t> to_bytes(const ::addrinfo &addrinfo) {
   std::vector<std::uint8_t> bytes;
   switch (addrinfo.ai_family) {
     case AF_INET:
-      bytes.resize(sizeof(in_addr));
+      bytes.resize(sizeof(::in_addr));
       std::memcpy(
           bytes.data(),
-          &(reinterpret_cast<const sockaddr_in *>(addrinfo.ai_addr))->sin_addr,
-          sizeof(in_addr));
+          &reinterpret_cast<const ::sockaddr_in &>(*addrinfo.ai_addr).sin_addr,
+          sizeof(::in_addr));
       return bytes;
     case AF_INET6:
-      bytes.resize(sizeof(in6_addr));
+      bytes.resize(sizeof(::in6_addr));
       std::memcpy(bytes.data(),
-                  &(reinterpret_cast<const sockaddr_in6 *>(addrinfo.ai_addr))
-                       ->sin6_addr,
-                  sizeof(in6_addr));
+                  &reinterpret_cast<const ::sockaddr_in6 &>(*addrinfo.ai_addr)
+                       .sin6_addr,
+                  sizeof(::in6_addr));
       return bytes;
     default:
       throw std::runtime_error(
@@ -39,14 +39,14 @@ std::vector<std::uint8_t> as_bytes(const addrinfo &addrinfo) {
 std::vector<ip::address> resolve(std::string_view hostname,
                                  std::optional<ip::protocol> protocol,
                                  std::optional<ip::version> version) {
-  addrinfo *results = nullptr;
-  const utils::scope_exit _([results] {
+  ::addrinfo *results = nullptr;
+  const utils::scope_exit _([results]() noexcept {
     if (results) {
-      freeaddrinfo(results);
+      ::freeaddrinfo(results);
     }
   });
 
-  addrinfo hints{};
+  ::addrinfo hints{};
   hints.ai_family = [version] {
     if (!version.has_value()) {
       return AF_UNSPEC;
@@ -71,22 +71,22 @@ std::vector<ip::address> resolve(std::string_view hostname,
   }();
 
   switch (const auto error =
-              getaddrinfo(hostname.data(), nullptr, &hints, &results)) {
+              ::getaddrinfo(hostname.data(), nullptr, &hints, &results)) {
     case 0:
       break;
     case EAI_SYSTEM:
       throw std::runtime_error(
           std::format("failed to resolve any address at {}: {}", hostname,
-                      strerror(errno)));
+                      std::strerror(errno)));
     default:
       throw std::runtime_error(
           std::format("failed to resolve any address at {}: {}", hostname,
-                      gai_strerror(error)));
+                      ::gai_strerror(error)));
   }
 
   std::vector<ip::address> addresses;
-  for (const addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
-    addresses.emplace_back(as_bytes(*ptr));
+  for (const ::addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
+    addresses.emplace_back(to_bytes(*ptr));
   }
   return addresses;
 }
