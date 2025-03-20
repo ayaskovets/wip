@@ -5,12 +5,15 @@
 #include <mutex>
 #include <optional>
 #include <span>
+#include <type_traits>
 
 #include "utils/conditionally_runtime.hpp"
 
 namespace _TMP_::threading {
 
-template <typename T, std::size_t Capacity = std::dynamic_extent>
+template <typename ItemType, std::size_t Capacity = std::dynamic_extent>
+  requires(std::is_nothrow_move_constructible_v<ItemType> ||
+           std::is_nothrow_copy_constructible_v<ItemType>)
 class mpmc_queue final {
  public:
   constexpr mpmc_queue()
@@ -29,7 +32,7 @@ class mpmc_queue final {
   }
 
  public:
-  bool try_push(T value) {
+  bool try_push(ItemType value) {
     std::unique_lock<std::mutex> lock(mutex_);
     if (queue_.size() == *capacity_) {
       return false;
@@ -39,7 +42,7 @@ class mpmc_queue final {
     return true;
   }
 
-  void push(T value) {
+  void push(ItemType value) {
     std::unique_lock<std::mutex> lock(mutex_);
     push_available_cv_.wait(lock,
                             [this]() { return queue_.size() < *capacity_; });
@@ -47,23 +50,21 @@ class mpmc_queue final {
     pop_available_cv_.notify_one();
   }
 
-  std::optional<T> try_pop() {
-    std::optional<T> front = std::nullopt;
-    {
-      std::unique_lock<std::mutex> lock(mutex_);
-      if (!queue_.empty()) {
-        front.emplace(queue_.front());
-        queue_.pop_front();
-      }
-      push_available_cv_.notify_one();
+  std::optional<ItemType> try_pop() {
+    std::optional<ItemType> front = std::nullopt;
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!queue_.empty()) {
+      front.emplace(std::move(queue_.front()));
+      queue_.pop_front();
     }
+    push_available_cv_.notify_one();
     return front;
   }
 
-  T pop() {
+  ItemType pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this]() { return !queue_.empty(); });
-    T front = queue_.front();
+    ItemType front = std::move(queue_.front());
     queue_.pop_front();
     push_available_cv_.notify_one();
     return front;
@@ -73,7 +74,7 @@ class mpmc_queue final {
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
-  std::deque<T> queue_;
+  std::deque<ItemType> queue_;
   [[no_unique_address]] utils::conditionally_runtime<
       std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
 };

@@ -108,58 +108,67 @@ TEST(_TMP__threading, mpmc_queue_unblocking_try_pop) {
   consumer.join();
 }
 
-TEST(_TMP__threading, mpmc_queue_throw_on_item_copy_or_move) {
+TEST(_TMP__threading, mpmc_queue_non_copyable_item_type) {
+  struct non_copyable {
+    constexpr non_copyable() noexcept = default;
+    constexpr non_copyable(const non_copyable&) = delete;
+    constexpr non_copyable& operator=(const non_copyable&) = delete;
+    constexpr non_copyable(non_copyable&&) = default;
+    constexpr non_copyable& operator=(non_copyable&&) = default;
+  };
+
+  _TMP_::threading::mpmc_queue<non_copyable> queue(1);
+  {
+    queue.try_push(non_copyable{});
+    [[maybe_unused]] const auto value = queue.try_pop();
+  }
+  {
+    queue.push(non_copyable{});
+    [[maybe_unused]] const auto value = queue.pop();
+  }
+}
+
+TEST(_TMP__threading, mpmc_queue_throw_on_item_move) {
   static const std::runtime_error kException("exception");
 
   auto should_throw = std::make_shared<bool>(true);
-  class throw_on_copy_or_move_if final {
+
+  class throw_on_move_if final {
    public:
-    throw_on_copy_or_move_if(std::shared_ptr<bool> should_throw)
+    throw_on_move_if(std::shared_ptr<bool> should_throw)
         : should_throw_(should_throw) {}
-    throw_on_copy_or_move_if(const throw_on_copy_or_move_if& that)
+    throw_on_move_if(throw_on_move_if&& that)
         : should_throw_(that.should_throw_) {
       if (*should_throw_) {
         throw kException;
       }
     }
-    throw_on_copy_or_move_if& operator=(const throw_on_copy_or_move_if& that) {
+    throw_on_move_if& operator=(throw_on_move_if&& that) {
       should_throw_ = that.should_throw_;
       if (*should_throw_) {
         throw kException;
       }
       return *this;
     }
-    throw_on_copy_or_move_if(throw_on_copy_or_move_if&& that)
-        : should_throw_(that.should_throw_) {
-      if (*should_throw_) {
-        throw kException;
-      }
-    }
-    throw_on_copy_or_move_if& operator=(throw_on_copy_or_move_if&& that) {
-      should_throw_ = that.should_throw_;
-      if (*should_throw_) {
-        throw kException;
-      }
-      return *this;
-    }
+    throw_on_move_if(const throw_on_move_if& that) = default;
+    throw_on_move_if& operator=(const throw_on_move_if& that) = default;
 
    private:
     std::shared_ptr<bool> should_throw_;
   };
 
-  _TMP_::threading::mpmc_queue<throw_on_copy_or_move_if> queue(1);
+  _TMP_::threading::mpmc_queue<throw_on_move_if> queue(1);
 
   {
     try {
-      queue.push(throw_on_copy_or_move_if(should_throw));
+      queue.push(throw_on_move_if(should_throw));
       GTEST_FAIL();
     } catch (const std::runtime_error& e) {
       EXPECT_EQ(e.what(), kException.what());
     }
     EXPECT_EQ(queue.size(), 0);
-
     try {
-      queue.try_push(throw_on_copy_or_move_if(should_throw));
+      queue.try_push(throw_on_move_if(should_throw));
       GTEST_FAIL();
     } catch (const std::runtime_error& e) {
       EXPECT_EQ(e.what(), kException.what());
@@ -168,7 +177,7 @@ TEST(_TMP__threading, mpmc_queue_throw_on_item_copy_or_move) {
   }
   {
     *should_throw = false;
-    queue.push(throw_on_copy_or_move_if(should_throw));
+    queue.push(throw_on_move_if(should_throw));
     EXPECT_EQ(queue.size(), 1);
     *should_throw = true;
   }
