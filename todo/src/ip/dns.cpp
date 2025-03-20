@@ -1,7 +1,6 @@
 #include "ip/dns.hpp"
 
 #include <netdb.h>
-#include <unistd.h>
 
 #include <cerrno>
 #include <format>
@@ -77,11 +76,7 @@ std::vector<address> resolve(std::string_view hostname, protocol protocol) {
 
   std::vector<address> addresses;
   for (const addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
-    const auto s = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-    if (s != -1) {
-      close(s);
-      addresses.emplace_back(as_bytes(*ptr));
-    }
+    addresses.emplace_back(as_bytes(*ptr));
   }
   return addresses;
 }
