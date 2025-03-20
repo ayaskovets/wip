@@ -13,7 +13,7 @@ TEST(_TMP__threading, lockfree_spsc_queue_size) {
   static_assert(sizeof(_TMP_::threading::lockfree_spsc_queue<int, 128>) == 320);
   static_assert(alignof(_TMP_::threading::lockfree_spsc_queue<int, 128>) == 64);
 
-  static_assert(sizeof(_TMP_::threading::lockfree_spsc_queue<int>) == 384);
+  static_assert(sizeof(_TMP_::threading::lockfree_spsc_queue<int>) == 320);
   static_assert(alignof(_TMP_::threading::lockfree_spsc_queue<int>) == 64);
 }
 
