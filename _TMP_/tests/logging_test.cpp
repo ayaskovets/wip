@@ -6,7 +6,7 @@ namespace tests::logging {
 
 namespace logging = _TMP_::logging;
 
-TEST(_TMP_, writer) {
+TEST(_TMP__logging, writer) {
   std::string buffer;
   const logging::logger logger(
       logging::level::kInfo, logging::renderer::kNoop(),
@@ -18,7 +18,7 @@ TEST(_TMP_, writer) {
   EXPECT_EQ(buffer, "42");
 }
 
-TEST(_TMP_, skip) {
+TEST(_TMP__logging, skip) {
   std::string buffer;
   const logging::logger logger(
       logging::level::kWarn, logging::renderer::kNoop(),
@@ -40,7 +40,7 @@ TEST(_TMP_, skip) {
   EXPECT_EQ(buffer.size(), 2);
 }
 
-TEST(_TMP_, renderer) {
+TEST(_TMP__logging, renderer) {
   std::string buffer;
   const logging::logger logger(
       logging::level::kInfo,
