@@ -30,13 +30,6 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       : capacity_(std::dynamic_extent) {}
 
  public:
-  constexpr std::size_t capacity() const noexcept { return *capacity_; }
-  std::size_t size() const {
-    std::unique_lock<std::mutex> lock(mutex_);
-    return queue_.size();
-  }
-
- public:
   void push(T value) {
     std::unique_lock<std::mutex> lock(mutex_);
     push_available_cv_.wait(lock,
@@ -48,11 +41,18 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   T pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
-    T front(
-        std::move(queue_.front()));  // NOTE: correct iff noexcept(pop_front)
+    // NOTE: correct iff noexcept(pop_front)
+    T front(std::move(queue_.front()));
     queue_.pop_front();
     push_available_cv_.notify_one();
     return front;
+  }
+
+ public:
+  constexpr std::size_t capacity() const noexcept { return *capacity_; }
+  std::size_t size() const {
+    std::unique_lock<std::mutex> lock(mutex_);
+    return queue_.size();
   }
 
  private:
