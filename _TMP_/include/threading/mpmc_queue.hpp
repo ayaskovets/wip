@@ -12,21 +12,20 @@
 namespace _TMP_::threading {
 
 template <typename ItemType, std::size_t Capacity = std::dynamic_extent>
-  requires(std::is_nothrow_destructible_v<ItemType> &&
-           (std::is_nothrow_move_constructible_v<ItemType> ||
-            std::is_nothrow_copy_constructible_v<ItemType>))
+  requires(std::is_nothrow_destructible_v<ItemType>)
 class mpmc_queue final {
  public:
-  constexpr mpmc_queue()
+  constexpr mpmc_queue() noexcept
     requires(Capacity != std::dynamic_extent)
   = default;
 
-  constexpr explicit mpmc_queue(std::size_t capacity = std::dynamic_extent)
+  constexpr explicit mpmc_queue(
+      std::size_t capacity = std::dynamic_extent) noexcept
     requires(Capacity == std::dynamic_extent)
       : capacity_(capacity) {}
 
  public:
-  constexpr std::size_t capacity() const { return *capacity_; }
+  constexpr std::size_t capacity() const noexcept { return *capacity_; }
   std::size_t size() const {
     std::unique_lock<std::mutex> lock(mutex_);
     return queue_.size();
@@ -52,13 +51,14 @@ class mpmc_queue final {
   }
 
   std::optional<ItemType> try_pop() {
-    std::optional<ItemType> front = std::nullopt;
+    std::optional<ItemType> front(std::nullopt);
     std::unique_lock<std::mutex> lock(mutex_);
     if (!queue_.empty()) {
-      if constexpr (!std::is_nothrow_move_constructible_v<ItemType>) {
-        front.emplace(queue_.front());
-      } else {
+      if constexpr (std::is_nothrow_move_constructible_v<ItemType>) {
+        // NOTE: correct iff noexcept(pop_front)
         front.emplace(std::move(queue_.front()));
+      } else {
+        front.emplace(queue_.front());
       }
       queue_.pop_front();
     }
@@ -69,13 +69,14 @@ class mpmc_queue final {
   ItemType pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this]() { return !queue_.empty(); });
-    if constexpr (!std::is_nothrow_move_constructible_v<ItemType>) {
-      ItemType front = queue_.front();
+    if constexpr (std::is_nothrow_move_constructible_v<ItemType>) {
+      // NOTE: correct iff noexcept(pop_front)
+      ItemType front(std::move(queue_.front()));
       queue_.pop_front();
       push_available_cv_.notify_one();
       return front;
     } else {
-      ItemType front = std::move(queue_.front());
+      ItemType front(queue_.front());
       queue_.pop_front();
       push_available_cv_.notify_one();
       return front;

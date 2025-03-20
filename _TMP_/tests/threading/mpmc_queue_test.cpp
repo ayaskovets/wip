@@ -133,42 +133,53 @@ TEST(_TMP__threading, mpmc_queue_throw_on_item_move) {
 
   auto should_throw = std::make_shared<bool>(true);
 
-  class throw_on_move_if final {
+  class throw_on_move_or_copy_if final {
    public:
-    throw_on_move_if(std::shared_ptr<bool> should_throw)
+    throw_on_move_or_copy_if(std::shared_ptr<bool> should_throw)
         : should_throw_(should_throw) {}
-    throw_on_move_if(throw_on_move_if&& that)
+    throw_on_move_or_copy_if(throw_on_move_or_copy_if&& that)
         : should_throw_(that.should_throw_) {
       if (*should_throw_) {
         throw kException;
       }
     }
-    throw_on_move_if& operator=(throw_on_move_if&& that) {
+    throw_on_move_or_copy_if& operator=(throw_on_move_or_copy_if&& that) {
       should_throw_ = that.should_throw_;
       if (*should_throw_) {
         throw kException;
       }
       return *this;
     }
-    throw_on_move_if(const throw_on_move_if& that) = default;
-    throw_on_move_if& operator=(const throw_on_move_if& that) = default;
+    throw_on_move_or_copy_if(const throw_on_move_or_copy_if& that)
+        : should_throw_(that.should_throw_) {
+      if (*should_throw_) {
+        throw kException;
+      }
+    }
+    throw_on_move_or_copy_if& operator=(const throw_on_move_or_copy_if& that) {
+      should_throw_ = that.should_throw_;
+      if (*should_throw_) {
+        throw kException;
+      }
+      return *this;
+    }
 
    private:
     std::shared_ptr<bool> should_throw_;
   };
 
-  _TMP_::threading::mpmc_queue<throw_on_move_if> queue(1);
+  _TMP_::threading::mpmc_queue<throw_on_move_or_copy_if> queue(1);
 
   {
     try {
-      queue.push(throw_on_move_if(should_throw));
+      queue.push(throw_on_move_or_copy_if(should_throw));
       GTEST_FAIL();
     } catch (const std::runtime_error& e) {
       EXPECT_EQ(e.what(), kException.what());
     }
     EXPECT_EQ(queue.size(), 0);
     try {
-      queue.try_push(throw_on_move_if(should_throw));
+      queue.try_push(throw_on_move_or_copy_if(should_throw));
       GTEST_FAIL();
     } catch (const std::runtime_error& e) {
       EXPECT_EQ(e.what(), kException.what());
@@ -177,7 +188,7 @@ TEST(_TMP__threading, mpmc_queue_throw_on_item_move) {
   }
   {
     *should_throw = false;
-    queue.push(throw_on_move_if(should_throw));
+    queue.push(throw_on_move_or_copy_if(should_throw));
     EXPECT_EQ(queue.size(), 1);
     *should_throw = true;
   }
