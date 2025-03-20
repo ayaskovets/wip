@@ -1,8 +1,11 @@
 #pragma once
 
+#include <concepts>
+#include <utility>
+
 namespace _TMP_::utils {
 
-template <typename T>
+template <std::invocable T>
 class scope_exit final {
  public:
   constexpr explicit scope_exit(T&& finally)
