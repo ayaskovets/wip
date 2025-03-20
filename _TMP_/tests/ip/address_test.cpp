@@ -1,7 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "ip/address.hpp"
-#include "ip/dns.hpp"
+
+#include <gtest/gtest.h>
 
 namespace tests::logging {
 
@@ -35,14 +34,5 @@ INSTANTIATE_TEST_SUITE_P(
                                                   255, 255, 255, 255},
                         "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
                         _TMP_::ip::version::kIpV6)));
-
-TEST(_TMP__ip, resolve_localhost) {
-  const auto addresses =
-      _TMP_::ip::resolve("localhost", _TMP_::ip::protocol::kTcp);
-
-  EXPECT_EQ(addresses,
-            (std::vector<_TMP_::ip::address>{_TMP_::ip::address("::1"),
-                                             _TMP_::ip::address("127.0.0.1")}));
-}
 
 }  // namespace tests::logging

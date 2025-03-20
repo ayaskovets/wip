@@ -5,10 +5,10 @@ find_package(GTest REQUIRED)
 add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
-    datetime_test.cpp
-    ip_test.cpp
-    logging_test.cpp
-    queue_test.cpp
+    datetime/iso8601_test.cpp
+    ip/address_test.cpp
+    ip/dns_test.cpp
+    logging/logging_test.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_20

@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "datetime/iso8601.hpp"
+
+#include <gtest/gtest.h>
 
 namespace tests::logging {
 
