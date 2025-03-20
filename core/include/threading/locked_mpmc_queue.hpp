@@ -25,7 +25,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       : capacity_(capacity) {}
 
   // NOTE: unbounded queue constructor
-  constexpr explicit locked_mpmc_queue() noexcept
+  constexpr locked_mpmc_queue() noexcept
     requires(Capacity == std::dynamic_extent)
       : capacity_(std::dynamic_extent) {}
 
