@@ -1,5 +1,6 @@
 #pragma once
 
+#include <condition_variable>
 #include <deque>
 #include <mutex>
 #include <optional>
@@ -15,7 +16,10 @@ class mpmc_queue final {
   constexpr mpmc_queue()
     requires(Capacity != std::dynamic_extent)
   = default;
-  constexpr mpmc_queue(std::size_t capacity) : capacity_(capacity) {}
+
+  constexpr explicit mpmc_queue(std::size_t capacity = std::dynamic_extent)
+    requires(Capacity == std::dynamic_extent)
+      : capacity_(capacity) {}
 
  public:
   constexpr std::size_t capacity() const { return *capacity_; }
@@ -37,10 +41,8 @@ class mpmc_queue final {
 
   void push(T value) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (queue_.size() == *capacity_) {
-      push_available_cv_.wait(lock,
-                              [this]() { return queue_.size() < *capacity_; });
-    }
+    push_available_cv_.wait(lock,
+                            [this]() { return queue_.size() < *capacity_; });
     queue_.push_back(std::move(value));
     pop_available_cv_.notify_one();
   }
@@ -60,9 +62,7 @@ class mpmc_queue final {
 
   T pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (queue_.empty()) {
-      pop_available_cv_.wait(lock, [this]() { return !queue_.empty(); });
-    }
+    pop_available_cv_.wait(lock, [this]() { return !queue_.empty(); });
     T front = queue_.front();
     queue_.pop_front();
     push_available_cv_.notify_one();
