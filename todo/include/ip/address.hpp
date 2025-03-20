@@ -11,8 +11,11 @@ class address final {
   explicit address(std::vector<std::uint8_t> address);
 
  public:
+  bool operator==(const address&) const = default;
+
+ public:
   std::string as_string() const;
-  const std::vector<std::uint8_t>& as_vector() const;
+  const std::vector<std::uint8_t>& as_bytes() const;
 
  private:
   std::vector<std::uint8_t> address_;
