@@ -9,15 +9,15 @@
 
 namespace tests::threading {
 
-TEST(_TMP__threading, mpmc_queue_size) {
-  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int, 10>) == 256);
-  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 64);
+TEST(_TMP__threading, locked_mpmc_queue_size) {
+  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int, 10>) == 208);
+  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int, 10>) == 8);
 
-  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int>) == 256);
-  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 64);
+  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int>) == 216);
+  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 8);
 }
 
-TEST(_TMP__threading, mpmc_queue_size_capacity) {
+TEST(_TMP__threading, locked_mpmc_queue_size_capacity) {
   {
     _TMP_::threading::locked_mpmc_queue<std::string> queue(101);
     EXPECT_EQ(queue.capacity(), 101);
@@ -46,13 +46,13 @@ TEST(_TMP__threading, mpmc_queue_size_capacity) {
   }
 }
 
-TEST(_TMP__threading, mpmc_queue_blocking_push) {
+TEST(_TMP__threading, locked_mpmc_queue_blocking_push) {
   _TMP_::threading::locked_mpmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
 
-  std::thread consumer([&queue]() {
+  std::thread consumer([&queue] {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     EXPECT_EQ(queue.pop(), 1);
   });
@@ -63,10 +63,10 @@ TEST(_TMP__threading, mpmc_queue_blocking_push) {
   consumer.join();
 }
 
-TEST(_TMP__threading, mpmc_queue_blocking_pop) {
+TEST(_TMP__threading, locked_mpmc_queue_blocking_pop) {
   _TMP_::threading::locked_mpmc_queue<int> queue(1);
 
-  std::thread producer([&queue]() {
+  std::thread producer([&queue] {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     queue.push(42);
   });
@@ -76,13 +76,13 @@ TEST(_TMP__threading, mpmc_queue_blocking_pop) {
   producer.join();
 }
 
-TEST(_TMP__threading, mpmc_queue_unblocking_pop) {
+TEST(_TMP__threading, locked_mpmc_queue_unblocking_pop) {
   _TMP_::threading::locked_mpmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
 
-  std::thread consumer([&queue]() {
+  std::thread consumer([&queue] {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     EXPECT_EQ(queue.pop(), 1);
   });
@@ -93,7 +93,7 @@ TEST(_TMP__threading, mpmc_queue_unblocking_pop) {
   consumer.join();
 }
 
-TEST(_TMP__threading, mpmc_queue_non_copyable_item_type) {
+TEST(_TMP__threading, locked_mpmc_queue_non_copyable_item_type) {
   struct non_copyable {
     constexpr non_copyable() noexcept = default;
     constexpr non_copyable(const non_copyable&) = delete;
@@ -109,11 +109,11 @@ TEST(_TMP__threading, mpmc_queue_non_copyable_item_type) {
   }
 }
 
-class _TMP__threading
+class _TMP__threading_locked_mpmc_queue_
     : public ::testing::TestWithParam<
           std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> {};
 
-TEST_P(_TMP__threading, mpmc_queue_mpmc_threads) {
+TEST_P(_TMP__threading_locked_mpmc_queue_, locked_mpmc_queue_workload) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
   std::vector<int> items_to_push(items_size);
@@ -131,7 +131,7 @@ TEST_P(_TMP__threading, mpmc_queue_mpmc_threads) {
   std::vector<std::thread> threads;
   threads.reserve(producers + consumers);
 
-  const auto producer = [&latch, &queue, &items_to_push, &pushed]() {
+  const auto producer = [&latch, &queue, &items_to_push, &pushed] {
     latch.arrive_and_wait();
     while (true) {
       const std::size_t index = pushed.fetch_add(1, std::memory_order::relaxed);
@@ -143,11 +143,11 @@ TEST_P(_TMP__threading, mpmc_queue_mpmc_threads) {
   };
 
   const auto consumer = [&latch, &queue, &items_to_push, &mutex,
-                         &popped_items]() {
+                         &popped_items] {
     latch.arrive_and_wait();
     while (true) {
       std::unique_lock<std::mutex> lock(mutex);
-      if (popped_items.size() >= items_to_push.size()) {
+      if (popped_items.size() == items_to_push.size()) {
         return;
       }
       popped_items.push_back(queue.pop());
@@ -169,7 +169,8 @@ TEST_P(_TMP__threading, mpmc_queue_mpmc_threads) {
   EXPECT_EQ(popped_items, items_to_push);
 }
 
-INSTANTIATE_TEST_SUITE_P(_TMP__threading, _TMP__threading,
+INSTANTIATE_TEST_SUITE_P(_TMP__threading_locked_mpmc_queue_,
+                         _TMP__threading_locked_mpmc_queue_,
                          ::testing::Values(std::make_tuple(5, 3, 1, 1),
                                            std::make_tuple(100, 10, 4, 1),
                                            std::make_tuple(100, 10, 1, 4),
