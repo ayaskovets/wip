@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.29.2)
 
-project(_TMP__project)
+project(core_project)
 
 include(CTest)
 
-add_subdirectory(_TMP_)
-add_subdirectory(_TMP__exec)
+add_subdirectory(core)
+add_subdirectory(exec)
