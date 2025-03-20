@@ -3,7 +3,7 @@ set(TARGET todo)
 add_library(${TARGET} STATIC)
 target_sources(${TARGET}
     PRIVATE
-    src/datetime/serialization.cpp
+    src/datetime/fmt.cpp
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
