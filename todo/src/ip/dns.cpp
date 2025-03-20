@@ -53,7 +53,7 @@ std::vector<address> resolve(std::string_view hostname, protocol protocol) {
   });
 
   const addrinfo hints{
-      .ai_family = AF_INET,
+      .ai_family = AF_UNSPEC,
       .ai_socktype = kSocktype(protocol),
       .ai_flags = 0,
       .ai_protocol = 0,
