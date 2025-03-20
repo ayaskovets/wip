@@ -91,11 +91,11 @@ TEST(_TMP__threading, lockfree_spsc_queue_item_destructor) {
     std::size_t& destructed;
   };
 
-  std::size_t constructed = 0;
-  std::size_t move_constructed = 0;
-  std::size_t destructed = 0;
-
   {
+    std::size_t constructed = 0;
+    std::size_t move_constructed = 0;
+    std::size_t destructed = 0;
+
     _TMP_::threading::lockfree_spsc_queue<non_copyable_counter> queue(1);
 
     non_copyable_counter pushed_item(constructed, move_constructed, destructed);
@@ -116,10 +116,20 @@ TEST(_TMP__threading, lockfree_spsc_queue_item_destructor) {
     EXPECT_EQ(move_constructed, 3);
     EXPECT_EQ(destructed, 3);
   }
-
-  EXPECT_EQ(constructed, 4);
-  EXPECT_EQ(move_constructed, 3);
-  EXPECT_EQ(destructed, 4);
+  {
+    std::size_t constructed = 0;
+    std::size_t move_constructed = 0;
+    std::size_t destructed = 0;
+    {
+      _TMP_::threading::lockfree_spsc_queue<non_copyable_counter> queue(1);
+      non_copyable_counter pushed_item(constructed, move_constructed,
+                                       destructed);
+      EXPECT_TRUE(queue.try_push(std::move(pushed_item)));
+    }
+    EXPECT_EQ(constructed, 4);
+    EXPECT_EQ(move_constructed, 3);
+    EXPECT_EQ(destructed, 4);
+  }
 }
 
 class _TMP__threading_lockfree_spsc_queue
