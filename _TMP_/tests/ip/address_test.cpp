@@ -5,8 +5,8 @@
 namespace tests::ip {
 
 TEST(_TMP__ip, address_size) {
-  static_assert(sizeof(_TMP_::ip::address) == 24);
-  static_assert(alignof(_TMP_::ip::address) == 8);
+  static_assert(sizeof(_TMP_::ip::address) == 17);
+  static_assert(alignof(_TMP_::ip::address) == 1);
 }
 
 class _TMP__ip
@@ -19,13 +19,19 @@ TEST_P(_TMP__ip, address_construction) {
   const _TMP_::ip::address from_bytes(bytes);
   const _TMP_::ip::address from_string(string);
 
-  EXPECT_EQ(from_bytes.as_bytes(), bytes);
+  EXPECT_TRUE(from_bytes == from_string);
+  EXPECT_FALSE(from_bytes != from_string);
+  EXPECT_TRUE(std::equal(bytes.begin(), bytes.end(),
+                         from_bytes.get_bytes().begin(),
+                         from_bytes.get_bytes().end()));
   EXPECT_EQ(from_bytes.as_string(), string);
-  EXPECT_EQ(from_bytes.version(), version);
+  EXPECT_EQ(from_bytes.get_version(), version);
 
-  EXPECT_EQ(from_bytes.as_bytes(), from_string.as_bytes());
+  EXPECT_TRUE(std::equal(
+      from_bytes.get_bytes().begin(), from_bytes.get_bytes().end(),
+      from_string.get_bytes().begin(), from_string.get_bytes().end()));
   EXPECT_EQ(from_bytes.as_string(), from_string.as_string());
-  EXPECT_EQ(from_bytes.version(), from_string.version());
+  EXPECT_EQ(from_bytes.get_version(), from_string.get_version());
   EXPECT_EQ(from_bytes, from_string);
 }
 

@@ -1,29 +1,42 @@
 #pragma once
 
+#include <array>
+#include <ranges>
+#include <span>
 #include <string>
-#include <vector>
 
 #include "ip/version.hpp"
 
 namespace _TMP_::ip {
 
 class address final {
- public:
-  explicit address(std::string address);
-  explicit address(std::vector<std::uint8_t> address);
+ private:
+  address(const std::uint8_t* data, std::size_t size);
 
  public:
-  bool operator==(const address&) const noexcept = default;
+  explicit address(std::string_view string_view);
+
+  template <std::ranges::range Range>
+    requires(std::same_as<std::ranges::range_value_t<Range>, std::uint8_t>)
+  constexpr explicit address(Range range)
+      : address(std::data(range), std::size(range)) {}
 
  public:
-  version version() const;
+  bool operator==(const address&) const noexcept;
+  constexpr bool operator!=(const address& that) const noexcept {
+    return !this->operator==(that);
+  }
+
+ public:
+  version get_version() const;
+  std::span<const std::uint8_t> get_bytes() const;
 
  public:
   std::string as_string() const;
-  const std::vector<std::uint8_t>& as_bytes() const;
 
  private:
-  std::vector<std::uint8_t> address_;
+  std::array<std::uint8_t, 16> data_;
+  version version_;
 };
 
 }  // namespace _TMP_::ip
