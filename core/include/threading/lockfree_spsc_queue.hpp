@@ -33,7 +33,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   };
 
  public:
-  constexpr lockfree_spsc_queue()
+  constexpr lockfree_spsc_queue() noexcept(false)
     requires(Capacity != std::dynamic_extent)
       : ring_buffer_(kAllocator(Capacity + 1)) {
     if (!ring_buffer_) {
@@ -41,7 +41,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr explicit lockfree_spsc_queue(std::size_t capacity)
+  constexpr explicit lockfree_spsc_queue(std::size_t capacity) noexcept(false)
     requires(Capacity == std::dynamic_extent)
       : ring_buffer_(kAllocator(capacity + 1)), capacity_(capacity) {
     if (!ring_buffer_) {
@@ -53,9 +53,6 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     while (try_pop().has_value()) {
     }
   }
-
- public:
-  constexpr std::size_t capacity() const noexcept { return *capacity_; }
 
  public:
   constexpr bool try_push(T value) noexcept {
@@ -92,6 +89,9 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     pop_from_.store(next_pop_from, std::memory_order::release);
     return value;
   }
+
+ public:
+  constexpr std::size_t capacity() const noexcept { return *capacity_; }
 
  private:
   std::unique_ptr<AlignedT, decltype(kDeleter)> ring_buffer_;
