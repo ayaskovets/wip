@@ -10,6 +10,7 @@ target_sources(${TARGET}
     src/ip/connection.cpp
     src/ip/dns.cpp
     src/ip/port.cpp
+    src/ip/socket.cpp
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
