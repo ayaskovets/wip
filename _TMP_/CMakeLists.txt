@@ -6,11 +6,11 @@ target_sources(${TARGET}
     src/async/task.cpp
     src/async/thread_pool.cpp
     src/datetime/iso8601.cpp
+    src/ip/address.cpp
+    src/ip/dns.cpp
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
-    src/ip/address.cpp
-    src/ip/dns.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_20
