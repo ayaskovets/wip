@@ -199,7 +199,7 @@ TEST_P(_TMP__threading, mpmc_queue_mpmc_threads) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
   std::vector<int> items_to_push(items_size);
-  std::iota(std::begin(items_to_push), std::end(items_to_push), 0);
+  std::iota(items_to_push.begin(), items_to_push.end(), 0);
 
   _TMP_::threading::mpmc_queue<int> queue(queue_size);
 
