@@ -9,10 +9,18 @@ TEST(ip, address_size) {
   static_assert(alignof(core::ip::address) == 1);
 }
 
-class ip : public ::testing::TestWithParam<std::tuple<
-               std::vector<std::uint8_t>, std::string, core::ip::version>> {};
+TEST(ip, address_localhost) {
+  EXPECT_EQ(core::ip::address("127.0.0.1"),
+            core::ip::address::kLocalhost(core::ip::version::kIpV4));
+  EXPECT_EQ(core::ip::address("::1"),
+            core::ip::address::kLocalhost(core::ip::version::kIpV6));
+}
 
-TEST_P(ip, address_construction) {
+class ip_address
+    : public ::testing::TestWithParam<std::tuple<
+          std::vector<std::uint8_t>, std::string, core::ip::version>> {};
+
+TEST_P(ip_address, address_construction) {
   const auto& [bytes, string, version] = GetParam();
 
   const core::ip::address from_bytes(bytes);
@@ -35,7 +43,7 @@ TEST_P(ip, address_construction) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    ip, ip,
+    ip_address, ip_address,
     ::testing::Values(
         std::make_tuple(std::vector<std::uint8_t>{255, 255, 255, 255},
                         "255.255.255.255", core::ip::version::kIpV4),
