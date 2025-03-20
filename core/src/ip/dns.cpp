@@ -14,8 +14,7 @@ namespace {
 
 constexpr std::size_t kGuessResultsSize = 5;
 
-std::pair<ip::address, ip::port> to_address_port_pair(
-    const ::addrinfo &addrinfo) {
+ip::endpoint to_endpoint(const ::addrinfo &addrinfo) {
   switch (addrinfo.ai_family) {
     case AF_INET: {
       const auto *sockaddr =
@@ -25,10 +24,9 @@ std::pair<ip::address, ip::port> to_address_port_pair(
           &reinterpret_cast<const std::uint8_t &>(sockaddr->sin_addr),
           sizeof(::in_addr));
 
-      return std::pair<ip::address, ip::port>(
-          std::piecewise_construct, std::forward_as_tuple(bytes),
-          std::forward_as_tuple(sockaddr->sin_port,
-                                ip::port::network_byte_order));
+      return ip::endpoint(
+          ip::address(bytes),
+          ip::port(sockaddr->sin_port, ip::port::network_byte_order));
     }
     case AF_INET6: {
       const auto *sockaddr =
@@ -38,10 +36,9 @@ std::pair<ip::address, ip::port> to_address_port_pair(
           &reinterpret_cast<const std::uint8_t &>(sockaddr->sin6_addr),
           sizeof(::in6_addr));
 
-      return std::pair<ip::address, ip::port>(
-          std::piecewise_construct, std::forward_as_tuple(bytes),
-          std::forward_as_tuple(sockaddr->sin6_port,
-                                ip::port::network_byte_order));
+      return ip::endpoint(
+          ip::address(bytes),
+          ip::port(sockaddr->sin6_port, ip::port::network_byte_order));
     }
     default:
       throw std::runtime_error(
@@ -51,9 +48,9 @@ std::pair<ip::address, ip::port> to_address_port_pair(
 
 }  // namespace
 
-std::vector<std::pair<ip::address, ip::port>> resolve(
-    std::string_view hostname, std::optional<ip::protocol> protocol,
-    std::optional<ip::version> version) {
+std::vector<ip::endpoint> resolve(std::string_view hostname,
+                                  std::optional<ip::protocol> protocol,
+                                  std::optional<ip::version> version) {
   ::addrinfo *results = nullptr;
   const utils::scope_exit _([results]() noexcept {
     if (results) {
@@ -99,10 +96,10 @@ std::vector<std::pair<ip::address, ip::port>> resolve(
                       ::gai_strerror(error)));
   }
 
-  std::vector<std::pair<ip::address, ip::port>> addresses;
+  std::vector<ip::endpoint> addresses;
   addresses.reserve(kGuessResultsSize);
   for (const ::addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
-    addresses.emplace_back(to_address_port_pair(*ptr));
+    addresses.emplace_back(to_endpoint(*ptr));
   }
   return addresses;
 }
