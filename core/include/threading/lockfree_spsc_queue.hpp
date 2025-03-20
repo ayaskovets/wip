@@ -5,7 +5,6 @@
 #include <optional>
 #include <span>
 #include <type_traits>
-#include <vector>
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
