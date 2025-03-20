@@ -11,6 +11,9 @@
 namespace core::ip {
 
 class address final {
+ public:
+  static const address& kLocalhost(ip::version version);
+
  private:
   address(const std::uint8_t& data, std::size_t size);
 

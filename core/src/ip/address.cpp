@@ -14,6 +14,19 @@ constexpr std::size_t kIpV6Bytes = 16;
 
 }  // namespace
 
+const address& address::kLocalhost(ip::version version) {
+  switch (version) {
+    case ip::version::kIpV4: {
+      static address address("127.0.0.1");
+      return address;
+    }
+    case ip::version::kIpV6: {
+      static address address("::1");
+      return address;
+    }
+  }
+}
+
 address::address(const std::uint8_t& data, std::size_t size) {
   switch (size) {
     case kIpV4Bytes:
