@@ -40,14 +40,14 @@ std::vector<address> resolve(std::string_view hostname,
                              std::optional<protocol> protocol,
                              std::optional<version> version) {
   addrinfo *results = nullptr;
-  SCOPE_EXIT([results]() {
+  SCOPE_EXIT([results] {
     if (results) {
       freeaddrinfo(results);
     }
   });
 
   addrinfo hints{};
-  hints.ai_family = [version]() {
+  hints.ai_family = [version] {
     if (!version.has_value()) {
       return AF_UNSPEC;
     }
@@ -58,7 +58,7 @@ std::vector<address> resolve(std::string_view hostname,
         return AF_INET6;
     }
   }();
-  hints.ai_socktype = [protocol]() {
+  hints.ai_socktype = [protocol] {
     if (!protocol.has_value()) {
       return 0;
     }
