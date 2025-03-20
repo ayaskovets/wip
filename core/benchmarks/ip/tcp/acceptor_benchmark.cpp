@@ -1,11 +1,13 @@
 #include <benchmark/benchmark.h>
 
-#include "ip/acceptor.hpp"
+#include "ip/tcp/acceptor.hpp"
 
 void BM_acceptor_try_accept(benchmark::State& state) {
-  const core::ip::acceptor acceptor(
-      core::ip::address::kLocalhost(core::ip::version::kIpV4),
-      core::ip::port(9996));
+  const core::ip::tcp::acceptor acceptor(
+      core::ip::endpoint(
+          core::ip::address::kLocalhost(core::ip::version::kIpV4),
+          core::ip::port(9996)),
+      1);
 
   for (const auto _ : state) {
     benchmark::DoNotOptimize(acceptor.try_accept());
