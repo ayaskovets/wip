@@ -2,8 +2,6 @@
 
 #include "datetime/iso8601.hpp"
 
-namespace benchmarks::datetime {
-
 void BM_as_iso8601(benchmark::State& state) {
   const auto now = std::chrono::system_clock::now();
   for (const auto _ : state) {
@@ -18,7 +16,5 @@ void BM_serialize_format(benchmark::State& state) {
   }
 }
 
-}  // namespace benchmarks::datetime
-
-BENCHMARK(benchmarks::datetime::BM_as_iso8601);
-BENCHMARK(benchmarks::datetime::BM_serialize_format);
+BENCHMARK(BM_as_iso8601);
+BENCHMARK(BM_serialize_format);

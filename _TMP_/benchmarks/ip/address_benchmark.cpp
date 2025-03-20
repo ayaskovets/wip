@@ -2,8 +2,6 @@
 
 #include "ip/address.hpp"
 
-namespace benchmarks::ip {
-
 void BM_ip4_from_bytes(benchmark::State& state) {
   const std::vector<std::uint8_t> bytes{127, 0, 0, 1};
   for (const auto _ : state) {
@@ -48,11 +46,9 @@ void BM_ip6_as_string(benchmark::State& state) {
   }
 }
 
-}  // namespace benchmarks::ip
-
-BENCHMARK(benchmarks::ip::BM_ip4_from_bytes);
-BENCHMARK(benchmarks::ip::BM_ip6_from_bytes);
-BENCHMARK(benchmarks::ip::BM_ip4_from_string);
-BENCHMARK(benchmarks::ip::BM_ip6_from_string);
-BENCHMARK(benchmarks::ip::BM_ip4_as_string);
-BENCHMARK(benchmarks::ip::BM_ip6_as_string);
+BENCHMARK(BM_ip4_from_bytes);
+BENCHMARK(BM_ip6_from_bytes);
+BENCHMARK(BM_ip4_from_string);
+BENCHMARK(BM_ip6_from_string);
+BENCHMARK(BM_ip4_as_string);
+BENCHMARK(BM_ip6_as_string);
