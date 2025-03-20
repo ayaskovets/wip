@@ -11,6 +11,7 @@ class BM_locked_std_queue : public benchmark::Fixture {
   std::queue<T> queue_;
   std::mutex mutex_;
   std::condition_variable pop_available_;
+  std::condition_variable push_available_;
 };
 
 BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, pod_type, int)
@@ -18,6 +19,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, pod_type, int)
   if (state.thread_index() % 2) {
     for (const auto _ : state) {
       std::unique_lock<std::mutex> lock(mutex_);
+      push_available_.wait(lock, [this]() { return queue_.size() <= 100; });
       queue_.push(42);
       pop_available_.notify_one();
     }
@@ -27,6 +29,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, pod_type, int)
       pop_available_.wait(lock, [this]() { return !queue_.empty(); });
       const int value = queue_.front();
       queue_.pop();
+      push_available_.notify_one();
       benchmark::DoNotOptimize(&value);
     }
   }
@@ -38,6 +41,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, heap_allocated,
   if (state.thread_index() % 2) {
     for (const auto _ : state) {
       std::unique_lock<std::mutex> lock(mutex_);
+      push_available_.wait(lock, [this]() { return queue_.size() <= 100; });
       queue_.push(std::make_shared<int>(42));
       pop_available_.notify_one();
     }
@@ -47,6 +51,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, heap_allocated,
       pop_available_.wait(lock, [this]() { return !queue_.empty(); });
       const std::shared_ptr<int> value = queue_.front();
       queue_.pop();
+      push_available_.notify_one();
       benchmark::DoNotOptimize(&value);
     }
   }
@@ -91,12 +96,12 @@ BENCHMARK_REGISTER_F(BM_locked_std_queue, pod_type)
     ->MeasureProcessCPUTime()
     ->UseRealTime();
 
-BENCHMARK_REGISTER_F(BM_mpmc_queue, pod_type)
+BENCHMARK_REGISTER_F(BM_locked_std_queue, heap_allocated)
     ->ThreadRange(2, 1 << 4)
     ->MeasureProcessCPUTime()
     ->UseRealTime();
 
-BENCHMARK_REGISTER_F(BM_locked_std_queue, heap_allocated)
+BENCHMARK_REGISTER_F(BM_mpmc_queue, pod_type)
     ->ThreadRange(2, 1 << 4)
     ->MeasureProcessCPUTime()
     ->UseRealTime();
