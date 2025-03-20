@@ -9,7 +9,7 @@ target_sources(${TARGET}
     ip/address_benchmark.cpp
     ip/dns_benchmark.cpp
     logging/logging_benchmark.cpp
-
+    threading/mpmc_queue_benchmark.cpp
     main.cpp
 )
 target_compile_features(${TARGET}
