@@ -4,20 +4,19 @@
 
 namespace benchmarks::logging {
 
-namespace logging = _TMP_::logging;
-
 void BM_default(benchmark::State& state) {
   for (const auto _ : state) {
-    benchmark::DoNotOptimize((logging::info("{}\n", 42), _));
+    benchmark::DoNotOptimize((_TMP_::logging::info("{}\n", 42), 42));
   }
 }
 
 void BM_transparent(benchmark::State& state) {
-  const logging::logger logger(logging::level::kInfo,
-                               logging::renderer::kNoop(),
-                               logging::writer::kStderr());
+  const _TMP_::logging::logger logger(_TMP_::logging::level::kInfo,
+                                      _TMP_::logging::renderer::kNoop(),
+                                      _TMP_::logging::writer::kStderr());
   for (const auto _ : state) {
-    benchmark::DoNotOptimize((logger(logging::level::kInfo, "{}\n", 42), _));
+    benchmark::DoNotOptimize(
+        (logger(_TMP_::logging::level::kInfo, "{}\n", 42), 42));
   }
 }
 

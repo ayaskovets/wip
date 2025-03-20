@@ -4,12 +4,10 @@
 
 namespace benchmarks::datetime {
 
-namespace datetime = _TMP_::datetime;
-
 void BM_as_iso8601(benchmark::State& state) {
   const auto now = std::chrono::system_clock::now();
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(datetime::as_iso8601(now));
+    benchmark::DoNotOptimize(_TMP_::datetime::as_iso8601(now));
   }
 }
 

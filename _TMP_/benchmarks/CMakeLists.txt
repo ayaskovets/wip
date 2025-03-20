@@ -5,11 +5,12 @@ find_package(benchmark REQUIRED)
 add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
-    # datetime_benchmark.cpp
-    # ip_benchmark.cpp
-    # logging_benchmark.cpp
+    datetime/iso8601_benchmark.cpp
+    ip/address_benchmark.cpp
+    ip/dns_benchmark.cpp
+    logging/logging_benchmark.cpp
+
     main.cpp
-    queue_benchmark.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_20
