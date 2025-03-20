@@ -14,14 +14,14 @@ enum class version : std::uint8_t {
 
 template <>
 struct std::formatter<core::ip::version> {
-  template <class format_context>
-  constexpr auto parse(format_context& ctx) const {
+  template <class FormatContext>
+  constexpr auto parse(FormatContext& ctx) const {
     return ctx.begin();
   }
 
-  template <class format_context>
+  template <class FormatContext>
   constexpr auto format(const core::ip::version& version,
-                        format_context& ctx) const {
+                        FormatContext& ctx) const {
     switch (version) {
       case core::ip::version::kIpV4:
         return std::format_to(ctx.out(), "IPv4");

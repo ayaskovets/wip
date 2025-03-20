@@ -14,11 +14,7 @@ constexpr std::size_t kIpV6Bytes = 16;
 
 }  // namespace
 
-address::address(const std::uint8_t* data, std::size_t size) {
-  if (!data) {
-    throw std::invalid_argument(std::format("null address data"));
-  }
-
+address::address(const std::uint8_t& data, std::size_t size) {
   switch (size) {
     case kIpV4Bytes:
       std::memcpy(data_.begin(), &data, size);
@@ -35,10 +31,10 @@ address::address(const std::uint8_t* data, std::size_t size) {
 
 address::address(std::string_view string_view) {
   if (string_view.size() <= INET_ADDRSTRLEN &&
-      inet_pton(AF_INET, string_view.data(), data_.begin())) {
+      ::inet_pton(AF_INET, string_view.data(), data_.begin())) {
     version_ = ip::version::kIpV4;
   } else if (string_view.size() <= INET6_ADDRSTRLEN &&
-             inet_pton(AF_INET6, string_view.data(), data_.begin())) {
+             ::inet_pton(AF_INET6, string_view.data(), data_.begin())) {
     version_ = ip::version::kIpV6;
   } else {
     throw std::invalid_argument(std::format("invalid address {}", string_view));
@@ -58,9 +54,7 @@ bool address::operator==(const address& that) const noexcept {
   }
 }
 
-ip::version address::get_version() const noexcept { return version_; }
-
-std::span<const std::uint8_t> address::as_bytes() const noexcept {
+std::span<const std::uint8_t> address::get_bytes() const noexcept {
   switch (version_) {
     case ip::version::kIpV4:
       return std::span<const std::uint8_t>(data_.begin(), kIpV4Bytes);
@@ -69,7 +63,9 @@ std::span<const std::uint8_t> address::as_bytes() const noexcept {
   }
 }
 
-std::string address::as_string() const {
+ip::version address::get_version() const noexcept { return version_; }
+
+std::string address::to_string() const {
   std::string string;
 
   int family;
@@ -84,14 +80,13 @@ std::string address::as_string() const {
       break;
   }
 
-  if (inet_ntop(family, data_.begin(), string.data(), string.size()))
-      [[likely]] {
+  if (::inet_ntop(family, &data_[0], string.data(), string.size())) [[likely]] {
     string.resize(string.find('\0'));
     return string;
   }
 
   throw std::runtime_error(
-      std::format("could not serialize address: {}", strerror(errno)));
+      std::format("could not serialize address: {}", std::strerror(errno)));
 }
 
 }  // namespace core::ip

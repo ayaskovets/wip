@@ -21,15 +21,15 @@ TEST_P(ip, address_construction) {
   EXPECT_TRUE(from_bytes == from_string);
   EXPECT_FALSE(from_bytes != from_string);
   EXPECT_TRUE(std::equal(bytes.begin(), bytes.end(),
-                         from_bytes.as_bytes().begin(),
-                         from_bytes.as_bytes().end()));
-  EXPECT_EQ(from_bytes.as_string(), string);
+                         from_bytes.get_bytes().begin(),
+                         from_bytes.get_bytes().end()));
+  EXPECT_EQ(from_bytes.to_string(), string);
   EXPECT_EQ(from_bytes.get_version(), version);
 
-  EXPECT_TRUE(
-      std::equal(from_bytes.as_bytes().begin(), from_bytes.as_bytes().end(),
-                 from_string.as_bytes().begin(), from_string.as_bytes().end()));
-  EXPECT_EQ(from_bytes.as_string(), from_string.as_string());
+  EXPECT_TRUE(std::equal(
+      from_bytes.get_bytes().begin(), from_bytes.get_bytes().end(),
+      from_string.get_bytes().begin(), from_string.get_bytes().end()));
+  EXPECT_EQ(from_bytes.to_string(), from_string.to_string());
   EXPECT_EQ(from_bytes.get_version(), from_string.get_version());
   EXPECT_EQ(from_bytes, from_string);
 }

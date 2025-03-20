@@ -35,19 +35,19 @@ void BM_ip6_from_string(benchmark::State& state) {
 }
 BENCHMARK(BM_ip6_from_string);
 
-void BM_ip4_as_string(benchmark::State& state) {
+void BM_ip4_to_string(benchmark::State& state) {
   const core::ip::address address("127.0.0.1");
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(address.as_string());
+    benchmark::DoNotOptimize(address.to_string());
   }
 }
-BENCHMARK(BM_ip4_as_string);
+BENCHMARK(BM_ip4_to_string);
 
-void BM_ip6_as_string(benchmark::State& state) {
+void BM_ip6_to_string(benchmark::State& state) {
   const auto address =
       core::ip::address("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(address.as_string());
+    benchmark::DoNotOptimize(address.to_string());
   }
 }
-BENCHMARK(BM_ip6_as_string);
+BENCHMARK(BM_ip6_to_string);

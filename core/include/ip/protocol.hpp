@@ -14,14 +14,14 @@ enum class protocol : std::uint8_t {
 
 template <>
 struct std::formatter<core::ip::protocol> {
-  template <class format_context>
-  constexpr auto parse(format_context& ctx) const {
+  template <class FormatContext>
+  constexpr auto parse(FormatContext& ctx) const {
     return ctx.begin();
   }
 
-  template <class format_context>
+  template <class FormatContext>
   constexpr auto format(const core::ip::protocol& protocol,
-                        format_context& ctx) const {
+                        FormatContext& ctx) const {
     switch (protocol) {
       case core::ip::protocol::kTcp:
         return std::format_to(ctx.out(), "TCP");
