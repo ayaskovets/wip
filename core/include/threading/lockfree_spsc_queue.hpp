@@ -76,7 +76,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr std::optional<Item> try_pop() noexcept {
-    std::optional<Item> value(std::nullopt);
+    std::optional<Item> value;
 
     const auto pop_from = pop_from_.load(std::memory_order::relaxed);
     if (pop_from == cached_push_to_ &&
