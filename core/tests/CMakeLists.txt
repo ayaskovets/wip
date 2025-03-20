@@ -13,6 +13,8 @@ target_sources(${TARGET}
     ip/port_test.cpp
     ip/socket_test.cpp
     ip/tcp/acceptor_test.cpp
+    ip/tcp/connection_test.cpp
+    ip/tcp/socket_test.cpp
     logging/logging_test.cpp
     threading/locked_mpmc_queue_test.cpp
     threading/lockfree_spsc_queue_test.cpp

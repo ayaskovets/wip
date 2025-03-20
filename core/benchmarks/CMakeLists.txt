@@ -6,9 +6,10 @@ add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_benchmark.cpp
-    ip/acceptor_benchmark.cpp
     ip/address_benchmark.cpp
     ip/dns_benchmark.cpp
+    ip/tcp/acceptor_benchmark.cpp
+    ip/tcp/connection_benchmark.cpp
     logging/logging_benchmark.cpp
     threading/locked_mpmc_queue_benchmark.cpp
     threading/lockfree_spsc_queue_benchmark.cpp
