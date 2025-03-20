@@ -1,0 +1,55 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "release",
+            "displayName": "Release",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_INIT": "-Wall -Wextra -pedantic -Werror -O3"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS_INIT": "-Wall -Wextra -pedantic -Werror -g"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "displayName": "Release"
+        },
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "displayName": "Debug"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "release",
+            "displayName": "release",
+            "configurePreset": "release",
+            "output": {
+                "verbosity": "verbose"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "debug",
+            "configurePreset": "debug",
+            "output": {
+                "verbosity": "verbose"
+            }
+        }
+    ]
+}
