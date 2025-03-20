@@ -2,16 +2,16 @@
 
 namespace _TMP_::utils {
 
-struct uncopyable {
-  uncopyable() = default;
-  uncopyable(const uncopyable&) = delete;
-  uncopyable& operator=(const uncopyable&) = delete;
+struct non_copyable {
+  non_copyable() = default;
+  non_copyable(const non_copyable&) = delete;
+  non_copyable& operator=(const non_copyable&) = delete;
 };
 
-struct unmovable {
-  unmovable() = default;
-  unmovable(uncopyable&&) = delete;
-  unmovable& operator=(unmovable&&) = delete;
+struct non_movable {
+  non_movable() = default;
+  non_movable(non_copyable&&) = delete;
+  non_movable& operator=(non_movable&&) = delete;
 };
 
 }  // namespace _TMP_::utils
