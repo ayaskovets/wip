@@ -4,9 +4,10 @@ add_library(${TARGET} STATIC)
 target_sources(${TARGET}
     PRIVATE
     src/async/task.cpp
-    src/async/thread_pool.cpp
     src/datetime/iso8601.cpp
+    src/ip/acceptor.cpp
     src/ip/address.cpp
+    src/ip/connection.cpp
     src/ip/dns.cpp
     src/ip/port.cpp
     src/logging/logger.cpp
