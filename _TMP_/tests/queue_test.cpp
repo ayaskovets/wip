@@ -90,17 +90,12 @@ TEST_P(_TMP__queue_mpmc, mpmc) {
         [&latch, &queue, &items_to_push, &mutex, &popped_items]() {
           latch.arrive_and_wait();
           while (true) {
+            std::unique_lock<std::mutex> lock(mutex);
             if (auto item = queue.try_pop(); item.has_value()) {
-              std::lock_guard<std::mutex> lock(mutex);
               popped_items.push_back(std::move(item.value()));
-              if (popped_items.size() >= items_to_push.size()) {
-                return;
-              }
-            } else {
-              std::lock_guard<std::mutex> lock(mutex);
-              if (popped_items.size() >= items_to_push.size()) {
-                return;
-              }
+            }
+            if (popped_items.size() >= items_to_push.size()) {
+              return;
             }
           }
         });
