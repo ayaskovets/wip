@@ -18,7 +18,7 @@ class conditionally_runtime<T, true, CompileTimeValue> final {
   constexpr const T& operator*() const noexcept { return value_; }
 
  private:
-  alignas(T) T value_;
+  T value_;
 };
 
 template <typename T, T CompileTimeValue>
@@ -30,7 +30,7 @@ class conditionally_runtime<T, false, CompileTimeValue> final {
   constexpr const T& operator*() const noexcept { return value_; }
 
  private:
-  alignas(T) static inline const constinit T value_ = CompileTimeValue;
+  static inline const constinit T value_ = CompileTimeValue;
 };
 
 }  // namespace _TMP_::utils
