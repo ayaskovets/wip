@@ -40,7 +40,7 @@ std::vector<ip::address> resolve(std::string_view hostname,
                                  std::optional<ip::protocol> protocol,
                                  std::optional<ip::version> version) {
   addrinfo *results = nullptr;
-  SCOPE_EXIT([results] {
+  const utils::scope_exit _([results] {
     if (results) {
       freeaddrinfo(results);
     }
