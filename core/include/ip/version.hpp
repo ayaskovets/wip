@@ -15,7 +15,7 @@ enum class version : std::uint8_t {
 template <>
 struct std::formatter<core::ip::version> {
   template <class format_context>
-  constexpr auto parse(format_context& ctx) {
+  constexpr auto parse(format_context& ctx) const {
     return ctx.begin();
   }
 
