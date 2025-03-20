@@ -8,6 +8,7 @@ void BM_as_iso8601(benchmark::State& state) {
     benchmark::DoNotOptimize(_TMP_::datetime::as_iso8601(now));
   }
 }
+BENCHMARK(BM_as_iso8601);
 
 void BM_serialize_format(benchmark::State& state) {
   const auto now = std::chrono::system_clock::now();
@@ -15,6 +16,4 @@ void BM_serialize_format(benchmark::State& state) {
     benchmark::DoNotOptimize(std::format("{}", now));
   }
 }
-
-BENCHMARK(BM_as_iso8601);
 BENCHMARK(BM_serialize_format);
