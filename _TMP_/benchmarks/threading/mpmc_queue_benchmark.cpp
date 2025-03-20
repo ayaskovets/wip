@@ -21,7 +21,6 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, pod_type, int)
       queue_.push(42);
       pop_available_.notify_one();
     }
-
   } else {
     for (const auto _ : state) {
       std::unique_lock<std::mutex> lock(mutex_);
@@ -42,7 +41,6 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, heap_allocated,
       queue_.push(std::make_shared<int>(42));
       pop_available_.notify_one();
     }
-
   } else {
     for (const auto _ : state) {
       std::unique_lock<std::mutex> lock(mutex_);
@@ -66,7 +64,6 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_mpmc_queue, pod_type, int)
     for (const auto _ : state) {
       queue_.push(42);
     }
-
   } else {
     for (const auto _ : state) {
       const int value = queue_.pop();
