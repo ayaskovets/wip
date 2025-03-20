@@ -9,7 +9,7 @@
 
 namespace tests::threading {
 
-TEST(core_threading, locked_mpmc_queue_size) {
+TEST(threading, locked_mpmc_queue_size) {
   static_assert(sizeof(core::threading::locked_mpmc_queue<int, 10>) == 208);
   static_assert(alignof(core::threading::locked_mpmc_queue<int, 10>) == 8);
 
@@ -17,7 +17,7 @@ TEST(core_threading, locked_mpmc_queue_size) {
   static_assert(alignof(core::threading::locked_mpmc_queue<int>) == 8);
 }
 
-TEST(core_threading, locked_mpmc_queue_size_capacity) {
+TEST(threading, locked_mpmc_queue_size_capacity) {
   {
     core::threading::locked_mpmc_queue<std::string> queue(101);
     EXPECT_EQ(queue.capacity(), 101);
@@ -46,7 +46,7 @@ TEST(core_threading, locked_mpmc_queue_size_capacity) {
   }
 }
 
-TEST(core_threading, locked_mpmc_queue_blocking_push) {
+TEST(threading, locked_mpmc_queue_blocking_push) {
   core::threading::locked_mpmc_queue<int> queue(2);
 
   queue.push(1);
@@ -63,7 +63,7 @@ TEST(core_threading, locked_mpmc_queue_blocking_push) {
   consumer.join();
 }
 
-TEST(core_threading, locked_mpmc_queue_blocking_pop) {
+TEST(threading, locked_mpmc_queue_blocking_pop) {
   core::threading::locked_mpmc_queue<int> queue(1);
 
   std::thread producer([&queue] {
@@ -76,7 +76,7 @@ TEST(core_threading, locked_mpmc_queue_blocking_pop) {
   producer.join();
 }
 
-TEST(core_threading, locked_mpmc_queue_unblocking_pop) {
+TEST(threading, locked_mpmc_queue_unblocking_pop) {
   core::threading::locked_mpmc_queue<int> queue(2);
 
   queue.push(1);
@@ -93,7 +93,7 @@ TEST(core_threading, locked_mpmc_queue_unblocking_pop) {
   consumer.join();
 }
 
-TEST(core_threading, locked_mpmc_queue_non_copyable_item_type) {
+TEST(threading, locked_mpmc_queue_non_copyable_item_type) {
   struct non_copyable {
     constexpr non_copyable() noexcept = default;
     constexpr non_copyable(const non_copyable&) = delete;
@@ -109,11 +109,11 @@ TEST(core_threading, locked_mpmc_queue_non_copyable_item_type) {
   }
 }
 
-class core_threading_locked_mpmc_queue_
+class threading_locked_mpmc_queue_
     : public ::testing::TestWithParam<
           std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> {};
 
-TEST_P(core_threading_locked_mpmc_queue_, locked_mpmc_queue_workload) {
+TEST_P(threading_locked_mpmc_queue_, locked_mpmc_queue_workload) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
   std::vector<int> items_to_push(items_size);
@@ -169,8 +169,8 @@ TEST_P(core_threading_locked_mpmc_queue_, locked_mpmc_queue_workload) {
   EXPECT_EQ(popped_items, items_to_push);
 }
 
-INSTANTIATE_TEST_SUITE_P(core_threading_locked_mpmc_queue_,
-                         core_threading_locked_mpmc_queue_,
+INSTANTIATE_TEST_SUITE_P(threading_locked_mpmc_queue_,
+                         threading_locked_mpmc_queue_,
                          ::testing::Values(std::make_tuple(5, 3, 1, 1),
                                            std::make_tuple(100, 10, 4, 1),
                                            std::make_tuple(100, 10, 1, 4),

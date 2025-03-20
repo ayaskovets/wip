@@ -1,4 +1,4 @@
-set(TARGET core_tests)
+set(TARGET tests)
 
 find_package(GTest REQUIRED)
 

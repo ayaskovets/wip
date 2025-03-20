@@ -4,16 +4,15 @@
 
 namespace tests::ip {
 
-TEST(core_ip, address_size) {
+TEST(ip, address_size) {
   static_assert(sizeof(core::ip::address) == 17);
   static_assert(alignof(core::ip::address) == 1);
 }
 
-class core_ip
-    : public ::testing::TestWithParam<std::tuple<
-          std::vector<std::uint8_t>, std::string, core::ip::version>> {};
+class ip : public ::testing::TestWithParam<std::tuple<
+               std::vector<std::uint8_t>, std::string, core::ip::version>> {};
 
-TEST_P(core_ip, address_construction) {
+TEST_P(ip, address_construction) {
   const auto& [bytes, string, version] = GetParam();
 
   const core::ip::address from_bytes(bytes);
@@ -36,7 +35,7 @@ TEST_P(core_ip, address_construction) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    core_ip, core_ip,
+    ip, ip,
     ::testing::Values(
         std::make_tuple(std::vector<std::uint8_t>{255, 255, 255, 255},
                         "255.255.255.255", core::ip::version::kIpV4),
