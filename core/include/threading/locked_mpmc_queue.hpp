@@ -11,9 +11,9 @@
 
 namespace core::threading {
 
-template <typename Item, std::size_t Capacity = std::dynamic_extent>
-  requires(std::is_nothrow_destructible_v<Item> &&
-           std::is_nothrow_move_constructible_v<Item>)
+template <typename T, std::size_t Capacity = std::dynamic_extent>
+  requires(std::is_nothrow_destructible_v<T> &&
+           std::is_nothrow_move_constructible_v<T>)
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr locked_mpmc_queue() noexcept
@@ -37,7 +37,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
  public:
-  void push(Item value) {
+  void push(T value) {
     std::unique_lock<std::mutex> lock(mutex_);
     push_available_cv_.wait(lock,
                             [this] { return queue_.size() < *capacity_; });
@@ -45,10 +45,10 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     pop_available_cv_.notify_one();
   }
 
-  Item pop() {
+  T pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
-    Item front(
+    T front(
         std::move(queue_.front()));  // NOTE: correct iff noexcept(pop_front)
     queue_.pop_front();
     push_available_cv_.notify_one();
@@ -59,7 +59,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
-  std::deque<Item> queue_;
+  std::deque<T> queue_;
   [[no_unique_address]] const utils::conditionally_runtime<
       std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
 };
