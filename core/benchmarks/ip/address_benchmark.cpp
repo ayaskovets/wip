@@ -14,7 +14,7 @@ void BM_ip6_from_bytes(benchmark::State& state) {
   const std::vector<std::uint8_t> bytes{255, 255, 255, 255, 255, 255, 255, 255,
                                         255, 255, 255, 255, 255, 255, 255, 255};
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(core::ip::address(std::move(bytes)));
+    benchmark::DoNotOptimize(core::ip::address(bytes));
   }
 }
 BENCHMARK(BM_ip6_from_bytes);
@@ -30,7 +30,7 @@ BENCHMARK(BM_ip4_from_string);
 void BM_ip6_from_string(benchmark::State& state) {
   const std::string string("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
   for (const auto _ : state) {
-    benchmark::DoNotOptimize(core::ip::address(std::move(string)));
+    benchmark::DoNotOptimize(core::ip::address(string));
   }
 }
 BENCHMARK(BM_ip6_from_string);
