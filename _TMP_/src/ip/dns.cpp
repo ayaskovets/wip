@@ -36,7 +36,9 @@ std::vector<std::uint8_t> as_bytes(const addrinfo &addrinfo) {
 
 }  // namespace
 
-std::vector<address> resolve(std::string_view hostname, protocol protocol) {
+std::vector<address> resolve(std::string_view hostname,
+                             std::optional<protocol> protocol,
+                             std::optional<version> version) {
   addrinfo *results = nullptr;
   SCOPE_EXIT([results]() {
     if (results) {
@@ -45,9 +47,22 @@ std::vector<address> resolve(std::string_view hostname, protocol protocol) {
   });
 
   addrinfo hints{};
-  hints.ai_family = AF_UNSPEC;
+  hints.ai_family = [version]() {
+    if (!version.has_value()) {
+      return AF_UNSPEC;
+    }
+    switch (*version) {
+      case version::kIpV4:
+        return AF_INET;
+      case version::kIpV6:
+        return AF_INET6;
+    }
+  }();
   hints.ai_socktype = [protocol]() {
-    switch (protocol) {
+    if (!protocol.has_value()) {
+      return 0;
+    }
+    switch (*protocol) {
       case protocol::kTcp:
         return SOCK_STREAM;
       case protocol::kUdp:
@@ -61,12 +76,12 @@ std::vector<address> resolve(std::string_view hostname, protocol protocol) {
       break;
     case EAI_SYSTEM:
       throw std::runtime_error(
-          std::format("failed to resolve any {} address at {}: {}", protocol,
-                      hostname, strerror(errno)));
+          std::format("failed to resolve any address at {}: {}", hostname,
+                      strerror(errno)));
     default:
       throw std::runtime_error(
-          std::format("failed to resolve any {} address at {}: {}", protocol,
-                      hostname, gai_strerror(error)));
+          std::format("failed to resolve any address at {}: {}", hostname,
+                      gai_strerror(error)));
   }
 
   std::vector<address> addresses;
