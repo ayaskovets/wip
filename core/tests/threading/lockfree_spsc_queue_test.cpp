@@ -9,7 +9,7 @@
 
 namespace tests::threading {
 
-TEST(core_threading, lockfree_spsc_queue_size) {
+TEST(threading, lockfree_spsc_queue_size) {
   static_assert(sizeof(core::threading::lockfree_spsc_queue<int, 128>) == 320);
   static_assert(alignof(core::threading::lockfree_spsc_queue<int, 128>) == 64);
 
@@ -17,14 +17,14 @@ TEST(core_threading, lockfree_spsc_queue_size) {
   static_assert(alignof(core::threading::lockfree_spsc_queue<int>) == 64);
 }
 
-TEST(core_threading, lockfree_spsc_queue_size_capacity) {
+TEST(threading, lockfree_spsc_queue_size_capacity) {
   EXPECT_EQ(core::threading::lockfree_spsc_queue<std::string>(128).capacity(),
             128);
   EXPECT_EQ(core::threading::lockfree_spsc_queue<std::string>(64).capacity(),
             64);
 }
 
-TEST(core_threading, lockfree_spsc_queue_sanity_check) {
+TEST(threading, lockfree_spsc_queue_sanity_check) {
   core::threading::lockfree_spsc_queue<int> queue(2);
 
   EXPECT_FALSE(queue.try_pop().has_value());
@@ -39,7 +39,7 @@ TEST(core_threading, lockfree_spsc_queue_sanity_check) {
   EXPECT_FALSE(queue.try_pop().has_value());
 }
 
-TEST(core_threading, lockfree_spsc_queue_rollover) {
+TEST(threading, lockfree_spsc_queue_rollover) {
   core::threading::lockfree_spsc_queue<int> queue(5);
 
   for (std::size_t i = 0; i < 100; ++i) {
@@ -48,7 +48,7 @@ TEST(core_threading, lockfree_spsc_queue_rollover) {
   }
 }
 
-TEST(core_threading, lockfree_spsc_queue_non_copyable_item_type) {
+TEST(threading, lockfree_spsc_queue_non_copyable_item_type) {
   struct non_copyable {
     constexpr non_copyable() noexcept = default;
     constexpr non_copyable(const non_copyable&) = delete;
@@ -64,7 +64,7 @@ TEST(core_threading, lockfree_spsc_queue_non_copyable_item_type) {
   }
 }
 
-TEST(core_threading, lockfree_spsc_queue_item_destructor) {
+TEST(threading, lockfree_spsc_queue_item_destructor) {
   struct non_copyable_counter {
     constexpr non_copyable_counter(std::size_t& constructed,
                                    std::size_t& move_constructed,
@@ -132,10 +132,10 @@ TEST(core_threading, lockfree_spsc_queue_item_destructor) {
   }
 }
 
-class core_threading_lockfree_spsc_queue
+class threading_lockfree_spsc_queue
     : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
 
-TEST_P(core_threading_lockfree_spsc_queue, lockfree_spsc_queue_workload) {
+TEST_P(threading_lockfree_spsc_queue, lockfree_spsc_queue_workload) {
   const auto& [items_size, queue_size] = GetParam();
 
   std::vector<int> items_to_push(items_size);
@@ -175,7 +175,7 @@ TEST_P(core_threading_lockfree_spsc_queue, lockfree_spsc_queue_workload) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    core_threading_lockfree_spsc_queue, core_threading_lockfree_spsc_queue,
+    threading_lockfree_spsc_queue, threading_lockfree_spsc_queue,
     ::testing::Values(std::make_tuple(5, 3), std::make_tuple(8, 4),
                       std::make_tuple(5, 1), std::make_tuple(6, 2),
                       std::make_tuple(7, 2), std::make_tuple(10, 1),

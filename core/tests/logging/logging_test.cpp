@@ -4,12 +4,12 @@
 
 namespace tests::logging {
 
-TEST(core_logging, size) {
+TEST(logging, size) {
   static_assert(sizeof(core::logging::logger) == 48);
   static_assert(alignof(core::logging::logger) == 8);
 }
 
-TEST(core_logging, writer) {
+TEST(logging, writer) {
   std::string buffer;
 
   const auto level = core::logging::level::kInfo;
@@ -23,7 +23,7 @@ TEST(core_logging, writer) {
   EXPECT_EQ(buffer, "42");
 }
 
-TEST(core_logging, skip) {
+TEST(logging, skip) {
   std::size_t logs_count = 0;
 
   const auto level = core::logging::level::kWarn;
@@ -48,7 +48,7 @@ TEST(core_logging, skip) {
   EXPECT_EQ(logs_count, 2);
 }
 
-TEST(core_logging, renderer) {
+TEST(logging, renderer) {
   std::string buffer;
 
   const auto level = core::logging::level::kInfo;

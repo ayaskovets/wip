@@ -1,4 +1,4 @@
-set(TARGET core_benchmarks)
+set(TARGET benchmarks)
 
 find_package(benchmark REQUIRED)
 
