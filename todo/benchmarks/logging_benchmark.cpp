@@ -8,7 +8,7 @@ namespace logging = todo::logging;
 
 void BM_default(benchmark::State& state) {
   for (const auto _ : state) {
-    logging::log_info("{}\n", 42);
+    logging::info("{}\n", 42);
   }
 }
 

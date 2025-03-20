@@ -6,14 +6,13 @@ namespace todo::logging {
 
 namespace {
 
-constexpr auto kGreenColor = "\x1B[32m";
-constexpr auto kRedColor = "\x1B[31m";
-constexpr auto kYellowColor = "\x1B[33m";
-constexpr auto kResetColor = "\033[0m";
 constexpr auto kSetColor(level level) noexcept -> auto {
+  constexpr auto kGreenColor = "\x1B[32m";
+  constexpr auto kRedColor = "\x1B[31m";
+  constexpr auto kYellowColor = "\x1B[33m";
   switch (level) {
     case level::kDebug:
-      return kResetColor;
+      return "";
     case level::kInfo:
       return kGreenColor;
     case level::kWarn:
@@ -22,6 +21,7 @@ constexpr auto kSetColor(level level) noexcept -> auto {
       return kRedColor;
   }
 }
+constexpr auto kResetColor = "\033[0m";
 
 }  // namespace
 
@@ -49,7 +49,7 @@ const renderer& renderer::kColoredLeveledTimestamped() {
                               std::format_args args) -> std::string {
     return std::vformat(
         std::format("{}\t{}{}{}\t{}\n",
-                    datetime::to_iso8601(std::chrono::system_clock::now()),
+                    datetime::as_iso8601(std::chrono::system_clock::now()),
                     kSetColor(level), level, kResetColor, fmt),
         std::move(args));
   });

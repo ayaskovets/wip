@@ -6,10 +6,10 @@ namespace benchmarks::datetime {
 
 namespace datetime = todo::datetime;
 
-void BM_to_iso8601(benchmark::State& state) {
+void BM_as_iso8601(benchmark::State& state) {
   const auto now = std::chrono::system_clock::now();
   for (const auto _ : state) {
-    [[maybe_unused]] const auto __ = datetime::to_iso8601(now);
+    [[maybe_unused]] const auto __ = datetime::as_iso8601(now);
   }
 }
 
@@ -22,5 +22,5 @@ void BM_serialize_format(benchmark::State& state) {
 
 }  // namespace benchmarks::datetime
 
-BENCHMARK(benchmarks::datetime::BM_to_iso8601);
+BENCHMARK(benchmarks::datetime::BM_as_iso8601);
 BENCHMARK(benchmarks::datetime::BM_serialize_format);
