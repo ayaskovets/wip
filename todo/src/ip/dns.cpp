@@ -53,12 +53,9 @@ std::vector<address> resolve(std::string_view hostname, protocol protocol) {
     }
   });
 
-  const addrinfo hints{
-      .ai_family = AF_UNSPEC,
-      .ai_socktype = kSocktype(protocol),
-      .ai_flags = 0,
-      .ai_protocol = 0,
-  };
+  addrinfo hints{};
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = kSocktype(protocol);
 
   switch (const auto error =
               getaddrinfo(hostname.data(), nullptr, &hints, &results)) {
