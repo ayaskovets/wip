@@ -17,30 +17,28 @@ constexpr std::size_t kIpV6Bytes = 16;
 address::address(const std::uint8_t* data, std::size_t size) {
   switch (size) {
     case kIpV4Bytes:
-      std::copy_n(data, size, data_.begin());
+      std::memcpy(data_.begin(), data, size);
       version_ = version::kIpV4;
       break;
     case kIpV6Bytes:
-      std::copy_n(data, size, data_.begin());
+      std::memcpy(data_.begin(), data, size);
       version_ = version::kIpV6;
       break;
     default:
-      throw std::invalid_argument(std::format("invalid address"));
+      throw std::invalid_argument(std::format("invalid address size {}", size));
   }
 }
 
 address::address(std::string_view string_view) {
-  if (inet_pton(AF_INET, string_view.data(), data_.begin())) {
+  if (string_view.size() <= INET_ADDRSTRLEN &&
+      inet_pton(AF_INET, string_view.data(), data_.begin())) {
     version_ = version::kIpV4;
-    return;
-  }
-
-  if (inet_pton(AF_INET6, string_view.data(), data_.begin())) {
+  } else if (string_view.size() <= INET6_ADDRSTRLEN &&
+             inet_pton(AF_INET6, string_view.data(), data_.begin())) {
     version_ = version::kIpV6;
-    return;
+  } else {
+    throw std::invalid_argument(std::format("invalid address {}", string_view));
   }
-
-  throw std::invalid_argument(std::format("invalid address {}", string_view));
 }
 
 bool address::operator==(const address& that) const noexcept {
