@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include "datetime/fmt.hpp"
+#include "datetime/iso8601.hpp"
 
 namespace benchmarks::datetime {
 
