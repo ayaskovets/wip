@@ -5,9 +5,9 @@ find_package(GTest REQUIRED)
 add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
-    # datetime_test.cpp
-    # ip_test.cpp
-    # logging_test.cpp
+    datetime_test.cpp
+    ip_test.cpp
+    logging_test.cpp
     queue_test.cpp
 )
 target_compile_features(${TARGET}
