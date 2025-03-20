@@ -43,9 +43,9 @@ BENCHMARK_TEMPLATE(BM_locked_spsc_queue_spsc_throughput, int)
     ->Args({1024, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
-    ->Unit(benchmark::kMicrosecond);
+    ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_locked_spsc_queue_spsc_throughput, std::shared_ptr<int>)
     ->Args({1024, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
-    ->Unit(benchmark::kMicrosecond);
+    ->Unit(benchmark::kMillisecond);

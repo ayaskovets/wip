@@ -44,12 +44,12 @@ BENCHMARK_TEMPLATE(BM_locked_mpmc_queue_spsc_throughput, int)
     ->Args({1024, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
-    ->Unit(benchmark::kMicrosecond);
+    ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_locked_mpmc_queue_spsc_throughput, std::shared_ptr<int>)
     ->Args({1024, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
-    ->Unit(benchmark::kMicrosecond);
+    ->Unit(benchmark::kMillisecond);
 
 template <typename ValueConstructor>
 void BM_locked_mpmc_queue_mpmc_throughput(benchmark::State& state) {
@@ -105,7 +105,7 @@ BENCHMARK_TEMPLATE(BM_locked_mpmc_queue_mpmc_throughput, int)
     ->Args({1024, 1048576, 4, 4})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
-    ->Unit(benchmark::kMicrosecond);
+    ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_locked_mpmc_queue_mpmc_throughput, std::shared_ptr<int>)
     ->Args({1024, 1048576, 2, 2})
     ->Args({1024, 1048576, 1, 4})
@@ -113,4 +113,4 @@ BENCHMARK_TEMPLATE(BM_locked_mpmc_queue_mpmc_throughput, std::shared_ptr<int>)
     ->Args({1024, 1048576, 4, 4})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
-    ->Unit(benchmark::kMicrosecond);
+    ->Unit(benchmark::kMillisecond);
