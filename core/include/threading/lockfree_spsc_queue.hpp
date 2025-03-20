@@ -1,6 +1,8 @@
 #pragma once
 
 #include <atomic>
+#include <cerrno>
+#include <format>
 #include <optional>
 #include <span>
 #include <type_traits>
@@ -25,7 +27,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
 
  private:
   constinit static inline auto kAllocator = [](std::size_t size) {
-    return static_cast<AlignedT*>(std::malloc(sizeof(AlignedT) * (size + 1)));
+    return static_cast<AlignedT*>(std::malloc(sizeof(AlignedT) * size));
   };
 
   constinit static inline auto kDeleter = [](AlignedT* item) {
@@ -37,7 +39,8 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     requires(Capacity != std::dynamic_extent)
       : ring_buffer_(kAllocator(Capacity + 1)) {
     if (!ring_buffer_) {
-      throw std::runtime_error("failed to allocate memory");
+      throw std::runtime_error(
+          std::format("failed to allocate memory: {}", std::strerror(errno)));
     }
   }
 
@@ -45,7 +48,8 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     requires(Capacity == std::dynamic_extent)
       : ring_buffer_(kAllocator(capacity + 1)), capacity_(capacity) {
     if (!ring_buffer_) {
-      throw std::runtime_error("failed to allocate memory");
+      throw std::runtime_error(
+          std::format("failed to allocate memory :{}", std::strerror(errno)));
     }
   }
 
