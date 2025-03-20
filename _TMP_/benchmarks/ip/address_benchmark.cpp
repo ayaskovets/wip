@@ -19,7 +19,7 @@ void BM_ip4_from_string(benchmark::State& state) {
 }
 
 void BM_ip4_as_string(benchmark::State& state) {
-  const auto address = _TMP_::ip::address("127.0.0.1");
+  const _TMP_::ip::address address("127.0.0.1");
   for (const auto _ : state) {
     benchmark::DoNotOptimize(address.as_string());
   }

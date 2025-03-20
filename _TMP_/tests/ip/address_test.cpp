@@ -16,8 +16,8 @@ class _TMP__ip
 TEST_P(_TMP__ip, address_construction) {
   const auto [bytes, string, version] = GetParam();
 
-  const auto from_bytes = _TMP_::ip::address(bytes);
-  const auto from_string = _TMP_::ip::address(string);
+  const _TMP_::ip::address from_bytes(bytes);
+  const _TMP_::ip::address from_string(string);
 
   EXPECT_EQ(from_bytes.as_bytes(), bytes);
   EXPECT_EQ(from_bytes.as_string(), string);
