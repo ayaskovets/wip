@@ -17,7 +17,7 @@ constexpr std::size_t kGuessResultsSize = 5;
 ip::endpoint to_endpoint(const ::addrinfo &addrinfo) {
   switch (addrinfo.ai_family) {
     case AF_INET: {
-      const auto *sockaddr =
+      const auto sockaddr =
           reinterpret_cast<const ::sockaddr_in *>(addrinfo.ai_addr);
 
       const auto bytes = std::span<const std::uint8_t>(
@@ -29,7 +29,7 @@ ip::endpoint to_endpoint(const ::addrinfo &addrinfo) {
           ip::port(sockaddr->sin_port, ip::port::network_byte_order));
     }
     case AF_INET6: {
-      const auto *sockaddr =
+      const auto sockaddr =
           reinterpret_cast<const ::sockaddr_in6 *>(addrinfo.ai_addr);
 
       const auto bytes = std::span<const std::uint8_t>(
