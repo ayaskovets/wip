@@ -15,4 +15,22 @@ TEST(todo, as_iso8601) {
   EXPECT_EQ(datetime::as_iso8601(time_point), timestamp);
 }
 
+TEST(todo, as_iso8601_before_epoch) {
+  using namespace std::chrono;
+  const system_clock::time_point time_point =
+      sys_days{January / 9 / 1300} + 12h + 35min + 34s + 125ms + 322us;
+  const auto timestamp = "1300-01-09T12:35:34.125322Z";
+
+  EXPECT_EQ(datetime::as_iso8601(time_point), timestamp);
+}
+
+TEST(todo, as_iso8601_after_max_time) {
+  using namespace std::chrono;
+  const system_clock::time_point time_point =
+      sys_days{January / 9 / 3235} + 12h + 35min + 34s + 125ms + 322us;
+  const auto timestamp = "3235-01-09T12:35:34.125322Z";
+
+  EXPECT_EQ(datetime::as_iso8601(time_point), timestamp);
+}
+
 }  // namespace tests::logging
