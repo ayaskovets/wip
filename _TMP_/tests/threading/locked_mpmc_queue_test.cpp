@@ -10,26 +10,11 @@
 namespace tests::threading {
 
 TEST(_TMP__threading, mpmc_queue_size) {
-  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int, 10>) == 208);
-  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 8);
+  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int, 10>) == 256);
+  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 64);
 
-  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int>) == 216);
-  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 8);
-}
-
-TEST(_TMP__threading, mpmc_queue_try_push_single_threaded) {
-  _TMP_::threading::locked_mpmc_queue<int> queue(1);
-  EXPECT_TRUE(queue.try_push(42));
-  EXPECT_FALSE(queue.try_push(42));
-}
-
-TEST(_TMP__threading, mpmc_queue_try_pop_single_threaded) {
-  _TMP_::threading::locked_mpmc_queue<int> queue(1);
-  EXPECT_FALSE(queue.try_pop().has_value());
-
-  queue.push(42);
-  EXPECT_EQ(queue.try_pop(), 42);
-  EXPECT_FALSE(queue.try_pop().has_value());
+  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int>) == 256);
+  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 64);
 }
 
 TEST(_TMP__threading, mpmc_queue_size_capacity) {
@@ -91,7 +76,7 @@ TEST(_TMP__threading, mpmc_queue_blocking_pop) {
   producer.join();
 }
 
-TEST(_TMP__threading, mpmc_queue_unblocking_try_pop) {
+TEST(_TMP__threading, mpmc_queue_unblocking_pop) {
   _TMP_::threading::locked_mpmc_queue<int> queue(2);
 
   queue.push(1);
@@ -103,7 +88,7 @@ TEST(_TMP__threading, mpmc_queue_unblocking_try_pop) {
   });
 
   queue.push(3);
-  EXPECT_EQ(queue.try_pop(), 2);
+  EXPECT_EQ(queue.pop(), 2);
 
   consumer.join();
 }
@@ -119,95 +104,8 @@ TEST(_TMP__threading, mpmc_queue_non_copyable_item_type) {
 
   _TMP_::threading::locked_mpmc_queue<non_copyable> queue(1);
   {
-    queue.try_push(non_copyable{});
-    [[maybe_unused]] const auto value = queue.try_pop();
-  }
-  {
     queue.push(non_copyable{});
     [[maybe_unused]] const auto value = queue.pop();
-  }
-}
-
-TEST(_TMP__threading, mpmc_queue_throw_on_item_move) {
-  static const std::runtime_error kException("exception");
-
-  auto should_throw = std::make_shared<bool>(true);
-
-  class throw_on_move_or_copy_if final {
-   public:
-    throw_on_move_or_copy_if(std::shared_ptr<bool> should_throw)
-        : should_throw_(should_throw) {}
-    throw_on_move_or_copy_if(throw_on_move_or_copy_if&& that)
-        : should_throw_(that.should_throw_) {
-      if (*should_throw_) {
-        throw kException;
-      }
-    }
-    throw_on_move_or_copy_if& operator=(throw_on_move_or_copy_if&& that) {
-      should_throw_ = that.should_throw_;
-      if (*should_throw_) {
-        throw kException;
-      }
-      return *this;
-    }
-    throw_on_move_or_copy_if(const throw_on_move_or_copy_if& that)
-        : should_throw_(that.should_throw_) {
-      if (*should_throw_) {
-        throw kException;
-      }
-    }
-    throw_on_move_or_copy_if& operator=(const throw_on_move_or_copy_if& that) {
-      should_throw_ = that.should_throw_;
-      if (*should_throw_) {
-        throw kException;
-      }
-      return *this;
-    }
-
-   private:
-    std::shared_ptr<bool> should_throw_;
-  };
-
-  _TMP_::threading::locked_mpmc_queue<throw_on_move_or_copy_if> queue(1);
-
-  {
-    try {
-      queue.push(throw_on_move_or_copy_if(should_throw));
-      GTEST_FAIL();
-    } catch (const std::runtime_error& e) {
-      EXPECT_EQ(e.what(), kException.what());
-    }
-    EXPECT_EQ(queue.size(), 0);
-    try {
-      queue.try_push(throw_on_move_or_copy_if(should_throw));
-      GTEST_FAIL();
-    } catch (const std::runtime_error& e) {
-      EXPECT_EQ(e.what(), kException.what());
-    }
-    EXPECT_EQ(queue.size(), 0);
-  }
-  {
-    *should_throw = false;
-    queue.push(throw_on_move_or_copy_if(should_throw));
-    EXPECT_EQ(queue.size(), 1);
-    *should_throw = true;
-  }
-  {
-    try {
-      queue.try_pop();
-      GTEST_FAIL();
-    } catch (const std::runtime_error& e) {
-      EXPECT_EQ(e.what(), kException.what());
-    }
-    EXPECT_EQ(queue.size(), 1);
-
-    try {
-      queue.pop();
-      GTEST_FAIL();
-    } catch (const std::runtime_error& e) {
-      EXPECT_EQ(e.what(), kException.what());
-    }
-    EXPECT_EQ(queue.size(), 1);
   }
 }
 
@@ -233,36 +131,35 @@ TEST_P(_TMP__threading, mpmc_queue_mpmc_threads) {
   std::vector<std::thread> threads;
   threads.reserve(producers + consumers);
 
-  for (std::size_t i = 0; i < producers; ++i) {
-    threads.emplace_back([&latch, &queue, &items_to_push, &pushed]() {
-      latch.arrive_and_wait();
-      while (true) {
-        const std::size_t index =
-            pushed.fetch_add(1, std::memory_order::relaxed);
-        if (index >= items_to_push.size()) {
-          return;
-        }
-        queue.push(items_to_push[index]);
+  const auto producer = [&latch, &queue, &items_to_push, &pushed]() {
+    latch.arrive_and_wait();
+    while (true) {
+      const std::size_t index = pushed.fetch_add(1, std::memory_order::relaxed);
+      if (index >= items_to_push.size()) {
+        return;
       }
-    });
-  }
+      queue.push(items_to_push[index]);
+    }
+  };
 
+  const auto consumer = [&latch, &queue, &items_to_push, &mutex,
+                         &popped_items]() {
+    latch.arrive_and_wait();
+    while (true) {
+      std::unique_lock<std::mutex> lock(mutex);
+      if (popped_items.size() >= items_to_push.size()) {
+        return;
+      }
+      popped_items.push_back(queue.pop());
+    }
+  };
+
+  for (std::size_t i = 0; i < producers; ++i) {
+    threads.emplace_back(producer);
+  }
   for (std::size_t i = 0; i < consumers; ++i) {
-    threads.emplace_back(
-        [&latch, &queue, &items_to_push, &mutex, &popped_items]() {
-          latch.arrive_and_wait();
-          while (true) {
-            std::unique_lock<std::mutex> lock(mutex);
-            if (auto item = queue.try_pop(); item.has_value()) {
-              popped_items.push_back(std::move(item.value()));
-            }
-            if (popped_items.size() >= items_to_push.size()) {
-              return;
-            }
-          }
-        });
+    threads.emplace_back(consumer);
   }
-
   for (auto& thread : threads) {
     thread.join();
   }
