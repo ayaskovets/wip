@@ -21,8 +21,9 @@ class logger {
 
  public:
   template <typename... Args>
-  constexpr void operator()(level level, std::format_string<Args...> fmt,
-                            Args&&... args) const {
+  constexpr decltype(auto) operator()(level level,
+                                      std::format_string<Args...> fmt,
+                                      Args&&... args) const {
     if (level_ <= level) [[likely]] {
       writer_(level,
               renderer_(level, fmt.get(),
