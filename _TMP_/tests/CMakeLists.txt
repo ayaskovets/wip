@@ -9,8 +9,10 @@ target_sources(${TARGET}
     ip/address_test.cpp
     ip/dns_test.cpp
     logging/logging_test.cpp
-    threading/mpmc_queue_test.cpp
+    threading/lockfree_spsc_queue_test.cpp
+    threading/locked_mpmc_queue_test.cpp
     utils/conditionally_runtime_test.cpp
+    utils/predicates_test.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_20
