@@ -6,10 +6,10 @@
 namespace core::logging {
 
 enum class level : std::uint8_t {
-  kDebug = 0,
-  kInfo = 1,
-  kWarn = 2,
-  kError = 3,
+  kDebug,
+  kInfo,
+  kWarn,
+  kError,
 };
 
 }  // namespace core::logging

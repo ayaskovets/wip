@@ -9,7 +9,6 @@
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
-#include "utils/predicates.hpp"
 
 namespace core::threading {
 

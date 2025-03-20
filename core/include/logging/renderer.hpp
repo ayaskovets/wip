@@ -9,7 +9,7 @@ namespace core::logging {
 
 class renderer final {
  private:
-  using render_t = std::string (*)(level level, std::string_view fmt,
+  using render_t = std::string (*)(logging::level level, std::string_view fmt,
                                    std::format_args args);
 
  public:
@@ -23,7 +23,7 @@ class renderer final {
       : render_(std::move(render)) {}
 
  public:
-  constexpr std::string operator()(level level, std::string_view fmt,
+  constexpr std::string operator()(logging::level level, std::string_view fmt,
                                    std::format_args args) const {
     return render_(level, fmt, std::move(args));
   }

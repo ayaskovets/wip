@@ -36,9 +36,9 @@ std::vector<std::uint8_t> as_bytes(const addrinfo &addrinfo) {
 
 }  // namespace
 
-std::vector<address> resolve(std::string_view hostname,
-                             std::optional<protocol> protocol,
-                             std::optional<version> version) {
+std::vector<ip::address> resolve(std::string_view hostname,
+                                 std::optional<ip::protocol> protocol,
+                                 std::optional<ip::version> version) {
   addrinfo *results = nullptr;
   SCOPE_EXIT([results] {
     if (results) {
@@ -52,9 +52,9 @@ std::vector<address> resolve(std::string_view hostname,
       return AF_UNSPEC;
     }
     switch (*version) {
-      case version::kIpV4:
+      case ip::version::kIpV4:
         return AF_INET;
-      case version::kIpV6:
+      case ip::version::kIpV6:
         return AF_INET6;
     }
   }();
@@ -63,9 +63,9 @@ std::vector<address> resolve(std::string_view hostname,
       return 0;
     }
     switch (*protocol) {
-      case protocol::kTcp:
+      case ip::protocol::kTcp:
         return SOCK_STREAM;
-      case protocol::kUdp:
+      case ip::protocol::kUdp:
         return SOCK_DGRAM;
     }
   }();
@@ -84,7 +84,7 @@ std::vector<address> resolve(std::string_view hostname,
                       gai_strerror(error)));
   }
 
-  std::vector<address> addresses;
+  std::vector<ip::address> addresses;
   for (const addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
     addresses.emplace_back(as_bytes(*ptr));
   }
