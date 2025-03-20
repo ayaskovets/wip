@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include "utils/conditionally_runtime.hpp"
+#include "utils/constants.hpp"
 
 namespace _TMP_::threading {
 
@@ -40,14 +41,14 @@ class locked_mpmc_queue final {
   void push(ItemType value) {
     std::unique_lock<std::mutex> lock(mutex_);
     push_available_cv_.wait(lock,
-                            [this]() { return queue_.size() < *capacity_; });
+                            [this] { return queue_.size() < *capacity_; });
     queue_.push_back(std::move(value));
     pop_available_cv_.notify_one();
   }
 
   ItemType pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    pop_available_cv_.wait(lock, [this]() { return !queue_.empty(); });
+    pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
     ItemType front(std::move(queue_.front()));
     queue_.pop_front();  // NOTE: correct iff noexcept(pop_front)
     push_available_cv_.notify_one();
@@ -55,7 +56,7 @@ class locked_mpmc_queue final {
   }
 
  private:
-  alignas(64) mutable std::mutex mutex_;
+  mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
   std::deque<ItemType> queue_;
