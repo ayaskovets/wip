@@ -1,7 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <format>
 #include <optional>
 #include <span>
 #include <type_traits>
