@@ -4,6 +4,7 @@
 
 #include <cerrno>
 #include <format>
+#include <span>
 
 #include "utils/declarative.hpp"
 
@@ -11,23 +12,37 @@ namespace core::ip {
 
 namespace {
 
-std::vector<std::uint8_t> to_bytes(const ::addrinfo &addrinfo) {
-  std::vector<std::uint8_t> bytes;
+constexpr std::size_t kGuessResultsSize = 5;
+
+std::pair<ip::address, ip::port> to_address_port_pair(
+    const ::addrinfo &addrinfo) noexcept(false) {
   switch (addrinfo.ai_family) {
-    case AF_INET:
-      bytes.resize(sizeof(::in_addr));
-      std::memcpy(
-          bytes.data(),
-          &reinterpret_cast<const ::sockaddr_in &>(*addrinfo.ai_addr).sin_addr,
+    case AF_INET: {
+      const auto *sockaddr =
+          reinterpret_cast<const ::sockaddr_in *>(addrinfo.ai_addr);
+
+      const auto bytes = std::span<const std::uint8_t>(
+          &reinterpret_cast<const std::uint8_t &>(sockaddr->sin_addr),
           sizeof(::in_addr));
-      return bytes;
-    case AF_INET6:
-      bytes.resize(sizeof(::in6_addr));
-      std::memcpy(bytes.data(),
-                  &reinterpret_cast<const ::sockaddr_in6 &>(*addrinfo.ai_addr)
-                       .sin6_addr,
-                  sizeof(::in6_addr));
-      return bytes;
+
+      return std::pair<ip::address, ip::port>(
+          std::piecewise_construct, std::forward_as_tuple(bytes),
+          std::forward_as_tuple(sockaddr->sin_port,
+                                ip::port::network_byte_order));
+    }
+    case AF_INET6: {
+      const auto *sockaddr =
+          reinterpret_cast<const ::sockaddr_in6 *>(addrinfo.ai_addr);
+
+      const auto bytes = std::span<const std::uint8_t>(
+          &reinterpret_cast<const std::uint8_t &>(sockaddr->sin6_addr),
+          sizeof(::in6_addr));
+
+      return std::pair<ip::address, ip::port>(
+          std::piecewise_construct, std::forward_as_tuple(bytes),
+          std::forward_as_tuple(sockaddr->sin6_port,
+                                ip::port::network_byte_order));
+    }
     default:
       throw std::runtime_error(
           std::format("unexpected address family {}", addrinfo.ai_family));
@@ -36,9 +51,9 @@ std::vector<std::uint8_t> to_bytes(const ::addrinfo &addrinfo) {
 
 }  // namespace
 
-std::vector<ip::address> resolve(std::string_view hostname,
-                                 std::optional<ip::protocol> protocol,
-                                 std::optional<ip::version> version) {
+std::vector<std::pair<ip::address, ip::port>> resolve(
+    std::string_view hostname, std::optional<ip::protocol> protocol,
+    std::optional<ip::version> version) noexcept(false) {
   ::addrinfo *results = nullptr;
   const utils::scope_exit _([results]() noexcept {
     if (results) {
@@ -84,9 +99,10 @@ std::vector<ip::address> resolve(std::string_view hostname,
                       ::gai_strerror(error)));
   }
 
-  std::vector<ip::address> addresses;
+  std::vector<std::pair<ip::address, ip::port>> addresses;
+  addresses.reserve(kGuessResultsSize);
   for (const ::addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
-    addresses.emplace_back(to_bytes(*ptr));
+    addresses.emplace_back(to_address_port_pair(*ptr));
   }
   return addresses;
 }
