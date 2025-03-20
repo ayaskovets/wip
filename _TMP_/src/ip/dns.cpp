@@ -11,15 +11,6 @@ namespace _TMP_::ip {
 
 namespace {
 
-constexpr auto kSocktype(protocol protocol) noexcept {
-  switch (protocol) {
-    case protocol::kTcp:
-      return SOCK_STREAM;
-    case protocol::kUdp:
-      return SOCK_DGRAM;
-  }
-}
-
 std::vector<std::uint8_t> as_bytes(const addrinfo &addrinfo) {
   std::vector<std::uint8_t> bytes;
   switch (addrinfo.ai_family) {
@@ -55,7 +46,14 @@ std::vector<address> resolve(std::string_view hostname, protocol protocol) {
 
   addrinfo hints{};
   hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = kSocktype(protocol);
+  hints.ai_socktype = [protocol]() {
+    switch (protocol) {
+      case protocol::kTcp:
+        return SOCK_STREAM;
+      case protocol::kUdp:
+        return SOCK_DGRAM;
+    }
+  }();
 
   switch (const auto error =
               getaddrinfo(hostname.data(), nullptr, &hints, &results)) {
