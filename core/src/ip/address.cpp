@@ -81,7 +81,7 @@ bool address::operator==(const address& that) const noexcept {
 }
 
 bool address::operator!=(const address& that) const noexcept {
-  return operator==(that);
+  return !operator==(that);
 }
 
 std::span<const std::uint8_t> address::get_bytes() const noexcept {
