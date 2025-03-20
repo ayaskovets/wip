@@ -15,19 +15,26 @@ namespace _TMP_::threading {
 
 template <typename ItemType, std::size_t Capacity = std::dynamic_extent>
   requires(std::is_nothrow_destructible_v<ItemType> &&
-           std::is_nothrow_move_constructible_v<ItemType>)
+           std::is_nothrow_move_constructible_v<ItemType> &&
+           sizeof(ItemType) <= utils::kCacheLineSize)
 class lockfree_spsc_queue final {
+  struct alignas(utils::kCacheLineSize) AlignedItemType {
+    ItemType value;
+  };
+
  public:
   constexpr lockfree_spsc_queue()
     requires(Capacity != std::dynamic_extent)
-  {
-    ring_buffer_.resize(*capacity_ + 1);
-  }
+      : ring_buffer_(new AlignedItemType[Capacity + 1]) {}
 
   constexpr explicit lockfree_spsc_queue(std::size_t capacity)
     requires(Capacity == std::dynamic_extent)
-      : capacity_(capacity) {
-    ring_buffer_.resize(*capacity_ + 1);
+      : ring_buffer_(new AlignedItemType[capacity + 1]), capacity_(capacity) {}
+
+  constexpr ~lockfree_spsc_queue() {
+    while (try_pop().has_value()) {
+    }
+    delete[] ring_buffer_;
   }
 
  public:
@@ -42,7 +49,8 @@ class lockfree_spsc_queue final {
          (cached_pop_from_ = pop_from_.load(std::memory_order::acquire)))) {
       return false;
     }
-    std::construct_at(&ring_buffer_.at(push_to), std::move(value));
+    std::construct_at(&reinterpret_cast<ItemType&>(ring_buffer_[push_to]),
+                      std::move(value));
     push_to_.store(next_push_to, std::memory_order::release);
     return true;
   }
@@ -55,21 +63,23 @@ class lockfree_spsc_queue final {
          (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
       return value;
     }
-    value.emplace(std::move(ring_buffer_.at(pop_from)));
+    value.emplace(
+        std::move(reinterpret_cast<ItemType&>(ring_buffer_[pop_from])));
+    std::destroy_at(&ring_buffer_[pop_from]);
     const auto next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
     pop_from_.store(next_pop_from, std::memory_order::release);
     return value;
   }
 
  private:
-  std::vector<ItemType> ring_buffer_;
+  AlignedItemType* ring_buffer_ = nullptr;
+  [[no_unique_address]] const utils::conditionally_runtime<
+      std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
+
   alignas(utils::kCacheLineSize) std::atomic<std::size_t> push_to_ = 0;
   alignas(utils::kCacheLineSize) std::size_t cached_push_to_ = 0;
   alignas(utils::kCacheLineSize) std::atomic<std::size_t> pop_from_ = 0;
   alignas(utils::kCacheLineSize) std::size_t cached_pop_from_ = 0;
-  [[no_unique_address]] alignas(utils::kCacheLineSize) const
-      utils::conditionally_runtime<std::size_t, Capacity == std::dynamic_extent,
-                                   Capacity> capacity_;
 };
 
 }  // namespace _TMP_::threading
