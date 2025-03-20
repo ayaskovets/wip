@@ -17,13 +17,13 @@ enum class level : std::uint8_t {
 template <>
 struct std::formatter<todo::logging::level> {
   template <class format_context>
-  [[nodiscard]] constexpr auto parse(format_context& ctx) {
+  constexpr auto parse(format_context& ctx) {
     return ctx.begin();
   }
 
   template <class format_context>
-  [[nodiscard]] constexpr auto format(const todo::logging::level& level,
-                                      format_context& ctx) const {
+  constexpr auto format(const todo::logging::level& level,
+                        format_context& ctx) const {
     switch (level) {
       case todo::logging::level::kDebug:
         return std::format_to(ctx.out(), "DEBUG");
