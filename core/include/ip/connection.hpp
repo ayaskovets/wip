@@ -13,7 +13,7 @@ class connection final : utils::non_copyable {
 
  public:
   connection(connection&& that) noexcept;
-  connection& operator=(connection&& that) noexcept;
+  connection& operator=(connection&& that);
 
  public:
   ip::address get_address() const noexcept;
