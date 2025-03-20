@@ -3,7 +3,7 @@
 #include "ip/acceptor.hpp"
 
 void BM_acceptor_try_accept(benchmark::State& state) {
-  const auto acceptor = core::ip::acceptor(
+  const core::ip::acceptor acceptor(
       core::ip::address::kLocalhost(core::ip::version::kIpV4),
       core::ip::port(9996));
 
