@@ -2,8 +2,6 @@
 
 #include "ip/dns.hpp"
 
-namespace benchmarks::ip {
-
 void BM_resolve_localhost(benchmark::State& state) {
   for (const auto _ : state) {
     benchmark::DoNotOptimize(
@@ -18,8 +16,5 @@ void BM_resolve_google(benchmark::State& state) {
   }
 }
 
-}  // namespace benchmarks::ip
-
-BENCHMARK(benchmarks::ip::BM_resolve_localhost)->Unit(benchmark::kMicrosecond);
-BENCHMARK(benchmarks::ip::BM_resolve_google)->Unit(benchmark::kMicrosecond);
-;
+BENCHMARK(BM_resolve_localhost)->Unit(benchmark::kMicrosecond);
+BENCHMARK(BM_resolve_google)->Unit(benchmark::kMicrosecond);
