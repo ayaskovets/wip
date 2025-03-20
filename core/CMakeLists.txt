@@ -5,6 +5,7 @@ target_sources(${TARGET}
     PRIVATE
     src/async/task.cpp
     src/datetime/iso8601.cpp
+    src/io/fd.cpp
     src/ip/acceptor.cpp
     src/ip/address.cpp
     src/ip/connection.cpp
