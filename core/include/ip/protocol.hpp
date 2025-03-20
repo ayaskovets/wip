@@ -6,8 +6,8 @@
 namespace core::ip {
 
 enum class protocol : std::uint8_t {
-  kTcp = 0,
-  kUdp = 1,
+  kTcp,
+  kUdp,
 };
 
 }  // namespace core::ip
