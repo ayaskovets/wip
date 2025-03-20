@@ -4,7 +4,7 @@
 
 namespace core::ip {
 
-class port {
+class port final {
  public:
   port(std::uint16_t) noexcept;
 
