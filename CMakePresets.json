@@ -3,7 +3,7 @@
     "configurePresets": [
         {
             "name": "release",
-            "displayName": "Release",
+            "displayName": "release",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Unix Makefiles",
             "cacheVariables": {
@@ -13,7 +13,7 @@
         },
         {
             "name": "debug",
-            "displayName": "Debug",
+            "displayName": "debug",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Unix Makefiles",
             "cacheVariables": {
@@ -26,12 +26,12 @@
         {
             "name": "release",
             "configurePreset": "release",
-            "displayName": "Release"
+            "displayName": "release"
         },
         {
             "name": "debug",
             "configurePreset": "debug",
-            "displayName": "Debug"
+            "displayName": "debug"
         }
     ],
     "testPresets": [
