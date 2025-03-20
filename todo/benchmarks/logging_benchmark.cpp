@@ -8,7 +8,7 @@ namespace logging = todo::logging;
 
 void BM_default(benchmark::State& state) {
   for (const auto _ : state) {
-    logging::info("{}\n", 42);
+    benchmark::DoNotOptimize((logging::info("{}\n", 42), _));
   }
 }
 
@@ -17,19 +17,19 @@ void BM_transparent(benchmark::State& state) {
                                logging::renderer::kNoop(),
                                logging::writer::kStderr());
   for (const auto _ : state) {
-    logger(logging::level::kInfo, "{}\n", 42);
+    benchmark::DoNotOptimize((logger(logging::level::kInfo, "{}\n", 42), _));
   }
 }
 
 void BM_fprintf(benchmark::State& state) {
   for (const auto _ : state) {
-    fprintf(stderr, "%d\n", 42);
+    benchmark::DoNotOptimize(fprintf(stderr, "%d\n", 42));
   }
 }
 
 void BM_fputs(benchmark::State& state) {
   for (const auto _ : state) {
-    fputs("42\n", stderr);
+    benchmark::DoNotOptimize(fputs("42\n", stderr));
   }
 }
 
