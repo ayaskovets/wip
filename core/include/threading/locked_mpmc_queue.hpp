@@ -7,13 +7,14 @@
 #include <type_traits>
 
 #include "utils/conditionally_runtime.hpp"
+#include "utils/mixins.hpp"
 
 namespace core::threading {
 
 template <typename Item, std::size_t Capacity = std::dynamic_extent>
   requires(std::is_nothrow_destructible_v<Item> &&
            std::is_nothrow_move_constructible_v<Item>)
-class locked_mpmc_queue final {
+class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr locked_mpmc_queue() noexcept
     requires(Capacity != std::dynamic_extent)
