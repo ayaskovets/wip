@@ -4,19 +4,19 @@
 
 namespace tests::utils {
 
-TEST(utils, size) {
+TEST(utils, conditionally_runtime_size) {
   static_assert(
       sizeof(core::utils::conditionally_runtime<std::size_t, false, 42>) == 1);
   static_assert(sizeof(core::utils::conditionally_runtime<int, true, 42>) ==
                 sizeof(int));
 }
 
-TEST(utils, constructor) {
+TEST(utils, conditionally_runtime_constructor) {
   core::utils::conditionally_runtime<std::size_t, false, 42>();
   core::utils::conditionally_runtime<std::size_t, true>(42);
 }
 
-TEST(utils, time_star_operator) {
+TEST(utils, conditionally_runtime_star_operator) {
   {
     core::utils::conditionally_runtime<int, false, 1> v;
     static_assert(std::is_same_v<decltype(*v), const int&>);
@@ -34,7 +34,7 @@ TEST(utils, time_star_operator) {
   }
 }
 
-TEST(utils, assignment) {
+TEST(utils, conditionally_runtime_assignment) {
   {
     core::utils::conditionally_runtime<int, true> v(4);
     EXPECT_EQ(*v, 4);

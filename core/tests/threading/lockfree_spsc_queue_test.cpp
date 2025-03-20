@@ -74,17 +74,16 @@ TEST(threading, lockfree_spsc_queue_item_destructor) {
           destructed(destructed) {
       ++constructed;
     }
-    constexpr ~non_copyable_counter() noexcept { ++destructed; }
     constexpr non_copyable_counter(non_copyable_counter&& that) noexcept
         : non_copyable_counter(that.constructed, that.move_constructed,
                                that.destructed) {
       move_constructed += 1;
     }
-
     constexpr non_copyable_counter(const non_copyable_counter&) = delete;
     constexpr non_copyable_counter& operator=(const non_copyable_counter&) =
         delete;
     constexpr non_copyable_counter& operator=(non_copyable_counter&&) = delete;
+    constexpr ~non_copyable_counter() noexcept { ++destructed; }
 
     std::size_t& constructed;
     std::size_t& move_constructed;
