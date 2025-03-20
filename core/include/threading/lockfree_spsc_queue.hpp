@@ -33,7 +33,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   };
 
  public:
-  constexpr lockfree_spsc_queue() noexcept(false)
+  constexpr lockfree_spsc_queue()
     requires(Capacity != std::dynamic_extent)
       : ring_buffer_(kAllocator(Capacity + 1)) {
     if (!ring_buffer_) {
@@ -41,7 +41,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr explicit lockfree_spsc_queue(std::size_t capacity) noexcept(false)
+  constexpr explicit lockfree_spsc_queue(std::size_t capacity)
     requires(Capacity == std::dynamic_extent)
       : ring_buffer_(kAllocator(capacity + 1)), capacity_(capacity) {
     if (!ring_buffer_) {

@@ -5,6 +5,7 @@
 
 namespace core::datetime {
 
-std::string to_iso8601(std::chrono::system_clock::time_point time_point);
+std::string to_iso8601(
+    std::chrono::system_clock::time_point time_point) noexcept;
 
 }  // namespace core::datetime

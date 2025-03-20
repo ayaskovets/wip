@@ -2,7 +2,8 @@
 
 namespace core::datetime {
 
-std::string to_iso8601(std::chrono::system_clock::time_point time_point) {
+std::string to_iso8601(
+    std::chrono::system_clock::time_point time_point) noexcept {
   constexpr auto kIso8601Fmt =
       "{:0>4}-{:0>2}-{:0>2}T{:0>2}:{:0>2}:{:0>2}.{:0>6}Z";
 

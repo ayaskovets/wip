@@ -15,7 +15,7 @@ namespace {
 constexpr std::size_t kGuessResultsSize = 5;
 
 std::pair<ip::address, ip::port> to_address_port_pair(
-    const ::addrinfo &addrinfo) noexcept(false) {
+    const ::addrinfo &addrinfo) {
   switch (addrinfo.ai_family) {
     case AF_INET: {
       const auto *sockaddr =
@@ -53,7 +53,7 @@ std::pair<ip::address, ip::port> to_address_port_pair(
 
 std::vector<std::pair<ip::address, ip::port>> resolve(
     std::string_view hostname, std::optional<ip::protocol> protocol,
-    std::optional<ip::version> version) noexcept(false) {
+    std::optional<ip::version> version) {
   ::addrinfo *results = nullptr;
   const utils::scope_exit _([results]() noexcept {
     if (results) {
