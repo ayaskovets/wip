@@ -88,16 +88,20 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_mpmc_queue, heap_allocated, std::shared_ptr<int>)
 
 BENCHMARK_REGISTER_F(BM_locked_std_queue, pod_type)
     ->ThreadRange(2, 1 << 5)
-    ->MeasureProcessCPUTime();
+    ->MeasureProcessCPUTime()
+    ->UseRealTime();
 
 BENCHMARK_REGISTER_F(BM_mpmc_queue, pod_type)
     ->ThreadRange(2, 1 << 5)
-    ->MeasureProcessCPUTime();
+    ->MeasureProcessCPUTime()
+    ->UseRealTime();
 
 BENCHMARK_REGISTER_F(BM_locked_std_queue, heap_allocated)
     ->ThreadRange(2, 1 << 5)
-    ->MeasureProcessCPUTime();
+    ->MeasureProcessCPUTime()
+    ->UseRealTime();
 
 BENCHMARK_REGISTER_F(BM_mpmc_queue, heap_allocated)
     ->ThreadRange(2, 1 << 5)
-    ->MeasureProcessCPUTime();
+    ->MeasureProcessCPUTime()
+    ->UseRealTime();
