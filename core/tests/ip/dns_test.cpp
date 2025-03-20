@@ -9,8 +9,8 @@ TEST(ip, resolve_localhost_tcp_ip6) {
                                          core::ip::version::kIpV6);
   EXPECT_EQ(results.size(), 1);
 
-  const auto& [address, port] = results.at(0);
-  EXPECT_EQ(address, core::ip::address("::1"));
+  const auto& endpoint = results.at(0);
+  EXPECT_EQ(endpoint.get_address(), core::ip::address("::1"));
 }
 
 TEST(ip, resolve_localhost_udp_ip4) {
@@ -18,8 +18,8 @@ TEST(ip, resolve_localhost_udp_ip4) {
                                          core::ip::version::kIpV4);
   EXPECT_EQ(results.size(), 1);
 
-  const auto& [address, port] = results.at(0);
-  EXPECT_EQ(address, core::ip::address("127.0.0.1"));
+  const auto& endpoint = results.at(0);
+  EXPECT_EQ(endpoint.get_address(), core::ip::address("127.0.0.1"));
 }
 
 }  // namespace tests::ip

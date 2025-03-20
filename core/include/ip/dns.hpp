@@ -3,13 +3,13 @@
 #include <optional>
 #include <string_view>
 
-#include "ip/address.hpp"
-#include "ip/port.hpp"
+#include "ip/endpoint.hpp"
 #include "ip/protocol.hpp"
+#include "ip/version.hpp"
 
 namespace core::ip {
 
-std::vector<std::pair<ip::address, ip::port>> resolve(
+std::vector<ip::endpoint> resolve(
     std::string_view hostname,
     std::optional<ip::protocol> protocol = std::nullopt,
     std::optional<ip::version> version = std::nullopt);
