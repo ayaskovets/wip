@@ -12,12 +12,16 @@ class endpoint final {
   endpoint(ip::address address, ip::port port) noexcept;
 
  public:
+  bool operator==(const endpoint& that) const noexcept = default;
+  bool operator!=(const endpoint& that) const noexcept = default;
+
+ public:
   const ip::address& get_address() const noexcept;
   ip::port get_port() const noexcept;
 
  private:
-  ip::address address_;
-  ip::port port_;
+  const ip::address address_;
+  const ip::port port_;
 };
 
 }  // namespace core::ip
