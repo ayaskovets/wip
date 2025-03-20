@@ -55,7 +55,7 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, heap_allocated,
 template <typename T>
 class BM_mpmc_queue : public benchmark::Fixture {
  protected:
-  _TMP_::threading::mpmc_queue<T> queue_;
+  _TMP_::threading::mpmc_queue<T, 100> queue_;
 };
 
 BENCHMARK_TEMPLATE_DEFINE_F(BM_mpmc_queue, pod_type, int)
