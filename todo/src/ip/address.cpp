@@ -20,33 +20,40 @@ address::address(std::string address) {
   throw std::invalid_argument(std::format("invalid address {}", address));
 }
 
-address::address(std::vector<std::uint8_t> address) {
-  switch (address.size()) {
-    case sizeof(in_addr):
-    case sizeof(in6_addr):
-      address_ = std::move(address);
+address::address(std::vector<std::uint8_t> address)
+    : address_(std::move(address)) {
+  switch (version()) {
+    case version::kIpV4:
+    case version::kIpV6:
       break;
+  }
+}
+
+version address::version() const {
+  switch (address_.size()) {
+    case sizeof(in_addr):
+      return version::kIpV4;
+    case sizeof(in6_addr):
+      return version::kIpV6;
     default:
-      throw std::invalid_argument(
-          std::format("invalid address size {}", address.size()));
+      throw std::runtime_error(
+          std::format("invalid address size {}", address_.size()));
   }
 }
 
 std::string address::as_string() const {
   std::string string;
-  decltype(AF_INET) family;
-  switch (address_.size()) {
-    case sizeof(in_addr):
+
+  int family;
+  switch (version()) {
+    case version::kIpV4:
       family = AF_INET;
       string.resize(INET_ADDRSTRLEN);
       break;
-    case sizeof(in6_addr):
+    case version::kIpV6:
       family = AF_INET6;
       string.resize(INET6_ADDRSTRLEN);
       break;
-    default:
-      throw std::runtime_error(
-          std::format("unexpected address size: {}", address_.size()));
   }
 
   if (inet_ntop(family, address_.data(), string.data(), string.size()))

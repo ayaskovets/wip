@@ -14,11 +14,14 @@ TEST(todo, ip4_address_constructor) {
   const auto address1 = ip::address(bytes);
   const auto address2 = ip::address(string);
 
-  EXPECT_EQ(address1, address2);
   EXPECT_EQ(address1.as_bytes(), bytes);
   EXPECT_EQ(address1.as_string(), string);
+  EXPECT_EQ(address1.version(), ip::version::kIpV4);
+
   EXPECT_EQ(address1.as_bytes(), address2.as_bytes());
   EXPECT_EQ(address1.as_string(), address2.as_string());
+  EXPECT_EQ(address1.version(), address2.version());
+  EXPECT_EQ(address1, address2);
 }
 
 TEST(todo, ip6_address_constructor) {
@@ -32,8 +35,12 @@ TEST(todo, ip6_address_constructor) {
   EXPECT_EQ(address1, address2);
   EXPECT_EQ(address1.as_bytes(), bytes);
   EXPECT_EQ(address1.as_string(), string);
+  EXPECT_EQ(address1.version(), ip::version::kIpV6);
+
   EXPECT_EQ(address1.as_bytes(), address2.as_bytes());
   EXPECT_EQ(address1.as_string(), address2.as_string());
+  EXPECT_EQ(address1.version(), address2.version());
+  EXPECT_EQ(address1, address2);
 }
 
 TEST(todo, resolve_localhost) {
