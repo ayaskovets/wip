@@ -15,8 +15,8 @@ class port final {
   port(std::uint16_t port, network_byte_order_t) noexcept;
 
  public:
-  constexpr bool operator==(const port&) const = default;
-  constexpr bool operator!=(const port&) const = default;
+  constexpr bool operator==(const port&) const noexcept = default;
+  constexpr bool operator!=(const port&) const noexcept = default;
 
  public:
   std::uint16_t get_bytes() const noexcept;
