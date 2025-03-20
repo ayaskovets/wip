@@ -26,14 +26,16 @@ std::vector<std::uint8_t> as_bytes(const addrinfo &addrinfo) {
   switch (addrinfo.ai_family) {
     case AF_INET:
       bytes.resize(sizeof(in_addr));
-      std::memcpy(bytes.data(),
-                  &((const sockaddr_in *)addrinfo.ai_addr)->sin_addr,
-                  sizeof(in_addr));
+      std::memcpy(
+          bytes.data(),
+          &(reinterpret_cast<const sockaddr_in *>(addrinfo.ai_addr))->sin_addr,
+          sizeof(in_addr));
       return bytes;
     case AF_INET6:
       bytes.resize(sizeof(in6_addr));
       std::memcpy(bytes.data(),
-                  &((const sockaddr_in6 *)addrinfo.ai_addr)->sin6_addr,
+                  &(reinterpret_cast<const sockaddr_in6 *>(addrinfo.ai_addr))
+                       ->sin6_addr,
                   sizeof(in6_addr));
       return bytes;
     default:
