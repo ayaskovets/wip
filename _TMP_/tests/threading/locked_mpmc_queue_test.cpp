@@ -1,4 +1,4 @@
-#include "threading/mpmc_queue.hpp"
+#include "threading/locked_mpmc_queue.hpp"
 
 #include <gtest/gtest.h>
 
@@ -10,21 +10,21 @@
 namespace tests::threading {
 
 TEST(_TMP__threading, mpmc_queue_size) {
-  static_assert(sizeof(_TMP_::threading::mpmc_queue<int, 10>) == 208);
-  static_assert(alignof(_TMP_::threading::mpmc_queue<int>) == 8);
+  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int, 10>) == 208);
+  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 8);
 
-  static_assert(sizeof(_TMP_::threading::mpmc_queue<int>) == 216);
-  static_assert(alignof(_TMP_::threading::mpmc_queue<int>) == 8);
+  static_assert(sizeof(_TMP_::threading::locked_mpmc_queue<int>) == 216);
+  static_assert(alignof(_TMP_::threading::locked_mpmc_queue<int>) == 8);
 }
 
 TEST(_TMP__threading, mpmc_queue_try_push_single_threaded) {
-  _TMP_::threading::mpmc_queue<int> queue(1);
+  _TMP_::threading::locked_mpmc_queue<int> queue(1);
   EXPECT_TRUE(queue.try_push(42));
   EXPECT_FALSE(queue.try_push(42));
 }
 
 TEST(_TMP__threading, mpmc_queue_try_pop_single_threaded) {
-  _TMP_::threading::mpmc_queue<int> queue(1);
+  _TMP_::threading::locked_mpmc_queue<int> queue(1);
   EXPECT_FALSE(queue.try_pop().has_value());
 
   queue.push(42);
@@ -34,7 +34,7 @@ TEST(_TMP__threading, mpmc_queue_try_pop_single_threaded) {
 
 TEST(_TMP__threading, mpmc_queue_size_capacity) {
   {
-    _TMP_::threading::mpmc_queue<std::string> queue(101);
+    _TMP_::threading::locked_mpmc_queue<std::string> queue(101);
     EXPECT_EQ(queue.capacity(), 101);
     EXPECT_EQ(queue.size(), 0);
 
@@ -47,7 +47,7 @@ TEST(_TMP__threading, mpmc_queue_size_capacity) {
     EXPECT_EQ(queue.size(), 0);
   }
   {
-    _TMP_::threading::mpmc_queue<std::string, 101> queue;
+    _TMP_::threading::locked_mpmc_queue<std::string, 101> queue;
     EXPECT_EQ(queue.capacity(), 101);
     EXPECT_EQ(queue.size(), 0);
 
@@ -62,7 +62,7 @@ TEST(_TMP__threading, mpmc_queue_size_capacity) {
 }
 
 TEST(_TMP__threading, mpmc_queue_blocking_push) {
-  _TMP_::threading::mpmc_queue<int> queue(2);
+  _TMP_::threading::locked_mpmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
@@ -79,7 +79,7 @@ TEST(_TMP__threading, mpmc_queue_blocking_push) {
 }
 
 TEST(_TMP__threading, mpmc_queue_blocking_pop) {
-  _TMP_::threading::mpmc_queue<int> queue(1);
+  _TMP_::threading::locked_mpmc_queue<int> queue(1);
 
   std::thread producer([&queue]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -92,7 +92,7 @@ TEST(_TMP__threading, mpmc_queue_blocking_pop) {
 }
 
 TEST(_TMP__threading, mpmc_queue_unblocking_try_pop) {
-  _TMP_::threading::mpmc_queue<int> queue(2);
+  _TMP_::threading::locked_mpmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
@@ -117,7 +117,7 @@ TEST(_TMP__threading, mpmc_queue_non_copyable_item_type) {
     constexpr non_copyable& operator=(non_copyable&&) = default;
   };
 
-  _TMP_::threading::mpmc_queue<non_copyable> queue(1);
+  _TMP_::threading::locked_mpmc_queue<non_copyable> queue(1);
   {
     queue.try_push(non_copyable{});
     [[maybe_unused]] const auto value = queue.try_pop();
@@ -168,7 +168,7 @@ TEST(_TMP__threading, mpmc_queue_throw_on_item_move) {
     std::shared_ptr<bool> should_throw_;
   };
 
-  _TMP_::threading::mpmc_queue<throw_on_move_or_copy_if> queue(1);
+  _TMP_::threading::locked_mpmc_queue<throw_on_move_or_copy_if> queue(1);
 
   {
     try {
@@ -221,7 +221,7 @@ TEST_P(_TMP__threading, mpmc_queue_mpmc_threads) {
   std::vector<int> items_to_push(items_size);
   std::iota(items_to_push.begin(), items_to_push.end(), 0);
 
-  _TMP_::threading::mpmc_queue<int> queue(queue_size);
+  _TMP_::threading::locked_mpmc_queue<int> queue(queue_size);
 
   std::atomic<std::size_t> pushed = 0;
 

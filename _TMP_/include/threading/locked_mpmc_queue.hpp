@@ -13,13 +13,13 @@ namespace _TMP_::threading {
 
 template <typename ItemType, std::size_t Capacity = std::dynamic_extent>
   requires(std::is_nothrow_destructible_v<ItemType>)
-class mpmc_queue final {
+class locked_mpmc_queue final {
  public:
-  constexpr mpmc_queue() noexcept
+  constexpr locked_mpmc_queue() noexcept
     requires(Capacity != std::dynamic_extent)
   = default;
 
-  constexpr explicit mpmc_queue(std::size_t capacity) noexcept
+  constexpr explicit locked_mpmc_queue(std::size_t capacity) noexcept
     requires(Capacity == std::dynamic_extent)
       : capacity_(capacity) {}
 

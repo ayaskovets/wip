@@ -3,7 +3,7 @@
 #include <queue>
 #include <span>
 
-#include "threading/mpmc_queue.hpp"
+#include "threading/locked_mpmc_queue.hpp"
 
 template <typename T>
 class BM_locked_std_queue : public benchmark::Fixture {
@@ -58,12 +58,12 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_std_queue, heap_allocated,
 }
 
 template <typename T>
-class BM_mpmc_queue : public benchmark::Fixture {
+class BM_locked_mpmc_queue : public benchmark::Fixture {
  protected:
-  _TMP_::threading::mpmc_queue<T, 100> queue_;
+  _TMP_::threading::locked_mpmc_queue<T, 100> queue_;
 };
 
-BENCHMARK_TEMPLATE_DEFINE_F(BM_mpmc_queue, pod_type, int)
+BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_mpmc_queue, pod_type, int)
 (benchmark::State& state) {
   if (state.thread_index() % 2) {
     for (const auto _ : state) {
@@ -77,7 +77,8 @@ BENCHMARK_TEMPLATE_DEFINE_F(BM_mpmc_queue, pod_type, int)
   }
 }
 
-BENCHMARK_TEMPLATE_DEFINE_F(BM_mpmc_queue, heap_allocated, std::shared_ptr<int>)
+BENCHMARK_TEMPLATE_DEFINE_F(BM_locked_mpmc_queue, heap_allocated,
+                            std::shared_ptr<int>)
 (benchmark::State& state) {
   if (state.thread_index() % 2) {
     for (const auto _ : state) {
@@ -101,12 +102,12 @@ BENCHMARK_REGISTER_F(BM_locked_std_queue, heap_allocated)
     ->MeasureProcessCPUTime()
     ->UseRealTime();
 
-BENCHMARK_REGISTER_F(BM_mpmc_queue, pod_type)
+BENCHMARK_REGISTER_F(BM_locked_mpmc_queue, pod_type)
     ->ThreadRange(2, 1 << 4)
     ->MeasureProcessCPUTime()
     ->UseRealTime();
 
-BENCHMARK_REGISTER_F(BM_mpmc_queue, heap_allocated)
+BENCHMARK_REGISTER_F(BM_locked_mpmc_queue, heap_allocated)
     ->ThreadRange(2, 1 << 4)
     ->MeasureProcessCPUTime()
     ->UseRealTime();
