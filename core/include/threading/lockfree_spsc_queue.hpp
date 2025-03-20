@@ -7,13 +7,14 @@
 
 #include "utils/conditionally_runtime.hpp"
 #include "utils/constants.hpp"
+#include "utils/mixins.hpp"
 
 namespace core::threading {
 
 template <typename Item, std::size_t Capacity = std::dynamic_extent>
   requires(std::is_nothrow_destructible_v<Item> &&
            std::is_nothrow_move_constructible_v<Item>)
-class lockfree_spsc_queue final {
+class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  private:
   struct alignas(utils::kCacheLineSize) AlignedItem {
     Item value;
@@ -22,11 +23,20 @@ class lockfree_spsc_queue final {
   static_assert(sizeof(AlignedItem) == utils::kCacheLineSize);
   static_assert(alignof(AlignedItem) == utils::kCacheLineSize);
 
+ private:
+  constinit static inline auto kAllocator = [](std::size_t size) {
+    return static_cast<AlignedItem*>(
+        std::malloc(sizeof(AlignedItem) * (size + 1)));
+  };
+
+  constinit static inline auto kDeleter = [](AlignedItem* item) {
+    std::free(item);
+  };
+
  public:
   constexpr lockfree_spsc_queue()
     requires(Capacity != std::dynamic_extent)
-      : ring_buffer_(static_cast<AlignedItem*>(
-            std::malloc(sizeof(AlignedItem) * (Capacity + 1)))) {
+      : ring_buffer_(kAllocator(Capacity + 1)) {
     if (!ring_buffer_) {
       throw std::runtime_error("failed to allocate memory");
     }
@@ -34,9 +44,7 @@ class lockfree_spsc_queue final {
 
   constexpr explicit lockfree_spsc_queue(std::size_t capacity)
     requires(Capacity == std::dynamic_extent)
-      : ring_buffer_(static_cast<AlignedItem*>(
-            std::malloc(sizeof(AlignedItem) * (capacity + 1)))),
-        capacity_(capacity) {
+      : ring_buffer_(kAllocator(capacity + 1)), capacity_(capacity) {
     if (!ring_buffer_) {
       throw std::runtime_error("failed to allocate memory");
     }
@@ -45,7 +53,6 @@ class lockfree_spsc_queue final {
   constexpr ~lockfree_spsc_queue() noexcept {
     while (try_pop().has_value()) {
     }
-    std::free(ring_buffer_);
   }
 
  public:
@@ -62,7 +69,7 @@ class lockfree_spsc_queue final {
       return false;
     }
 
-    std::construct_at(&reinterpret_cast<Item&>(ring_buffer_[push_to]),
+    std::construct_at(&reinterpret_cast<Item&>(ring_buffer_.get()[push_to]),
                       std::move(value));
     push_to_.store(next_push_to, std::memory_order::release);
     return true;
@@ -78,16 +85,17 @@ class lockfree_spsc_queue final {
       return value;
     }
 
-    value.emplace(std::move(reinterpret_cast<Item&>(ring_buffer_[pop_from])));
+    value.emplace(
+        std::move(reinterpret_cast<Item&>(ring_buffer_.get()[pop_from])));
 
-    std::destroy_at(&ring_buffer_[pop_from]);
+    std::destroy_at(&ring_buffer_.get()[pop_from]);
     const auto next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
     pop_from_.store(next_pop_from, std::memory_order::release);
     return value;
   }
 
  private:
-  AlignedItem* ring_buffer_ = nullptr;
+  std::unique_ptr<AlignedItem, decltype(kDeleter)> ring_buffer_;
   [[no_unique_address]] const utils::conditionally_runtime<
       std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
 
