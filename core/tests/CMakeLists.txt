@@ -7,15 +7,15 @@ target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_test.cpp
     io/fd_test.cpp
-    ip/acceptor_test.cpp
     ip/address_test.cpp
     ip/dns_test.cpp
     ip/endpoint_test.cpp
     ip/port_test.cpp
     ip/socket_test.cpp
+    ip/tcp/acceptor_test.cpp
     logging/logging_test.cpp
-    threading/lockfree_spsc_queue_test.cpp
     threading/locked_mpmc_queue_test.cpp
+    threading/lockfree_spsc_queue_test.cpp
     utils/conditionally_runtime_test.cpp
     utils/predicates_test.cpp
 )
