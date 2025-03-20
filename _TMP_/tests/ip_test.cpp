@@ -7,7 +7,7 @@ namespace tests::logging {
 
 namespace ip = _TMP_::ip;
 
-TEST(_TMP_, ip4_address_constructor) {
+TEST(_TMP__ip, ip4_address_constructor) {
   const std::vector<std::uint8_t> bytes{255, 255, 255, 255};
   const std::string string("255.255.255.255");
 
@@ -24,7 +24,7 @@ TEST(_TMP_, ip4_address_constructor) {
   EXPECT_EQ(address1, address2);
 }
 
-TEST(_TMP_, ip6_address_constructor) {
+TEST(_TMP__ip, ip6_address_constructor) {
   const std::vector<std::uint8_t> bytes{255, 255, 255, 255, 255, 255, 255, 255,
                                         255, 255, 255, 255, 255, 255, 255, 255};
   const std::string string("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
@@ -43,7 +43,7 @@ TEST(_TMP_, ip6_address_constructor) {
   EXPECT_EQ(address1, address2);
 }
 
-TEST(_TMP_, resolve_localhost) {
+TEST(_TMP__ip, resolve_localhost) {
   const auto addresses = ip::resolve("localhost", ip::protocol::kTcp);
 
   EXPECT_EQ(addresses, (std::vector<ip::address>{ip::address("::1"),
