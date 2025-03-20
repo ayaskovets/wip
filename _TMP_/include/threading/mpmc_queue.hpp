@@ -54,7 +54,11 @@ class mpmc_queue final {
     std::optional<ItemType> front = std::nullopt;
     std::unique_lock<std::mutex> lock(mutex_);
     if (!queue_.empty()) {
-      front.emplace(std::move(queue_.front()));
+      if constexpr (!std::is_nothrow_move_constructible_v<ItemType>) {
+        front.emplace(queue_.front());
+      } else {
+        front.emplace(std::move(queue_.front()));
+      }
       queue_.pop_front();
     }
     push_available_cv_.notify_one();
@@ -64,10 +68,17 @@ class mpmc_queue final {
   ItemType pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this]() { return !queue_.empty(); });
-    ItemType front = std::move(queue_.front());
-    queue_.pop_front();
-    push_available_cv_.notify_one();
-    return front;
+    if constexpr (!std::is_nothrow_move_constructible_v<ItemType>) {
+      ItemType front = queue_.front();
+      queue_.pop_front();
+      push_available_cv_.notify_one();
+      return front;
+    } else {
+      ItemType front = std::move(queue_.front());
+      queue_.pop_front();
+      push_available_cv_.notify_one();
+      return front;
+    }
   }
 
  private:
