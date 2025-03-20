@@ -16,7 +16,7 @@ class acceptor final : utils::non_copyable {
 
  public:
   acceptor(acceptor&& that) noexcept;
-  acceptor& operator=(acceptor&& that) noexcept;
+  acceptor& operator=(acceptor&& that);
 
  public:
   std::optional<ip::connection> try_accept() const;

@@ -4,8 +4,6 @@
 
 namespace core::ip {
 
-// TODO: fd_ usage
-
 namespace {
 
 constexpr int kInvalidFd = -1;
@@ -29,8 +27,15 @@ connection::connection(connection&& that) noexcept
       address_(std::move(that.address_)),
       port_(std::move(that.port_)) {}
 
-connection& connection::operator=(connection&& that) noexcept {
-  new (this) connection(std::move(that));
+connection& connection::operator=(connection&& that) {
+  if (fd_ != kInvalidFd && ::close(this->fd_) < 0) {
+    throw std::runtime_error(
+        std::format("failed to close socket: {}", std::strerror(errno)));
+  }
+
+  this->fd_ = std::exchange(that.fd_, kInvalidFd);
+  this->address_ = std::move(that.address_);
+  this->port_ = std::move(that.port_);
   return *this;
 }
 

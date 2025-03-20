@@ -103,8 +103,15 @@ acceptor::acceptor(acceptor&& that) noexcept
       address_(std::move(that.address_)),
       port_(std::move(that.port_)) {}
 
-acceptor& acceptor::operator=(acceptor&& that) noexcept {
-  new (this) acceptor(std::move(that));
+acceptor& acceptor::operator=(acceptor&& that) {
+  if (fd_ != kInvalidFd && ::close(fd_) < 0) {
+    throw std::runtime_error(
+        std::format("failed to close socket: {}", std::strerror(errno)));
+  }
+
+  this->fd_ = std::exchange(that.fd_, kInvalidFd);
+  this->address_ = std::move(that.address_);
+  this->port_ = std::move(that.port_);
   return *this;
 }
 
@@ -122,7 +129,10 @@ std::optional<ip::connection> acceptor::try_accept() const {
 
   ::sockaddr_storage storage;
   ::socklen_t socklen = sizeof(storage);
-  if (::accept(fd_, &reinterpret_cast<::sockaddr&>(storage), &socklen) < 0) {
+
+  const int fd =
+      ::accept(fd_, &reinterpret_cast<::sockaddr&>(storage), &socklen);
+  if (fd < 0) {
     switch (errno) {
       case EAGAIN:
         return connection;
