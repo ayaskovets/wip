@@ -87,7 +87,7 @@ class mpmc_queue final {
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
   std::deque<ItemType> queue_;
-  [[no_unique_address]] utils::conditionally_runtime<
+  [[no_unique_address]] const utils::conditionally_runtime<
       std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
 };
 
