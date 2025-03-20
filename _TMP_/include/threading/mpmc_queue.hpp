@@ -12,8 +12,9 @@
 namespace _TMP_::threading {
 
 template <typename ItemType, std::size_t Capacity = std::dynamic_extent>
-  requires(std::is_nothrow_move_constructible_v<ItemType> ||
-           std::is_nothrow_copy_constructible_v<ItemType>)
+  requires(std::is_nothrow_destructible_v<ItemType> &&
+           (std::is_nothrow_move_constructible_v<ItemType> ||
+            std::is_nothrow_copy_constructible_v<ItemType>))
 class mpmc_queue final {
  public:
   constexpr mpmc_queue()
