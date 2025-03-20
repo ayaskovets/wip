@@ -14,7 +14,8 @@ class logger {
   static const logger& kDefault();
 
  public:
-  logger(level level, renderer renderer, writer writer) noexcept
+  logger(logging::level level, logging::renderer renderer,
+         logging::writer writer) noexcept
       : level_(level),
         renderer_(std::move(renderer)),
         writer_(std::move(writer)) {}
@@ -32,9 +33,9 @@ class logger {
   }
 
  protected:
-  level level_;
-  renderer renderer_;
-  writer writer_;
+  logging::level level_;
+  logging::renderer renderer_;
+  logging::writer writer_;
 };
 
 }  // namespace core::logging

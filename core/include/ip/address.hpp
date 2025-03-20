@@ -28,15 +28,15 @@ class address final {
   }
 
  public:
-  version get_version() const;
-  std::span<const std::uint8_t> get_bytes() const;
+  ip::version get_version() const noexcept;
 
  public:
+  std::span<const std::uint8_t> as_bytes() const noexcept;
   std::string as_string() const;
 
  private:
   std::array<std::uint8_t, 16> data_;
-  version version_;
+  ip::version version_;
 };
 
 }  // namespace core::ip

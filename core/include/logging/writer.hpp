@@ -9,7 +9,8 @@ namespace core::logging {
 
 class writer final {
  private:
-  using write_t = std::function<void(level level, std::string_view message)>;
+  using write_t =
+      std::function<void(logging::level level, std::string_view message)>;
 
  public:
   static const writer& kStdout();
@@ -21,7 +22,8 @@ class writer final {
   explicit writer(write_t write) : write_(write) {}
 
  public:
-  constexpr void operator()(level level, std::string_view message) const {
+  constexpr void operator()(logging::level level,
+                            std::string_view message) const {
     write_(level, message);
   }
 

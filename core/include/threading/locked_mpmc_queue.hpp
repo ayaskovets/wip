@@ -8,7 +8,6 @@
 #include <type_traits>
 
 #include "utils/conditionally_runtime.hpp"
-#include "utils/constants.hpp"
 
 namespace core::threading {
 
@@ -25,7 +24,6 @@ class locked_mpmc_queue final {
     requires(Capacity == std::dynamic_extent)
       : capacity_(capacity) {}
 
-  // NOTE: unbounded queue constructor
   constexpr explicit locked_mpmc_queue() noexcept
     requires(Capacity == std::dynamic_extent)
       : capacity_(std::dynamic_extent) {}
@@ -49,8 +47,9 @@ class locked_mpmc_queue final {
   ItemType pop() {
     std::unique_lock<std::mutex> lock(mutex_);
     pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
-    ItemType front(std::move(queue_.front()));
-    queue_.pop_front();  // NOTE: correct iff noexcept(pop_front)
+    ItemType front(
+        std::move(queue_.front()));  // NOTE: correct iff noexcept(pop_front)
+    queue_.pop_front();
     push_available_cv_.notify_one();
     return front;
   }
