@@ -2,42 +2,68 @@
 
 #include <arpa/inet.h>
 
+#include <cerrno>
 #include <format>
 
 namespace _TMP_::ip {
 
-address::address(std::string address) {
-  address_.resize(sizeof(in_addr));
-  if (inet_pton(AF_INET, address.c_str(), address_.data())) {
-    return;
-  }
+namespace {
 
-  address_.resize(sizeof(in6_addr));
-  if (inet_pton(AF_INET6, address.c_str(), address_.data())) {
-    return;
-  }
+constexpr std::size_t kIpV4Bytes = 4;
+constexpr std::size_t kIpV6Bytes = 16;
 
-  throw std::invalid_argument(std::format("invalid address {}", address));
-}
+}  // namespace
 
-address::address(std::vector<std::uint8_t> address)
-    : address_(std::move(address)) {
-  switch (version()) {
-    case version::kIpV4:
-    case version::kIpV6:
+address::address(const std::uint8_t* data, std::size_t size) {
+  switch (size) {
+    case kIpV4Bytes:
+      std::copy_n(data, size, data_.begin());
+      version_ = version::kIpV4;
       break;
+    case kIpV6Bytes:
+      std::copy_n(data, size, data_.begin());
+      version_ = version::kIpV6;
+      break;
+    default:
+      throw std::invalid_argument(std::format("invalid address"));
   }
 }
 
-version address::version() const {
-  switch (address_.size()) {
-    case sizeof(in_addr):
-      return version::kIpV4;
-    case sizeof(in6_addr):
-      return version::kIpV6;
-    default:
-      throw std::runtime_error(
-          std::format("invalid address size {}", address_.size()));
+address::address(std::string_view string_view) {
+  if (inet_pton(AF_INET, string_view.data(), data_.begin())) {
+    version_ = version::kIpV4;
+    return;
+  }
+
+  if (inet_pton(AF_INET6, string_view.data(), data_.begin())) {
+    version_ = version::kIpV6;
+    return;
+  }
+
+  throw std::invalid_argument(std::format("invalid address {}", string_view));
+}
+
+bool address::operator==(const address& that) const noexcept {
+  switch (version_) {
+    case version::kIpV4:
+      return this->version_ == that.version_ &&
+             std::equal(this->data_.begin(),
+                        std::next(this->data_.begin(), kIpV4Bytes),
+                        that.data_.begin(),
+                        std::next(that.data_.begin(), kIpV4Bytes));
+    case version::kIpV6:
+      return this->version_ == that.version_ && this->data_ == that.data_;
+  }
+}
+
+version address::get_version() const { return version_; }
+
+std::span<const std::uint8_t> address::get_bytes() const {
+  switch (version_) {
+    case version::kIpV4:
+      return std::span<const std::uint8_t>(data_.begin(), kIpV4Bytes);
+    case version::kIpV6:
+      return std::span<const std::uint8_t>(data_.begin(), kIpV6Bytes);
   }
 }
 
@@ -45,7 +71,7 @@ std::string address::as_string() const {
   std::string string;
 
   int family;
-  switch (version()) {
+  switch (version_) {
     case version::kIpV4:
       family = AF_INET;
       string.resize(INET_ADDRSTRLEN);
@@ -56,7 +82,7 @@ std::string address::as_string() const {
       break;
   }
 
-  if (inet_ntop(family, address_.data(), string.data(), string.size()))
+  if (inet_ntop(family, data_.begin(), string.data(), string.size()))
       [[likely]] {
     string.resize(string.find('\0'));
     return string;
@@ -65,7 +91,5 @@ std::string address::as_string() const {
   throw std::runtime_error(
       std::format("could not serialize address: {}", strerror(errno)));
 }
-
-const std::vector<std::uint8_t>& address::as_bytes() const { return address_; }
 
 }  // namespace _TMP_::ip
