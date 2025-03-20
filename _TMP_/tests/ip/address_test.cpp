@@ -14,7 +14,7 @@ class _TMP__ip
           std::vector<std::uint8_t>, std::string, _TMP_::ip::version>> {};
 
 TEST_P(_TMP__ip, address_construction) {
-  const auto [bytes, string, version] = GetParam();
+  const auto& [bytes, string, version] = GetParam();
 
   const _TMP_::ip::address from_bytes(bytes);
   const _TMP_::ip::address from_string(string);

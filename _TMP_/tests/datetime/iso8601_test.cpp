@@ -10,7 +10,7 @@ class _TMP__datetime
 };
 
 TEST_P(_TMP__datetime, as_iso8601) {
-  const auto [time_point, string] = GetParam();
+  const auto& [time_point, string] = GetParam();
   EXPECT_EQ(_TMP_::datetime::as_iso8601(time_point), string);
 }
 
