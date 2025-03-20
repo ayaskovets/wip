@@ -19,8 +19,7 @@ class mpmc_queue final {
     requires(Capacity != std::dynamic_extent)
   = default;
 
-  constexpr explicit mpmc_queue(
-      std::size_t capacity = std::dynamic_extent) noexcept
+  constexpr explicit mpmc_queue(std::size_t capacity) noexcept
     requires(Capacity == std::dynamic_extent)
       : capacity_(capacity) {}
 
@@ -61,8 +60,8 @@ class mpmc_queue final {
         front.emplace(queue_.front());
       }
       queue_.pop_front();
+      push_available_cv_.notify_one();
     }
-    push_available_cv_.notify_one();
     return front;
   }
 
