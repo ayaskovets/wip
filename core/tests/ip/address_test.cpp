@@ -4,12 +4,12 @@
 
 namespace tests::ip {
 
-TEST(ip, address_size) {
+TEST(ip_address, size) {
   static_assert(sizeof(core::ip::address) == 17);
   static_assert(alignof(core::ip::address) == 1);
 }
 
-TEST(ip, address_localhost) {
+TEST(ip_address, localhost) {
   EXPECT_EQ(core::ip::address("127.0.0.1"),
             core::ip::address::kLocalhost(core::ip::version::kIpV4));
   EXPECT_EQ(core::ip::address("::1"),
@@ -20,7 +20,7 @@ class ip_address
     : public ::testing::TestWithParam<std::tuple<
           std::vector<std::uint8_t>, std::string, core::ip::version>> {};
 
-TEST_P(ip_address, address_construction) {
+TEST_P(ip_address, construction) {
   const auto& [bytes, string, version] = GetParam();
 
   const core::ip::address from_bytes(bytes);

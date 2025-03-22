@@ -4,12 +4,12 @@
 
 namespace tests::ip {
 
-TEST(ip, socket_size) {
+TEST(ip_socket, size) {
   static_assert(sizeof(core::ip::socket) == 4);
   static_assert(alignof(core::ip::socket) == 4);
 }
 
-TEST(ip, socket_flags) {
+TEST(ip_socket, flags) {
   for (const auto protocol :
        {core::ip::protocol::kTcp, core::ip::protocol::kUdp}) {
     for (const auto version :
@@ -29,7 +29,7 @@ TEST(ip, socket_flags) {
   }
 }
 
-TEST(ip, socket_bind) {
+TEST(ip_socket, bind) {
   for (const auto version :
        {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
     const core::ip::endpoint endpoint(core::ip::address::kLocalhost(version),
@@ -45,7 +45,7 @@ TEST(ip, socket_bind) {
   }
 }
 
-TEST(ip, socket_connect) {
+TEST(ip_socket, connect) {
   for (const auto version :
        {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
     const core::ip::endpoint endpoint(core::ip::address::kLocalhost(version),
@@ -71,7 +71,7 @@ TEST(ip, socket_connect) {
   }
 }
 
-TEST(ip, socket_endpoints) {
+TEST(ip_socket, endpoints) {
   for (const auto version :
        {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
     const core::ip::endpoint bind_endpoint(

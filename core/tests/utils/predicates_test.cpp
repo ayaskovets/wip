@@ -4,7 +4,7 @@
 
 namespace tests::utils {
 
-TEST(utils, is_power_of_two) {
+TEST(utils_predicates, is_power_of_two) {
   static_assert(!core::utils::is_power_of_two(0));
 
   constexpr std::array<int, 14> kPowersOfTwo = {

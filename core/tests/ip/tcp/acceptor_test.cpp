@@ -2,14 +2,14 @@
 
 #include <gtest/gtest.h>
 
-namespace tests::ip {
+namespace tests::ip::tcp {
 
-TEST(ip_tcp, acceptor_size) {
+TEST(ip_tcp_acceptor, size) {
   static_assert(sizeof(core::ip::tcp::acceptor) == 24);
   static_assert(alignof(core::ip::tcp::acceptor) == 4);
 }
 
-TEST(ip_tcp, acceptor_try_accept_ip4) {
+TEST(ip_tcp_acceptor, try_accept_ip4) {
   const core::ip::tcp::acceptor acceptor(
       core::ip::endpoint(
           core::ip::address::kLocalhost(core::ip::version::kIpV4),
@@ -18,7 +18,7 @@ TEST(ip_tcp, acceptor_try_accept_ip4) {
   EXPECT_FALSE(acceptor.try_accept().has_value());
 }
 
-TEST(ip_tcp, acceptor_try_accept_ip6) {
+TEST(ip_tcp_acceptor, try_accept_ip6) {
   const core::ip::tcp::acceptor acceptor(
       core::ip::endpoint(
           core::ip::address::kLocalhost(core::ip::version::kIpV6),
@@ -27,7 +27,7 @@ TEST(ip_tcp, acceptor_try_accept_ip6) {
   EXPECT_FALSE(acceptor.try_accept().has_value());
 }
 
-TEST(ip_tcp, acceptor_copy) {
+TEST(ip_tcp_acceptor, copy) {
   core::ip::tcp::acceptor original(
       core::ip::endpoint(
           core::ip::address::kLocalhost(core::ip::version::kIpV4),
@@ -39,7 +39,7 @@ TEST(ip_tcp, acceptor_copy) {
   EXPECT_FALSE(copy.try_accept().has_value());
 }
 
-TEST(ip_tcp, acceptor_move_operations) {
+TEST(ip_tcp_acceptor, move_operations) {
   core::ip::tcp::acceptor moved_from1(
       core::ip::endpoint(
           core::ip::address::kLocalhost(core::ip::version::kIpV4),
@@ -57,4 +57,4 @@ TEST(ip_tcp, acceptor_move_operations) {
   EXPECT_FALSE(acceptor.try_accept().has_value());
 }
 
-}  // namespace tests::ip
+}  // namespace tests::ip::tcp

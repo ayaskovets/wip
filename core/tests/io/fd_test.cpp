@@ -4,12 +4,12 @@
 
 namespace tests::io {
 
-TEST(io, fd_size) {
+TEST(io_fd, size) {
   static_assert(sizeof(core::io::fd) == 4);
   static_assert(alignof(core::io::fd) == 4);
 }
 
-TEST(io, fd_manual_close) {
+TEST(io_fd, manual_close) {
   core::io::fd fd(core::io::fd::kStdin());
   EXPECT_NO_THROW(fd.get_fd());
   EXPECT_NO_THROW(fd.close());
@@ -18,7 +18,7 @@ TEST(io, fd_manual_close) {
   EXPECT_ANY_THROW(fd.get_fd());
 }
 
-TEST(io, fd_transfer_ownership) {
+TEST(io_fd, transfer_ownership) {
   core::io::fd moved_from(core::io::fd::kStdin());
   core::io::fd moved_to = std::move(moved_from);
   EXPECT_NE(moved_from, moved_to);
@@ -30,7 +30,7 @@ TEST(io, fd_transfer_ownership) {
   EXPECT_NE(moved_from, moved_to);
 }
 
-TEST(io, fd_duplicate) {
+TEST(io_fd, duplicate) {
   core::io::fd original(core::io::fd::kStdin());
   core::io::fd copy(original);
   EXPECT_NO_THROW(original.get_fd());
@@ -41,7 +41,7 @@ TEST(io, fd_duplicate) {
   EXPECT_NE(original, copy);
 }
 
-TEST(io, fd_equality) {
+TEST(io_fd, equality) {
   EXPECT_EQ(core::io::fd::kStdin(), core::io::fd::kStdin());
   EXPECT_EQ(core::io::fd::kStdout(), core::io::fd::kStdout());
   EXPECT_EQ(core::io::fd::kStderr(), core::io::fd::kStderr());

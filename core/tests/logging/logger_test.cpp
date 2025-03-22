@@ -1,15 +1,15 @@
-#include "logging/logging.hpp"
-
 #include <gtest/gtest.h>
+
+#include "logging/logging.hpp"
 
 namespace tests::logging {
 
-TEST(logging, logger_size) {
+TEST(logging_logger, size) {
   static_assert(sizeof(core::logging::logger) == 48);
   static_assert(alignof(core::logging::logger) == 8);
 }
 
-TEST(logging, logger_writer) {
+TEST(logging_logger, writer) {
   std::string buffer;
 
   const auto level = core::logging::level::kInfo;
@@ -23,7 +23,7 @@ TEST(logging, logger_writer) {
   EXPECT_EQ(buffer, "42");
 }
 
-TEST(logging, logger_noop_level) {
+TEST(logging_logger, noop_level) {
   std::size_t logs_count = 0;
 
   const auto level = core::logging::level::kWarn;
@@ -48,7 +48,7 @@ TEST(logging, logger_noop_level) {
   EXPECT_EQ(logs_count, 2);
 }
 
-TEST(logging, logger_renderer) {
+TEST(logging_logger, renderer) {
   std::string buffer;
 
   const auto level = core::logging::level::kInfo;

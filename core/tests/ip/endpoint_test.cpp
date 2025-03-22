@@ -4,7 +4,7 @@
 
 namespace tests::ip {
 
-TEST(ip, endpoint_size) {
+TEST(ip_endpoint, size) {
   static_assert(sizeof(core::ip::endpoint) == 20);
   static_assert(alignof(core::ip::endpoint) == 2);
 }
