@@ -86,7 +86,7 @@ std::vector<ip::endpoint> resolve(std::string_view hostname,
               ::getaddrinfo(hostname.data(), nullptr, &hints, &results)) {
     case 0:
       break;
-    case EAI_SYSTEM:
+    [[unlikely]] case EAI_SYSTEM:
       throw std::runtime_error(
           std::format("failed to resolve any address at {}: {}", hostname,
                       std::strerror(errno)));

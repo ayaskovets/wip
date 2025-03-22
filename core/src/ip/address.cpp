@@ -50,7 +50,7 @@ address::address(std::span<const std::uint8_t> data) {
       std::memcpy(data_.begin(), data.data(), data.size());
       version_ = ip::version::kIpV6;
       break;
-    default:
+    [[unlikely]] default:
       throw std::invalid_argument(
           std::format("invalid address size {}", data.size()));
   }

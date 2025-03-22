@@ -30,7 +30,7 @@ const fd& fd::kStderr() noexcept {
 }
 
 fd::fd(int fd) : fd_(fd) {
-  if (fd_ < 0) {
+  if (fd_ < 0) [[unlikely]] {
     throw std::invalid_argument(std::format("invalid file descriptor: {}", fd));
   }
 }
