@@ -2,6 +2,8 @@
 
 #include "logging/logging.hpp"
 
+namespace benchmarks::logging {
+
 void BM_logging_default(benchmark::State& state) {
   for (const auto _ : state) {
     benchmark::DoNotOptimize((core::logging::info("{}\n", 42), 42));
@@ -33,3 +35,5 @@ void BM_logging_fputs(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_logging_fputs);
+
+}  // namespace benchmarks::logging

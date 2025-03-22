@@ -5,6 +5,8 @@
 
 #include "threading/locked_mpmc_queue.hpp"
 
+namespace benchmarks::threading {
+
 template <typename ValueConstructor>
 void BM_locked_mpmc_queue_spsc_throughput(benchmark::State& state) {
   const auto capacity = state.range(0);
@@ -114,3 +116,5 @@ BENCHMARK_TEMPLATE(BM_locked_mpmc_queue_mpmc_throughput, std::shared_ptr<int>)
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
+
+}  // namespace benchmarks::threading

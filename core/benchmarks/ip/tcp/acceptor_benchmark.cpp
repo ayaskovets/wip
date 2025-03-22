@@ -2,6 +2,8 @@
 
 #include "ip/tcp/acceptor.hpp"
 
+namespace benchmarks::ip::tcp {
+
 void BM_acceptor_try_accept(benchmark::State& state) {
   const core::ip::tcp::acceptor acceptor(
       core::ip::endpoint(
@@ -14,3 +16,5 @@ void BM_acceptor_try_accept(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_acceptor_try_accept);
+
+}  // namespace benchmarks::ip::tcp
