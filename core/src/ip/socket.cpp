@@ -32,7 +32,6 @@ constexpr int get_type(ip::protocol protocol) noexcept {
 
 ::sockaddr_storage to_sockaddr_storage(ip::endpoint endpoint) {
   ::sockaddr_storage storage;
-
   switch (endpoint.get_address().get_version()) {
     case ip::version::kIpV4: {
       ::sockaddr_in &sockaddr = reinterpret_cast<::sockaddr_in &>(storage);
@@ -58,7 +57,6 @@ constexpr int get_type(ip::protocol protocol) noexcept {
       break;
     }
   }
-
   return storage;
 }
 
@@ -183,7 +181,7 @@ bool socket::get_flag(flag flag) const {
       }
       break;
   }
-  if (optlen != sizeof(optval)) {
+  if (optlen != sizeof(optval)) [[unlikely]] {
     throw std::runtime_error("unexpected value of socket flag");
   }
   return static_cast<bool>(optval);
@@ -192,7 +190,7 @@ bool socket::get_flag(flag flag) const {
 void socket::bind(const ip::endpoint &endpoint) {
   const ::sockaddr_storage storage(to_sockaddr_storage(endpoint));
   if (::bind(fd_, &reinterpret_cast<const sockaddr &>(storage),
-             storage.ss_len) == kSyscallError) {
+             storage.ss_len) == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
         std::format("failed to bind socket: {}", std::strerror(errno)));
   }
@@ -210,7 +208,7 @@ socket::connection_status socket::connect(const ip::endpoint &endpoint) {
       case ECONNREFUSED:
       case EALREADY:
         return connection_status::kFailure;
-      default:
+      [[unlikely]] default:
         throw std::runtime_error(
             std::format("failed to connect socket: {}", std::strerror(errno)));
     }
@@ -238,6 +236,67 @@ ip::endpoint socket::get_connect_endpoint() const {
         std::format("failed to get peer address: {}", std::strerror(errno)));
   }
   return to_endpoint(storage);
+}
+
+std::size_t socket::send(std::span<const std::uint8_t> bytes) const {
+  const ssize_t sent = ::send(fd_, bytes.data(), bytes.size(), 0);
+  if (sent == kSyscallError) [[unlikely]] {
+    switch (errno) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) [[unlikely]] {
+        return 0;
+      }
+      throw std::runtime_error(
+          std::format("send failed: {}", std::strerror(errno)));
+    }
+  }
+  return sent;
+}
+
+std::size_t socket::send_to(std::span<const std::uint8_t> bytes,
+                            const ip::endpoint &endpoint) const {
+  const ::sockaddr_storage storage(to_sockaddr_storage(endpoint));
+  const ssize_t sent =
+      ::sendto(fd_, bytes.data(), bytes.size(), 0,
+               &reinterpret_cast<const sockaddr &>(storage), storage.ss_len);
+  if (sent == kSyscallError) [[unlikely]] {
+    switch (errno) {
+      if (errno == EAGAIN || errno == EWOULDBLOCK) [[unlikely]] {
+        return 0;
+      }
+      throw std::runtime_error(
+          std::format("send failed: {}", std::strerror(errno)));
+    }
+  }
+  return sent;
+}
+
+std::size_t socket::receive(std::span<std::uint8_t> bytes) const {
+  const ssize_t received = ::recv(fd_, bytes.data(), bytes.size(), 0);
+  if (received == kSyscallError) [[unlikely]] {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) [[unlikely]] {
+      return 0;
+    }
+    throw std::runtime_error(
+        std::format("recv failed: {}", std::strerror(errno)));
+  }
+  return received;
+}
+
+std::pair<std::size_t, std::optional<ip::endpoint>> socket::receive_from(
+    std::span<std::uint8_t> bytes) const {
+  ::sockaddr_storage storage;
+  ::socklen_t socklen = sizeof(storage);
+  const ssize_t received =
+      ::recvfrom(fd_, bytes.data(), bytes.size(), 0,
+                 &reinterpret_cast<sockaddr &>(storage), &socklen);
+  if (received == kSyscallError) [[unlikely]] {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) [[unlikely]] {
+      return std::make_pair(0, std::nullopt);
+    }
+    throw std::runtime_error(
+        std::format("recv failed: {}", std::strerror(errno)));
+  }
+  return std::make_pair(received, to_endpoint(storage));
 }
 
 }  // namespace core::ip

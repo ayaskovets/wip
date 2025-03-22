@@ -14,18 +14,8 @@ constexpr int kSyscallError = -1;
 
 socket::socket(ip::version version) : ip::socket(ip::protocol::kTcp, version) {}
 
-std::size_t socket::send(std::span<const std::uint8_t>) const {
-  // TODO: implement send
-  return {};
-}
-
-std::size_t socket::receive(std::span<std::uint8_t>) const {
-  // TODO: implement recv
-  return {};
-}
-
 void socket::listen(std::size_t backlog) {
-  if (::listen(fd_, backlog) == kSyscallError) {
+  if (::listen(fd_, backlog) == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format(
         "failed to set nonblocking mode on socket: {}", std::strerror(errno)));
   }
@@ -36,7 +26,7 @@ std::optional<socket> socket::try_accept() const {
 
   const int fd = ::accept(fd_, nullptr, nullptr);
   if (fd == kSyscallError) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) [[likely]] {
       return std::nullopt;
     }
     throw std::runtime_error(
@@ -47,7 +37,7 @@ std::optional<socket> socket::try_accept() const {
 
 socket socket::accept() const {
   const int fd = ::accept(fd_, nullptr, nullptr);
-  if (fd == kSyscallError) {
+  if (fd == kSyscallError) [[unlikely]] {
     assert(errno != EAGAIN && errno != EWOULDBLOCK);
     throw std::runtime_error(
         std::format("accept failed: {}", std::strerror(errno)));

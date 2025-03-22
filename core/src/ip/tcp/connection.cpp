@@ -38,14 +38,12 @@ std::optional<connection> connection::connect(const ip::endpoint& endpoint) {
   return connection(std::move(socket));
 }
 
-std::size_t connection::send(std::span<const std::uint8_t>) const {
-  // TODO: implement send
-  return {};
+std::size_t connection::send(std::span<const std::uint8_t> bytes) const {
+  return socket_.send(bytes);
 }
 
-std::size_t connection::receive(std::span<std::uint8_t>) const {
-  // TODO: implement recv
-  return {};
+std::size_t connection::receive(std::span<std::uint8_t> bytes) const {
+  return socket_.receive(bytes);
 }
 
 ip::endpoint connection::get_endpoint() const {

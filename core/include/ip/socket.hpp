@@ -40,6 +40,14 @@ class socket : public io::fd {
  public:
   ip::endpoint get_bind_endpoint() const;
   ip::endpoint get_connect_endpoint() const;
+
+ public:
+  std::size_t send(std::span<const std::uint8_t> bytes) const;
+  std::size_t send_to(std::span<const std::uint8_t> bytes,
+                      const ip::endpoint& endpoint) const;
+  std::size_t receive(std::span<std::uint8_t> bytes) const;
+  std::pair<std::size_t, std::optional<ip::endpoint>> receive_from(
+      std::span<std::uint8_t> bytes) const;
 };
 
 }  // namespace core::ip
