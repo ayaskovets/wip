@@ -20,8 +20,8 @@ class endpoint final {
   ip::port get_port() const noexcept;
 
  private:
-  const ip::address address_;
-  const ip::port port_;
+  ip::address address_;
+  ip::port port_;
 };
 
 }  // namespace core::ip

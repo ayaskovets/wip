@@ -24,7 +24,7 @@ class connection final {
   ip::endpoint get_endpoint() const;
 
  private:
-  const ip::tcp::socket socket_;
+  ip::tcp::socket socket_;
 };
 
 }  // namespace core::ip::tcp

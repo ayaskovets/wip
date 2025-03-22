@@ -20,7 +20,7 @@ class acceptor final {
 
  private:
   mutable ip::tcp::socket socket_;
-  const ip::endpoint endpoint_;
+  ip::endpoint endpoint_;
   bool is_blocking_;
 };
 
