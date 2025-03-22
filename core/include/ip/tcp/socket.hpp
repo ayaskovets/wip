@@ -9,7 +9,7 @@ class socket final : public ip::socket {
   using ip::socket::socket;
 
  public:
-  socket(ip::version version);
+  explicit socket(ip::version version);
 
  public:
   std::size_t send(std::span<const std::uint8_t> bytes) const;
@@ -17,7 +17,8 @@ class socket final : public ip::socket {
 
  public:
   void listen(std::size_t backlog);
-  std::optional<ip::tcp::socket> accept() const;
+  std::optional<socket> try_accept() const;
+  socket accept() const;
 };
 
 }  // namespace core::ip::tcp

@@ -3,17 +3,30 @@
 namespace core::ip::tcp {
 
 acceptor::acceptor(ip::endpoint endpoint, std::size_t backlog)
-    : socket_(endpoint.get_address().get_version()),
-      endpoint_(std::move(endpoint)) {
-  socket_.set_flag(ip::socket::flag::kNonblocking, true);
-  socket_.set_flag(ip::socket::flag::kReuseaddr, true);
-  socket_.set_flag(ip::socket::flag::kReuseport, true);
-  socket_.set_flag(ip::socket::flag::kKeepalive, true);
-  socket_.bind(endpoint_);
-  socket_.listen(backlog);
-}
+    : socket_([&endpoint, backlog] {
+        ip::tcp::socket socket(endpoint.get_address().get_version());
+        socket.set_flag(ip::socket::flag::kNonblocking, true);
+        socket.set_flag(ip::socket::flag::kReuseaddr, true);
+        socket.set_flag(ip::socket::flag::kReuseport, true);
+        socket.set_flag(ip::socket::flag::kKeepalive, true);
+        socket.bind(endpoint);
+        socket.listen(backlog);
+        return socket;
+      }()),
+      endpoint_(std::move(endpoint)),
+      is_blocking_(false) {}
 
 std::optional<ip::tcp::socket> acceptor::try_accept() const {
+  if (is_blocking_) [[unlikely]] {
+    socket_.set_flag(ip::socket::flag::kNonblocking, true);
+  }
+  return socket_.try_accept();
+}
+
+ip::tcp::socket acceptor::accept() const {
+  if (!is_blocking_) [[unlikely]] {
+    socket_.set_flag(ip::socket::flag::kNonblocking, false);
+  }
   return socket_.accept();
 }
 

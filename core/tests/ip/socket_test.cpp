@@ -55,16 +55,18 @@ TEST(ip_socket, connect) {
       core::ip::socket socket(protocol, version);
       socket.set_flag(core::ip::socket::flag::kReuseaddr, true);
       socket.set_flag(core::ip::socket::flag::kReuseport, true);
-      socket.set_flag(core::ip::socket::flag::kNonblocking, true);
 
       switch (protocol) {
         case core::ip::protocol::kTcp:
-          EXPECT_FALSE(socket.connect(endpoint));
-          EXPECT_FALSE(socket.connect(endpoint));
+          EXPECT_EQ(socket.connect(endpoint),
+                    core::ip::socket::connection_status::kFailure);
+          EXPECT_ANY_THROW(socket.connect(endpoint));
           break;
         case core::ip::protocol::kUdp:
-          EXPECT_TRUE(socket.connect(endpoint));
-          EXPECT_TRUE(socket.connect(endpoint));
+          EXPECT_EQ(socket.connect(endpoint),
+                    core::ip::socket::connection_status::kSuccess);
+          EXPECT_EQ(socket.connect(endpoint),
+                    core::ip::socket::connection_status::kSuccess);
           break;
       }
     }
@@ -81,19 +83,23 @@ TEST(ip_socket, endpoints) {
     for (const auto protocol :
          {core::ip::protocol::kTcp, core::ip::protocol::kUdp}) {
       core::ip::socket socket(protocol, version);
+      socket.set_flag(core::ip::socket::flag::kReuseaddr, true);
+      socket.set_flag(core::ip::socket::flag::kReuseport, true);
+
       EXPECT_NO_THROW(socket.get_bind_endpoint());
       socket.bind(bind_endpoint);
       EXPECT_EQ(socket.get_bind_endpoint(), bind_endpoint);
-
       EXPECT_ANY_THROW(socket.get_connect_endpoint());
 
       switch (protocol) {
         case core::ip::protocol::kTcp:
-          EXPECT_FALSE(socket.connect(connect_endpoint));
+          EXPECT_EQ(socket.connect(connect_endpoint),
+                    core::ip::socket::connection_status::kFailure);
           EXPECT_ANY_THROW(socket.get_connect_endpoint());
           break;
         case core::ip::protocol::kUdp:
-          EXPECT_TRUE(socket.connect(connect_endpoint));
+          EXPECT_EQ(socket.connect(connect_endpoint),
+                    core::ip::socket::connection_status::kSuccess);
           EXPECT_EQ(socket.get_connect_endpoint(), connect_endpoint);
           break;
       }

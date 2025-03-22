@@ -5,7 +5,7 @@
 namespace tests::ip::tcp {
 
 TEST(ip_tcp_acceptor, size) {
-  static_assert(sizeof(core::ip::tcp::acceptor) == 24);
+  static_assert(sizeof(core::ip::tcp::acceptor) == 28);
   static_assert(alignof(core::ip::tcp::acceptor) == 4);
 }
 

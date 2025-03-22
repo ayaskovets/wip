@@ -7,10 +7,15 @@ connection::connection(ip::tcp::socket socket) noexcept
 
 std::optional<connection> connection::try_accept(
     const ip::tcp::acceptor& acceptor) {
-  if (auto socket = acceptor.try_accept(); socket.has_value()) {
+  if (std::optional<ip::tcp::socket> socket = acceptor.try_accept();
+      socket.has_value()) {
     return connection(std::move(*socket));
   }
   return std::nullopt;
+}
+
+connection connection::accept(const ip::tcp::acceptor& acceptor) {
+  return connection(acceptor.accept());
 }
 
 std::optional<connection> connection::try_connect(
@@ -18,19 +23,28 @@ std::optional<connection> connection::try_connect(
   ip::tcp::socket socket(endpoint.get_address().get_version());
   socket.set_flag(ip::socket::flag::kNonblocking, true);
   socket.set_flag(ip::socket::flag::kKeepalive, true);
-  if (socket.connect(endpoint)) {
-    return connection(std::move(socket));
+  if (socket.connect(endpoint) == ip::socket::connection_status::kFailure) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  return connection(std::move(socket));
+}
+
+std::optional<connection> connection::connect(const ip::endpoint& endpoint) {
+  ip::tcp::socket socket(endpoint.get_address().get_version());
+  socket.set_flag(ip::socket::flag::kKeepalive, true);
+  if (socket.connect(endpoint) != ip::socket::connection_status::kSuccess) {
+    return std::nullopt;
+  }
+  return connection(std::move(socket));
 }
 
 std::size_t connection::send(std::span<const std::uint8_t>) const {
-  // TODO: implement
+  // TODO: implement send
   return {};
 }
 
 std::size_t connection::receive(std::span<std::uint8_t>) const {
-  // TODO: implement
+  // TODO: implement recv
   return {};
 }
 

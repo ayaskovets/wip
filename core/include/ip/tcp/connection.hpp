@@ -12,7 +12,9 @@ class connection final {
  public:
   static std::optional<connection> try_accept(
       const ip::tcp::acceptor& acceptor);
+  static connection accept(const ip::tcp::acceptor& acceptor);
   static std::optional<connection> try_connect(const ip::endpoint& endpoint);
+  static std::optional<connection> connect(const ip::endpoint& endpoint);
 
  public:
   std::size_t send(std::span<const std::uint8_t> bytes) const;

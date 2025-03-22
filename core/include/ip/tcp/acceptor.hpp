@@ -13,13 +13,15 @@ class acceptor final {
 
  public:
   std::optional<ip::tcp::socket> try_accept() const;
+  ip::tcp::socket accept() const;
 
  public:
   const ip::endpoint& get_endpoint() const;
 
  private:
-  ip::tcp::socket socket_;
+  mutable ip::tcp::socket socket_;
   const ip::endpoint endpoint_;
+  bool is_blocking_;
 };
 
 }  // namespace core::ip::tcp

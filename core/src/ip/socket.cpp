@@ -198,23 +198,24 @@ void socket::bind(const ip::endpoint &endpoint) {
   }
 }
 
-bool socket::connect(const ip::endpoint &endpoint) {
+socket::connection_status socket::connect(const ip::endpoint &endpoint) {
   const ::sockaddr_storage storage(to_sockaddr_storage(endpoint));
   if (::connect(fd_, &reinterpret_cast<const ::sockaddr &>(storage),
                 storage.ss_len) == kSyscallError) {
     switch (errno) {
       case EISCONN:
-        return true;
+        return connection_status::kSuccess;
       case EINPROGRESS:
+        return connection_status::kPending;
       case ECONNREFUSED:
       case EALREADY:
-        return false;
+        return connection_status::kFailure;
       default:
         throw std::runtime_error(
             std::format("failed to connect socket: {}", std::strerror(errno)));
     }
   }
-  return true;
+  return connection_status::kSuccess;
 }
 
 ip::endpoint socket::get_bind_endpoint() const {

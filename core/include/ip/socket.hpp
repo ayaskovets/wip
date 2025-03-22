@@ -27,7 +27,15 @@ class socket : public io::fd {
 
  public:
   void bind(const ip::endpoint& endpoint);
-  bool connect(const ip::endpoint& endpoint);
+
+ public:
+  enum class connection_status : std::uint8_t {
+    kSuccess,
+    kPending,
+    kFailure,
+  };
+
+  connection_status connect(const ip::endpoint& endpoint);
 
  public:
   ip::endpoint get_bind_endpoint() const;
