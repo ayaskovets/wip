@@ -160,7 +160,7 @@ TEST_P(threading_lockfree_spsc_queue, workload) {
   std::thread consumer([&latch, &queue, items_size, &popped_items] {
     latch.arrive_and_wait();
     while (popped_items.size() != items_size) {
-      if (const auto item = queue.try_pop(); item.has_value()) {
+      if (const std::optional<int> item = queue.try_pop(); item.has_value()) {
         popped_items.push_back(*item);
       }
     }
