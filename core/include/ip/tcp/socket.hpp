@@ -13,8 +13,11 @@ class socket final : public ip::socket {
 
  public:
   void listen(std::size_t backlog);
-  std::optional<socket> try_accept() const;
-  socket accept() const;
+  std::optional<socket> accept() const;
+
+ public:
+  std::size_t send(std::span<const std::uint8_t> bytes) const;
+  std::size_t receive(std::span<std::uint8_t> bytes) const;
 };
 
 }  // namespace core::ip::tcp

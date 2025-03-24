@@ -21,12 +21,10 @@ void socket::listen(std::size_t backlog) {
   }
 }
 
-std::optional<socket> socket::try_accept() const {
-  assert(get_flag(ip::socket::flag::kNonblocking));
-
+std::optional<socket> socket::accept() const {
   const int fd = ::accept(fd_, nullptr, nullptr);
   if (fd == kSyscallError) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) [[likely]] {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return std::nullopt;
     }
     throw std::runtime_error(
@@ -35,14 +33,28 @@ std::optional<socket> socket::try_accept() const {
   return socket(fd);
 }
 
-socket socket::accept() const {
-  const int fd = ::accept(fd_, nullptr, nullptr);
-  if (fd == kSyscallError) [[unlikely]] {
-    assert(errno != EAGAIN && errno != EWOULDBLOCK);
+std::size_t socket::send(std::span<const std::uint8_t> bytes) const {
+  const ssize_t sent = ::send(fd_, bytes.data(), bytes.size(), 0);
+  if (sent == kSyscallError) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0;
+    }
     throw std::runtime_error(
-        std::format("accept failed: {}", std::strerror(errno)));
+        std::format("send failed: {}", std::strerror(errno)));
   }
-  return socket(fd);
+  return sent;
+}
+
+std::size_t socket::receive(std::span<std::uint8_t> bytes) const {
+  const ssize_t received = ::recv(fd_, bytes.data(), bytes.size(), 0);
+  if (received == kSyscallError) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0;
+    }
+    throw std::runtime_error(
+        std::format("recv failed: {}", std::strerror(errno)));
+  }
+  return received;
 }
 
 }  // namespace core::ip::tcp
