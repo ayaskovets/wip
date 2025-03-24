@@ -20,8 +20,8 @@ class acceptor final {
 
  private:
   mutable ip::tcp::socket socket_;
+  mutable bool is_blocking_;
   ip::endpoint endpoint_;
-  bool is_blocking_;
 };
 
 }  // namespace core::ip::tcp
