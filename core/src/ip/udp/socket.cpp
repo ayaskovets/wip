@@ -76,24 +76,6 @@ socket::socket(ip::version version) : ip::socket(ip::protocol::kUdp, version) {}
 std::size_t socket::send(std::span<const std::uint8_t> bytes) const {
   const ssize_t sent = ::send(fd_, bytes.data(), bytes.size(), 0);
   if (sent == kSyscallError) {
-    switch (errno) {
-      if (errno == EAGAIN || errno == EWOULDBLOCK) {
-        return 0;
-      }
-      throw std::runtime_error(
-          std::format("send failed: {}", std::strerror(errno)));
-    }
-  }
-  return sent;
-}
-
-std::size_t socket::send(std::span<const std::uint8_t> bytes,
-                         const ip::endpoint &endpoint) const {
-  const ::sockaddr_storage storage(to_sockaddr_storage(endpoint));
-  const ssize_t sent =
-      ::sendto(fd_, bytes.data(), bytes.size(), 0,
-               &reinterpret_cast<const sockaddr &>(storage), storage.ss_len);
-  if (sent == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return 0;
     }
@@ -115,8 +97,24 @@ std::size_t socket::receive(std::span<std::uint8_t> bytes) const {
   return received;
 }
 
-std::size_t socket::receive(std::span<std::uint8_t> bytes,
-                            ip::endpoint &endpoint) const {
+std::size_t socket::send_to(std::span<const std::uint8_t> bytes,
+                            const ip::endpoint &endpoint) const {
+  const ::sockaddr_storage storage(to_sockaddr_storage(endpoint));
+  const ssize_t sent =
+      ::sendto(fd_, bytes.data(), bytes.size(), 0,
+               &reinterpret_cast<const sockaddr &>(storage), storage.ss_len);
+  if (sent == kSyscallError) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return 0;
+    }
+    throw std::runtime_error(
+        std::format("sendto failed: {}", std::strerror(errno)));
+  }
+  return sent;
+}
+
+std::size_t socket::receive_from(std::span<std::uint8_t> bytes,
+                                 ip::endpoint &endpoint) const {
   ::sockaddr_storage storage;
   ::socklen_t socklen = sizeof(storage);
   const ssize_t received =
@@ -127,7 +125,7 @@ std::size_t socket::receive(std::span<std::uint8_t> bytes,
       return 0;
     }
     throw std::runtime_error(
-        std::format("recv failed: {}", std::strerror(errno)));
+        std::format("recvfrom failed: {}", std::strerror(errno)));
   }
   endpoint = to_endpoint(storage);
   return received;

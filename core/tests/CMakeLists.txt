@@ -15,6 +15,7 @@ target_sources(${TARGET}
     ip/tcp/acceptor_test.cpp
     ip/tcp/connection_test.cpp
     ip/tcp/socket_test.cpp
+    ip/udp/socket_test.cpp
     logging/logger_test.cpp
     threading/locked_mpmc_queue_test.cpp
     threading/lockfree_spsc_queue_test.cpp
