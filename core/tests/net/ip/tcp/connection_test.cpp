@@ -6,12 +6,12 @@
 
 namespace tests::net::ip::tcp {
 
-TEST(ip_tcp_connection, size) {
+TEST(net_ip_tcp_connection, size) {
   static_assert(sizeof(core::net::ip::tcp::connection) == 4);
   static_assert(alignof(core::net::ip::tcp::connection) == 4);
 }
 
-// TEST(ip_tcp_connection, blocking_successful_connection) {
+// TEST(net_ip_tcp_connection, blocking_successful_connection) {
 //   const core::net::ip::endpoint endpoint(
 //       core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),
 //       core::net::ip::port(9996));
@@ -28,7 +28,7 @@ TEST(ip_tcp_connection, size) {
 //   client.join();
 // }
 
-// TEST(ip_tcp_connection, nonblocking_successful_connection) {
+// TEST(net_ip_tcp_connection, nonblocking_successful_connection) {
 //   const core::net::ip::endpoint endpoint(
 //       core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),
 //       core::net::ip::port(9996));

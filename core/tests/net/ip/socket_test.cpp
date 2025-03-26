@@ -4,12 +4,12 @@
 
 namespace tests::net::ip {
 
-TEST(ip_socket, size) {
+TEST(net_ip_socket, size) {
   static_assert(sizeof(core::net::ip::socket) == 4);
   static_assert(alignof(core::net::ip::socket) == 4);
 }
 
-TEST(ip_socket, flags) {
+TEST(net_ip_socket, flags) {
   for (const auto protocol :
        {core::net::ip::protocol::kTcp, core::net::ip::protocol::kUdp}) {
     for (const auto version :
@@ -29,7 +29,7 @@ TEST(ip_socket, flags) {
   }
 }
 
-TEST(ip_socket, bind) {
+TEST(net_ip_socket, bind) {
   for (const auto version :
        {core::net::ip::version::kIPv4, core::net::ip::version::kIPv6}) {
     const core::net::ip::endpoint endpoint(
@@ -45,7 +45,7 @@ TEST(ip_socket, bind) {
   }
 }
 
-TEST(ip_socket, connect) {
+TEST(net_ip_socket, connect) {
   for (const auto version :
        {core::net::ip::version::kIPv4, core::net::ip::version::kIPv6}) {
     const core::net::ip::endpoint endpoint(
@@ -73,7 +73,7 @@ TEST(ip_socket, connect) {
   }
 }
 
-TEST(ip_socket, endpoints) {
+TEST(net_ip_socket, endpoints) {
   for (const auto version :
        {core::net::ip::version::kIPv4, core::net::ip::version::kIPv6}) {
     const core::net::ip::endpoint bind_endpoint(

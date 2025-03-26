@@ -4,12 +4,12 @@
 
 namespace tests::net::ip {
 
-TEST(ip_port, size) {
+TEST(net_ip_port, size) {
   static_assert(sizeof(core::net::ip::port) == 2);
   static_assert(alignof(core::net::ip::port) == 2);
 }
 
-TEST(ip_port, construction) {
+TEST(net_ip_port, construction) {
   EXPECT_NE(core::net::ip::port(1234),
             core::net::ip::port(1234, core::net::ip::port::network_byte_order));
   EXPECT_EQ(

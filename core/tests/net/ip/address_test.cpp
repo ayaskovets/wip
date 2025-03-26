@@ -4,26 +4,26 @@
 
 namespace tests::net::ip {
 
-TEST(ip_address, size) {
+TEST(net_ip_address, size) {
   static_assert(sizeof(core::net::ip::address) == 17);
   static_assert(alignof(core::net::ip::address) == 1);
 }
 
-TEST(ip_address, localhost) {
+TEST(net_ip_address, localhost) {
   EXPECT_EQ(core::net::ip::address("127.0.0.1"),
             core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4));
   EXPECT_EQ(core::net::ip::address("::1"),
             core::net::ip::address::kLocalhost(core::net::ip::version::kIPv6));
 }
 
-TEST(ip_address, any) {
+TEST(net_ip_address, any) {
   EXPECT_EQ(core::net::ip::address("0.0.0.0"),
             core::net::ip::address::kAny(core::net::ip::version::kIPv4));
   EXPECT_EQ(core::net::ip::address("::"),
             core::net::ip::address::kAny(core::net::ip::version::kIPv6));
 }
 
-TEST(ip_address, broadcast) {
+TEST(net_ip_address, broadcast) {
   EXPECT_EQ(core::net::ip::address("255.255.255.255"),
             core::net::ip::address::kBroadcast());
 }

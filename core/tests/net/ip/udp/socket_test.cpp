@@ -6,12 +6,12 @@
 
 namespace tests::net::ip::udp {
 
-TEST(ip_udp_socket, size) {
+TEST(net_ip_udp_socket, size) {
   static_assert(sizeof(core::net::ip::udp::socket) == 4);
   static_assert(alignof(core::net::ip::udp::socket) == 4);
 }
 
-TEST(ip_udp_socket, nonblocking_send_receive_error) {
+TEST(net_ip_udp_socket, nonblocking_send_receive_error) {
   for (const auto version :
        {core::net::ip::version::kIPv4, core::net::ip::version::kIPv6}) {
     core::net::ip::udp::socket socket(version);
@@ -25,7 +25,7 @@ TEST(ip_udp_socket, nonblocking_send_receive_error) {
   }
 }
 
-TEST(ip_udp_socket, blocking_echo_handshake) {
+TEST(net_ip_udp_socket, blocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :
@@ -76,7 +76,7 @@ TEST(ip_udp_socket, blocking_echo_handshake) {
   }
 }
 
-TEST(ip_udp_socket, nonblocking_echo_handshake) {
+TEST(net_ip_udp_socket, nonblocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :

@@ -4,12 +4,12 @@
 
 namespace tests::net::ip::tcp {
 
-TEST(ip_tcp_acceptor, size) {
+TEST(net_ip_tcp_acceptor, size) {
   static_assert(sizeof(core::net::ip::tcp::acceptor) == 28);
   static_assert(alignof(core::net::ip::tcp::acceptor) == 4);
 }
 
-TEST(ip_tcp_acceptor, try_accept_ip4) {
+TEST(net_ip_tcp_acceptor, try_accept_ip4) {
   const core::net::ip::tcp::acceptor acceptor(
       core::net::ip::endpoint(
           core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),
@@ -18,7 +18,7 @@ TEST(ip_tcp_acceptor, try_accept_ip4) {
   EXPECT_FALSE(acceptor.try_accept().has_value());
 }
 
-TEST(ip_tcp_acceptor, try_accept_ip6) {
+TEST(net_ip_tcp_acceptor, try_accept_ip6) {
   const core::net::ip::tcp::acceptor acceptor(
       core::net::ip::endpoint(
           core::net::ip::address::kLocalhost(core::net::ip::version::kIPv6),
@@ -27,7 +27,7 @@ TEST(ip_tcp_acceptor, try_accept_ip6) {
   EXPECT_FALSE(acceptor.try_accept().has_value());
 }
 
-TEST(ip_tcp_acceptor, copy) {
+TEST(net_ip_tcp_acceptor, copy) {
   core::net::ip::tcp::acceptor original(
       core::net::ip::endpoint(
           core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),
@@ -39,7 +39,7 @@ TEST(ip_tcp_acceptor, copy) {
   EXPECT_FALSE(copy.try_accept().has_value());
 }
 
-TEST(ip_tcp_acceptor, move_operations) {
+TEST(net_ip_tcp_acceptor, move_operations) {
   core::net::ip::tcp::acceptor moved_from1(
       core::net::ip::endpoint(
           core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),

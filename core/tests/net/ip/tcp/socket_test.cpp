@@ -6,12 +6,12 @@
 
 namespace tests::net::ip::tcp {
 
-TEST(ip_tcp_socket, size) {
+TEST(net_ip_tcp_socket, size) {
   static_assert(sizeof(core::net::ip::tcp::socket) == 4);
   static_assert(alignof(core::net::ip::tcp::socket) == 4);
 }
 
-TEST(ip_tcp_socket, blocking_send_receive_error) {
+TEST(net_ip_tcp_socket, blocking_send_receive_error) {
   for (const auto version :
        {core::net::ip::version::kIPv4, core::net::ip::version::kIPv6}) {
     core::net::ip::tcp::socket socket(version);
@@ -25,7 +25,7 @@ TEST(ip_tcp_socket, blocking_send_receive_error) {
   }
 }
 
-TEST(ip_tcp_socket, nonblocking_send_receive_error) {
+TEST(net_ip_tcp_socket, nonblocking_send_receive_error) {
   for (const auto version :
        {core::net::ip::version::kIPv4, core::net::ip::version::kIPv6}) {
     core::net::ip::tcp::socket socket(version);
@@ -39,7 +39,7 @@ TEST(ip_tcp_socket, nonblocking_send_receive_error) {
   }
 }
 
-TEST(ip_tcp_socket, accept_error) {
+TEST(net_ip_tcp_socket, accept_error) {
   for (const auto version :
        {core::net::ip::version::kIPv4, core::net::ip::version::kIPv6}) {
     core::net::ip::tcp::socket socket(version);
@@ -53,7 +53,7 @@ TEST(ip_tcp_socket, accept_error) {
   }
 }
 
-TEST(ip_tcp_socket, blocking_echo_handshake) {
+TEST(net_ip_tcp_socket, blocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :
@@ -92,7 +92,7 @@ TEST(ip_tcp_socket, blocking_echo_handshake) {
   }
 }
 
-TEST(ip_tcp_socket, nonblocking_echo_handshake) {
+TEST(net_ip_tcp_socket, nonblocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :
