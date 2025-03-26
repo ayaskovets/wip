@@ -16,6 +16,18 @@ TEST(ip_address, localhost) {
             core::net::ip::address::kLocalhost(core::net::ip::version::kIPv6));
 }
 
+TEST(ip_address, any) {
+  EXPECT_EQ(core::net::ip::address("0.0.0.0"),
+            core::net::ip::address::kAny(core::net::ip::version::kIPv4));
+  EXPECT_EQ(core::net::ip::address("::"),
+            core::net::ip::address::kAny(core::net::ip::version::kIPv6));
+}
+
+TEST(ip_address, broadcast) {
+  EXPECT_EQ(core::net::ip::address("255.255.255.255"),
+            core::net::ip::address::kBroadcast());
+}
+
 class ip_address
     : public ::testing::TestWithParam<std::tuple<
           std::vector<std::uint8_t>, std::string, core::net::ip::version>> {};
