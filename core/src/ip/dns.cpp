@@ -64,9 +64,9 @@ std::vector<ip::endpoint> resolve(std::string_view hostname,
       return AF_UNSPEC;
     }
     switch (*version) {
-      case ip::version::kIpV4:
+      case ip::version::kIPv4:
         return AF_INET;
-      case ip::version::kIpV6:
+      case ip::version::kIPv6:
         return AF_INET6;
     }
   }();

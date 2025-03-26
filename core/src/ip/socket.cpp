@@ -14,9 +14,9 @@ constexpr int kSyscallError = -1;
 
 constexpr int get_domain(ip::version version) noexcept {
   switch (version) {
-    case ip::version::kIpV4:
+    case ip::version::kIPv4:
       return AF_INET;
-    case ip::version::kIpV6:
+    case ip::version::kIPv6:
       return AF_INET6;
   }
 }
@@ -33,7 +33,7 @@ constexpr int get_type(ip::protocol protocol) noexcept {
 ::sockaddr_storage to_sockaddr_storage(ip::endpoint endpoint) {
   ::sockaddr_storage storage;
   switch (endpoint.get_address().get_version()) {
-    case ip::version::kIpV4: {
+    case ip::version::kIPv4: {
       ::sockaddr_in &sockaddr = reinterpret_cast<::sockaddr_in &>(storage);
 
       sockaddr.sin_family = AF_INET;
@@ -44,7 +44,7 @@ constexpr int get_type(ip::protocol protocol) noexcept {
                   endpoint.get_address().get_bytes().size());
       break;
     }
-    case ip::version::kIpV6: {
+    case ip::version::kIPv6: {
       ::sockaddr_in6 &sockaddr = reinterpret_cast<::sockaddr_in6 &>(storage);
 
       sockaddr.sin6_family = AF_INET6;

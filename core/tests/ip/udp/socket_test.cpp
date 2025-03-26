@@ -13,7 +13,7 @@ TEST(ip_udp_socket, size) {
 
 TEST(ip_udp_socket, nonblocking_send_receive_error) {
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     core::ip::udp::socket socket(version);
     socket.set_flag(core::ip::socket::flag::kNonblocking, true);
     socket.set_flag(core::ip::socket::flag::kReuseaddr, true);
@@ -29,7 +29,7 @@ TEST(ip_udp_socket, blocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     const core::ip::endpoint server_endpoint(
         core::ip::address::kLocalhost(version), core::ip::port(9995));
     const core::ip::endpoint client_endpoint(
@@ -79,7 +79,7 @@ TEST(ip_udp_socket, nonblocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     const core::ip::endpoint server_endpoint(
         core::ip::address::kLocalhost(version), core::ip::port(9995));
     const core::ip::endpoint client_endpoint(

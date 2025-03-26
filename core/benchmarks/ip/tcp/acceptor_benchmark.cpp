@@ -7,7 +7,7 @@ namespace benchmarks::ip::tcp {
 void BM_acceptor_try_accept(benchmark::State& state) {
   const core::ip::tcp::acceptor acceptor(
       core::ip::endpoint(
-          core::ip::address::kLocalhost(core::ip::version::kIpV4),
+          core::ip::address::kLocalhost(core::ip::version::kIPv4),
           core::ip::port(9996)),
       1);
 

@@ -11,9 +11,9 @@ TEST(ip_address, size) {
 
 TEST(ip_address, localhost) {
   EXPECT_EQ(core::ip::address("127.0.0.1"),
-            core::ip::address::kLocalhost(core::ip::version::kIpV4));
+            core::ip::address::kLocalhost(core::ip::version::kIPv4));
   EXPECT_EQ(core::ip::address("::1"),
-            core::ip::address::kLocalhost(core::ip::version::kIpV6));
+            core::ip::address::kLocalhost(core::ip::version::kIPv6));
 }
 
 class ip_address
@@ -46,11 +46,11 @@ INSTANTIATE_TEST_SUITE_P(
     ip_address, ip_address,
     ::testing::Values(
         std::make_tuple(std::vector<std::uint8_t>{255, 255, 255, 255},
-                        "255.255.255.255", core::ip::version::kIpV4),
+                        "255.255.255.255", core::ip::version::kIPv4),
         std::make_tuple(std::vector<std::uint8_t>{255, 255, 255, 255, 255, 255,
                                                   255, 255, 255, 255, 255, 255,
                                                   255, 255, 255, 255},
                         "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
-                        core::ip::version::kIpV6)));
+                        core::ip::version::kIPv6)));
 
 }  // namespace tests::ip

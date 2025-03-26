@@ -6,7 +6,7 @@ namespace tests::ip {
 
 TEST(ip_resolve, localhost_tcp_ip6) {
   const auto results = core::ip::resolve("localhost", core::ip::protocol::kTcp,
-                                         core::ip::version::kIpV6);
+                                         core::ip::version::kIPv6);
   EXPECT_EQ(results.size(), 1);
 
   const auto& endpoint = results.at(0);
@@ -15,7 +15,7 @@ TEST(ip_resolve, localhost_tcp_ip6) {
 
 TEST(ip_resolve, localhost_udp_ip4) {
   const auto results = core::ip::resolve("localhost", core::ip::protocol::kUdp,
-                                         core::ip::version::kIpV4);
+                                         core::ip::version::kIPv4);
   EXPECT_EQ(results.size(), 1);
 
   const auto& endpoint = results.at(0);

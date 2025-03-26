@@ -9,18 +9,18 @@ namespace core::ip {
 
 namespace {
 
-constexpr std::size_t kIpV4Bytes = 4;
-constexpr std::size_t kIpV6Bytes = 16;
+constexpr std::size_t kIPv4Bytes = 4;
+constexpr std::size_t kIPv6Bytes = 16;
 
 }  // namespace
 
 const address& address::kLocalhost(ip::version version) noexcept {
   switch (version) {
-    case ip::version::kIpV4: {
+    case ip::version::kIPv4: {
       static address address("127.0.0.1");
       return address;
     }
-    case ip::version::kIpV6: {
+    case ip::version::kIPv6: {
       static address address("::1");
       return address;
     }
@@ -29,29 +29,29 @@ const address& address::kLocalhost(ip::version version) noexcept {
 
 const address& address::kAny(ip::version version) noexcept {
   switch (version) {
-    case ip::version::kIpV4: {
+    case ip::version::kIPv4: {
       static address address("0.0.0.0");
       return address;
     }
-    case ip::version::kIpV6: {
+    case ip::version::kIPv6: {
       static address address("::");
       return address;
     }
   }
 }
 
-const address& address::kBroadcast(/* ip::version::kIpV4 */) noexcept {
+const address& address::kBroadcast(/* ip::version::kIPv4 */) noexcept {
   static address address("255.255.255.255");
   return address;
 }
 
 const address& address::kNonRoutable(ip::version version) noexcept {
   switch (version) {
-    case ip::version::kIpV4: {
+    case ip::version::kIPv4: {
       static address address("192.0.2.0");
       return address;
     }
-    case ip::version::kIpV6: {
+    case ip::version::kIPv6: {
       static address address("2001:db8::");
       return address;
     }
@@ -60,13 +60,13 @@ const address& address::kNonRoutable(ip::version version) noexcept {
 
 address::address(std::span<const std::uint8_t> data) {
   switch (data.size()) {
-    case kIpV4Bytes:
+    case kIPv4Bytes:
       std::memcpy(data_.begin(), data.data(), data.size());
-      version_ = ip::version::kIpV4;
+      version_ = ip::version::kIPv4;
       break;
-    case kIpV6Bytes:
+    case kIPv6Bytes:
       std::memcpy(data_.begin(), data.data(), data.size());
-      version_ = ip::version::kIpV6;
+      version_ = ip::version::kIPv6;
       break;
     [[unlikely]] default:
       throw std::invalid_argument(
@@ -77,10 +77,10 @@ address::address(std::span<const std::uint8_t> data) {
 address::address(std::string_view string_view) {
   if (string_view.size() <= INET_ADDRSTRLEN &&
       ::inet_pton(AF_INET, string_view.data(), data_.begin())) {
-    version_ = ip::version::kIpV4;
+    version_ = ip::version::kIPv4;
   } else if (string_view.size() <= INET6_ADDRSTRLEN &&
              ::inet_pton(AF_INET6, string_view.data(), data_.begin())) {
-    version_ = ip::version::kIpV6;
+    version_ = ip::version::kIPv6;
   } else {
     throw std::invalid_argument(std::format("invalid address {}", string_view));
   }
@@ -88,12 +88,12 @@ address::address(std::string_view string_view) {
 
 bool address::operator==(const address& that) const noexcept {
   switch (version_) {
-    case ip::version::kIpV4:
+    case ip::version::kIPv4:
       return version_ == that.version_ &&
-             std::equal(data_.begin(), std::next(data_.begin(), kIpV4Bytes),
+             std::equal(data_.begin(), std::next(data_.begin(), kIPv4Bytes),
                         that.data_.begin(),
-                        std::next(that.data_.begin(), kIpV4Bytes));
-    case ip::version::kIpV6:
+                        std::next(that.data_.begin(), kIPv4Bytes));
+    case ip::version::kIPv6:
       return version_ == that.version_ && data_ == that.data_;
   }
 }
@@ -104,10 +104,10 @@ bool address::operator!=(const address& that) const noexcept {
 
 std::span<const std::uint8_t> address::get_bytes() const noexcept {
   switch (version_) {
-    case ip::version::kIpV4:
-      return std::span<const std::uint8_t>(data_.begin(), kIpV4Bytes);
-    case ip::version::kIpV6:
-      return std::span<const std::uint8_t>(data_.begin(), kIpV6Bytes);
+    case ip::version::kIPv4:
+      return std::span<const std::uint8_t>(data_.begin(), kIPv4Bytes);
+    case ip::version::kIPv6:
+      return std::span<const std::uint8_t>(data_.begin(), kIPv6Bytes);
   }
 }
 
@@ -118,11 +118,11 @@ std::string address::to_string() const {
 
   int family;
   switch (version_) {
-    case ip::version::kIpV4:
+    case ip::version::kIPv4:
       family = AF_INET;
       string.resize(INET_ADDRSTRLEN);
       break;
-    case ip::version::kIpV6:
+    case ip::version::kIPv6:
       family = AF_INET6;
       string.resize(INET6_ADDRSTRLEN);
       break;

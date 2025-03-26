@@ -6,8 +6,8 @@
 namespace core::ip {
 
 enum class version : std::uint8_t {
-  kIpV4,
-  kIpV6,
+  kIPv4,
+  kIPv6,
 };
 
 }  // namespace core::ip
@@ -23,9 +23,9 @@ struct std::formatter<core::ip::version> {
   constexpr auto format(const core::ip::version& version,
                         FormatContext& ctx) const {
     switch (version) {
-      case core::ip::version::kIpV4:
+      case core::ip::version::kIPv4:
         return std::format_to(ctx.out(), "IPv4");
-      case core::ip::version::kIpV6:
+      case core::ip::version::kIPv6:
         return std::format_to(ctx.out(), "IPv6");
     }
   }

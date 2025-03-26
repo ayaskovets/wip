@@ -11,9 +11,9 @@ ip::port endpoint::get_port() const noexcept { return port_; }
 
 std::string endpoint::to_string() const {
   switch (address_.get_version()) {
-    case ip::version::kIpV4:
+    case ip::version::kIPv4:
       return std::format("{}:{}", address_, port_);
-    case ip::version::kIpV6:
+    case ip::version::kIPv6:
       return std::format("[{}]:{}", address_, port_);
   }
 }

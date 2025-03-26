@@ -13,7 +13,7 @@ TEST(ip_socket, flags) {
   for (const auto protocol :
        {core::ip::protocol::kTcp, core::ip::protocol::kUdp}) {
     for (const auto version :
-         {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+         {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
       core::ip::socket socket(protocol, version);
       for (const auto flag : {core::ip::socket::flag::kNonblocking,
                               core::ip::socket::flag::kReuseaddr,
@@ -31,7 +31,7 @@ TEST(ip_socket, flags) {
 
 TEST(ip_socket, bind) {
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     const core::ip::endpoint endpoint(core::ip::address::kLocalhost(version),
                                       core::ip::port(9999));
     for (const auto protocol :
@@ -47,7 +47,7 @@ TEST(ip_socket, bind) {
 
 TEST(ip_socket, connect) {
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     const core::ip::endpoint endpoint(core::ip::address::kLocalhost(version),
                                       core::ip::port(9998));
     for (const auto protocol :
@@ -75,7 +75,7 @@ TEST(ip_socket, connect) {
 
 TEST(ip_socket, endpoints) {
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     const core::ip::endpoint bind_endpoint(
         core::ip::address::kLocalhost(version), core::ip::port(9997));
     const core::ip::endpoint connect_endpoint(

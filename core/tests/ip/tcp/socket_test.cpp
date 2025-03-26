@@ -13,7 +13,7 @@ TEST(ip_tcp_socket, size) {
 
 TEST(ip_tcp_socket, blocking_send_receive_error) {
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     core::ip::tcp::socket socket(version);
     socket.set_flag(core::ip::socket::flag::kNonblocking, true);
     socket.set_flag(core::ip::socket::flag::kReuseaddr, true);
@@ -27,7 +27,7 @@ TEST(ip_tcp_socket, blocking_send_receive_error) {
 
 TEST(ip_tcp_socket, nonblocking_send_receive_error) {
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     core::ip::tcp::socket socket(version);
     socket.set_flag(core::ip::socket::flag::kNonblocking, true);
     socket.set_flag(core::ip::socket::flag::kReuseaddr, true);
@@ -41,7 +41,7 @@ TEST(ip_tcp_socket, nonblocking_send_receive_error) {
 
 TEST(ip_tcp_socket, accept_error) {
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     core::ip::tcp::socket socket(version);
     socket.set_flag(core::ip::socket::flag::kNonblocking, true);
     socket.set_flag(core::ip::socket::flag::kReuseaddr, true);
@@ -57,7 +57,7 @@ TEST(ip_tcp_socket, blocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     const core::ip::endpoint endpoint(core::ip::address::kLocalhost(version),
                                       core::ip::port(9995));
 
@@ -96,7 +96,7 @@ TEST(ip_tcp_socket, nonblocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   for (const auto version :
-       {core::ip::version::kIpV4, core::ip::version::kIpV6}) {
+       {core::ip::version::kIPv4, core::ip::version::kIPv6}) {
     const core::ip::endpoint endpoint(core::ip::address::kLocalhost(version),
                                       core::ip::port(9996));
 
