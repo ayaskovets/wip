@@ -27,6 +27,24 @@ const address& address::kLocalhost(ip::version version) noexcept {
   }
 }
 
+const address& address::kAny(ip::version version) noexcept {
+  switch (version) {
+    case ip::version::kIpV4: {
+      static address address("0.0.0.0");
+      return address;
+    }
+    case ip::version::kIpV6: {
+      static address address("::");
+      return address;
+    }
+  }
+}
+
+const address& address::kBroadcast(/* ip::version::kIpV4 */) noexcept {
+  static address address("255.255.255.255");
+  return address;
+}
+
 const address& address::kNonRoutable(ip::version version) noexcept {
   switch (version) {
     case ip::version::kIpV4: {
@@ -93,6 +111,8 @@ std::span<const std::uint8_t> address::get_bytes() const noexcept {
   }
 }
 
+ip::version address::get_version() const noexcept { return version_; }
+
 std::string address::to_string() const {
   std::string string;
 
@@ -116,7 +136,5 @@ std::string address::to_string() const {
   throw std::runtime_error(
       std::format("could not serialize address: {}", std::strerror(errno)));
 }
-
-ip::version address::get_version() const noexcept { return version_; }
 
 }  // namespace core::ip

@@ -19,6 +19,9 @@ class endpoint final {
   const ip::address& get_address() const noexcept;
   ip::port get_port() const noexcept;
 
+ public:
+  std::string to_string() const;
+
  private:
   ip::address address_;
   ip::port port_;
@@ -36,7 +39,6 @@ struct std::formatter<core::ip::endpoint> {
   template <class FormatContext>
   constexpr auto format(const core::ip::endpoint& endpoint,
                         FormatContext& ctx) const {
-    return std::format_to(ctx.out(), "{}:{}", endpoint.get_address(),
-                          endpoint.get_port());
+    return std::format_to(ctx.out(), "{}", endpoint.to_string());
   }
 };

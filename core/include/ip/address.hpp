@@ -14,6 +14,8 @@ class address final {
  public:
   static const address& kLocalhost(ip::version version) noexcept;
   static const address& kNonRoutable(ip::version version) noexcept;
+  static const address& kAny(ip::version version) noexcept;
+  static const address& kBroadcast(/* ip::version::kIpV4 */) noexcept;
 
  public:
   explicit address(std::span<const std::uint8_t> bytes);
@@ -25,8 +27,10 @@ class address final {
 
  public:
   std::span<const std::uint8_t> get_bytes() const noexcept;
-  std::string to_string() const;
   ip::version get_version() const noexcept;
+
+ public:
+  std::string to_string() const;
 
  private:
   std::array<std::uint8_t, 16> data_;

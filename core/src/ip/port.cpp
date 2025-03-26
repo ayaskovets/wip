@@ -15,4 +15,6 @@ std::uint16_t port::get_bytes(network_byte_order_t) const noexcept {
   return htons(port_);
 }
 
+std::string port::to_string() const noexcept { return std::to_string(port_); }
+
 }  // namespace core::ip

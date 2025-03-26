@@ -22,6 +22,9 @@ class port final {
   std::uint16_t get_bytes() const noexcept;
   std::uint16_t get_bytes(network_byte_order_t) const noexcept;
 
+ public:
+  std::string to_string() const noexcept;
+
  private:
   std::uint16_t port_;
 };
@@ -37,6 +40,6 @@ struct std::formatter<core::ip::port> {
 
   template <class FormatContext>
   constexpr auto format(const core::ip::port& port, FormatContext& ctx) const {
-    return std::format_to(ctx.out(), "{}", port.get_bytes());
+    return std::format_to(ctx.out(), "{}", port.to_string());
   }
 };
