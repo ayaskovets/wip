@@ -16,8 +16,8 @@ class socket final : public ip::socket {
   std::optional<socket> accept() const;
 
  public:
-  std::size_t send(std::span<const std::uint8_t> bytes) const;
-  std::size_t receive(std::span<std::uint8_t> bytes) const;
+  using ip::socket::receive;
+  using ip::socket::send;
 };
 
 }  // namespace core::ip::tcp

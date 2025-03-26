@@ -33,28 +33,4 @@ std::optional<socket> socket::accept() const {
   return socket(fd);
 }
 
-std::size_t socket::send(std::span<const std::uint8_t> bytes) const {
-  const ssize_t sent = ::send(fd_, bytes.data(), bytes.size(), 0);
-  if (sent == kSyscallError) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      return 0;
-    }
-    throw std::runtime_error(
-        std::format("send failed: {}", std::strerror(errno)));
-  }
-  return sent;
-}
-
-std::size_t socket::receive(std::span<std::uint8_t> bytes) const {
-  const ssize_t received = ::recv(fd_, bytes.data(), bytes.size(), 0);
-  if (received == kSyscallError) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      return 0;
-    }
-    throw std::runtime_error(
-        std::format("recv failed: {}", std::strerror(errno)));
-  }
-  return received;
-}
-
 }  // namespace core::ip::tcp

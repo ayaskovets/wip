@@ -19,7 +19,7 @@ class socket : public io::fd {
     kNonblocking,
     kReuseaddr,
     kReuseport,
-    kKeepalive
+    kKeepalive,
   };
 
   void set_flag(flag flag, bool value);
@@ -40,6 +40,16 @@ class socket : public io::fd {
  public:
   ip::endpoint get_bind_endpoint() const;
   ip::endpoint get_connect_endpoint() const;
+
+ protected:
+  std::size_t receive(std::span<std::uint8_t> bytes) const;
+  std::size_t send(std::span<const std::uint8_t> bytes) const;
+
+ protected:
+  std::size_t receive_from(std::span<std::uint8_t> bytes,
+                           ip::endpoint& endpoint) const;
+  std::size_t send_to(std::span<const std::uint8_t> bytes,
+                      const ip::endpoint& endpoint) const;
 };
 
 }  // namespace core::ip
