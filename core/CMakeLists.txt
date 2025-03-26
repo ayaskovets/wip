@@ -6,15 +6,15 @@ target_sources(${TARGET}
     src/async/task.cpp
     src/datetime/iso8601.cpp
     src/io/fd.cpp
-    src/ip/address.cpp
-    src/ip/dns.cpp
-    src/ip/endpoint.cpp
-    src/ip/port.cpp
-    src/ip/socket.cpp
-    src/ip/tcp/acceptor.cpp
-    src/ip/tcp/connection.cpp
-    src/ip/tcp/socket.cpp
-    src/ip/udp/socket.cpp
+    src/net/ip/address.cpp
+    src/net/ip/dns.cpp
+    src/net/ip/endpoint.cpp
+    src/net/ip/port.cpp
+    src/net/ip/socket.cpp
+    src/net/ip/tcp/acceptor.cpp
+    src/net/ip/tcp/connection.cpp
+    src/net/ip/tcp/socket.cpp
+    src/net/ip/udp/socket.cpp
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
