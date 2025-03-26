@@ -2,7 +2,7 @@
 
 namespace core::net::ip::udp {
 
-socket::socket(ip::version version)
-    : net::ip::socket(ip::protocol::kUdp, version) {}
+socket::socket(net::ip::version version)
+    : net::ip::socket(net::ip::protocol::kUdp, version) {}
 
 }  // namespace core::net::ip::udp

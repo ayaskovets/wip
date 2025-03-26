@@ -9,7 +9,7 @@ class socket final : public net::ip::socket {
   using net::ip::socket::socket;
 
  public:
-  explicit socket(ip::version version);
+  explicit socket(net::ip::version version);
 
  public:
   void listen(std::size_t backlog);

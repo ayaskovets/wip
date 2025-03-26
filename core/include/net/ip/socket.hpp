@@ -12,7 +12,7 @@ class socket : public io::fd {
   socket(io::fd fd);
 
  public:
-  socket(ip::protocol protocol, net::ip::version version);
+  socket(net::ip::protocol protocol, net::ip::version version);
 
  public:
   enum class flag : std::uint8_t {

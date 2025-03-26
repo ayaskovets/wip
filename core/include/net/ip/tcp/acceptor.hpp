@@ -9,10 +9,10 @@ namespace core::net::ip::tcp {
 
 class acceptor final {
  public:
-  acceptor(ip::endpoint endpoint, std::size_t backlog);
+  acceptor(net::ip::endpoint endpoint, std::size_t backlog);
 
  public:
-  std::optional<ip::tcp::socket> try_accept() const;
+  std::optional<net::ip::tcp::socket> try_accept() const;
   // net::ip::tcp::socket accept() const;
 
  public:

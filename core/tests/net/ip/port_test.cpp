@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-namespace tests::ip {
+namespace tests::net::ip {
 
 TEST(ip_port, size) {
   static_assert(sizeof(core::net::ip::port) == 2);
@@ -19,4 +19,4 @@ TEST(ip_port, construction) {
             core::net::ip::port(0, core::net::ip::port::network_byte_order));
 }
 
-}  // namespace tests::ip
+}  // namespace tests::net::ip

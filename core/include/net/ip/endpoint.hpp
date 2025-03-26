@@ -9,7 +9,7 @@ namespace core::net::ip {
 
 class endpoint final {
  public:
-  endpoint(ip::address address, net::ip::port port) noexcept;
+  endpoint(net::ip::address address, net::ip::port port) noexcept;
 
  public:
   bool operator==(const endpoint& that) const noexcept = default;

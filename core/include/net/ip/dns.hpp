@@ -9,9 +9,9 @@
 
 namespace core::net::ip {
 
-std::vector<ip::endpoint> resolve(
+std::vector<net::ip::endpoint> resolve(
     std::string_view hostname,
-    std::optional<ip::protocol> protocol = std::nullopt,
-    std::optional<ip::version> version = std::nullopt);
+    std::optional<net::ip::protocol> protocol = std::nullopt,
+    std::optional<net::ip::version> version = std::nullopt);
 
 }  // namespace core::net::ip

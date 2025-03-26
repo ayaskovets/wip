@@ -12,7 +12,7 @@ namespace {
 
 constexpr int kSyscallError = -1;
 
-constexpr int get_domain(ip::version version) noexcept {
+constexpr int get_domain(net::ip::version version) noexcept {
   switch (version) {
     case net::ip::version::kIPv4:
       return AF_INET;
@@ -21,7 +21,7 @@ constexpr int get_domain(ip::version version) noexcept {
   }
 }
 
-constexpr int get_type(ip::protocol protocol) noexcept {
+constexpr int get_type(net::ip::protocol protocol) noexcept {
   switch (protocol) {
     case net::ip::protocol::kTcp:
       return SOCK_STREAM;
@@ -30,7 +30,7 @@ constexpr int get_type(ip::protocol protocol) noexcept {
   }
 }
 
-constexpr int get_protocol(ip::protocol protocol) noexcept {
+constexpr int get_protocol(net::ip::protocol protocol) noexcept {
   switch (protocol) {
     case net::ip::protocol::kTcp:
       return IPPROTO_TCP;
@@ -39,7 +39,7 @@ constexpr int get_protocol(ip::protocol protocol) noexcept {
   }
 }
 
-::sockaddr_storage to_sockaddr_storage(ip::endpoint endpoint) {
+::sockaddr_storage to_sockaddr_storage(net::ip::endpoint endpoint) {
   ::sockaddr_storage storage;
   switch (endpoint.get_address().get_version()) {
     case net::ip::version::kIPv4: {
@@ -47,7 +47,7 @@ constexpr int get_protocol(ip::protocol protocol) noexcept {
 
       sockaddr.sin_family = AF_INET;
       sockaddr.sin_port =
-          endpoint.get_port().get_bytes(ip::port::network_byte_order);
+          endpoint.get_port().get_bytes(net::ip::port::network_byte_order);
       sockaddr.sin_len = sizeof(::sockaddr_in);
       std::memcpy(&sockaddr.sin_addr, endpoint.get_address().get_bytes().data(),
                   endpoint.get_address().get_bytes().size());
@@ -58,7 +58,7 @@ constexpr int get_protocol(ip::protocol protocol) noexcept {
 
       sockaddr.sin6_family = AF_INET6;
       sockaddr.sin6_port =
-          endpoint.get_port().get_bytes(ip::port::network_byte_order);
+          endpoint.get_port().get_bytes(net::ip::port::network_byte_order);
       sockaddr.sin6_len = sizeof(::sockaddr_in6);
       std::memcpy(&sockaddr.sin6_addr,
                   endpoint.get_address().get_bytes().data(),
@@ -69,7 +69,7 @@ constexpr int get_protocol(ip::protocol protocol) noexcept {
   return storage;
 }
 
-ip::endpoint to_endpoint(const ::sockaddr_storage &storage) {
+net::ip::endpoint to_endpoint(const ::sockaddr_storage &storage) {
   switch (storage.ss_family) {
     case AF_INET: {
       const auto sockaddr = reinterpret_cast<const ::sockaddr_in *>(&storage);
@@ -104,7 +104,7 @@ ip::endpoint to_endpoint(const ::sockaddr_storage &storage) {
 
 socket::socket(io::fd fd) : io::fd(std::move(fd)) {}
 
-socket::socket(ip::protocol protocol, net::ip::version version)
+socket::socket(net::ip::protocol protocol, net::ip::version version)
     : io::fd([protocol, version] {
         const int fd = ::socket(get_domain(version), get_type(protocol),
                                 get_protocol(protocol));
@@ -227,7 +227,7 @@ socket::connection_status socket::connect(const net::ip::endpoint &endpoint) {
   return connection_status::kSuccess;
 }
 
-ip::endpoint socket::get_bind_endpoint() const {
+net::ip::endpoint socket::get_bind_endpoint() const {
   ::sockaddr_storage storage;
   ::socklen_t socklen = sizeof(storage);
   if (::getsockname(fd_, &reinterpret_cast<sockaddr &>(storage), &socklen) ==
@@ -238,7 +238,7 @@ ip::endpoint socket::get_bind_endpoint() const {
   return to_endpoint(storage);
 }
 
-ip::endpoint socket::get_connect_endpoint() const {
+net::ip::endpoint socket::get_connect_endpoint() const {
   ::sockaddr_storage storage;
   ::socklen_t socklen = sizeof(storage);
   if (::getpeername(fd_, &reinterpret_cast<sockaddr &>(storage), &socklen) ==

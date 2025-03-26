@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-namespace tests::ip {
+namespace tests::net::ip {
 
 TEST(ip_resolve, localhost_tcp_ip6) {
   const auto results =
@@ -24,4 +24,4 @@ TEST(ip_resolve, localhost_udp_ip4) {
   EXPECT_EQ(endpoint.get_address(), core::net::ip::address("127.0.0.1"));
 }
 
-}  // namespace tests::ip
+}  // namespace tests::net::ip

@@ -7,7 +7,7 @@ namespace core::net::ip::tcp {
 
 class connection final {
  private:
-  explicit connection(ip::tcp::socket socket) noexcept;
+  explicit connection(net::ip::tcp::socket socket) noexcept;
 
  public:
   static std::optional<connection> try_accept(

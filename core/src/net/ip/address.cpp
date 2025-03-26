@@ -14,7 +14,7 @@ constexpr std::size_t kIPv6Bytes = 16;
 
 }  // namespace
 
-const address& address::kLocalhost(ip::version version) noexcept {
+const address& address::kLocalhost(net::ip::version version) noexcept {
   switch (version) {
     case net::ip::version::kIPv4: {
       static address address("127.0.0.1");
@@ -27,7 +27,7 @@ const address& address::kLocalhost(ip::version version) noexcept {
   }
 }
 
-const address& address::kAny(ip::version version) noexcept {
+const address& address::kAny(net::ip::version version) noexcept {
   switch (version) {
     case net::ip::version::kIPv4: {
       static address address("0.0.0.0");
@@ -45,7 +45,7 @@ const address& address::kBroadcast(/* net::ip::version::kIPv4 */) noexcept {
   return address;
 }
 
-const address& address::kNonRoutable(ip::version version) noexcept {
+const address& address::kNonRoutable(net::ip::version version) noexcept {
   switch (version) {
     case net::ip::version::kIPv4: {
       static address address("192.0.2.0");
@@ -111,7 +111,7 @@ std::span<const std::uint8_t> address::get_bytes() const noexcept {
   }
 }
 
-ip::version address::get_version() const noexcept { return version_; }
+net::ip::version address::get_version() const noexcept { return version_; }
 
 std::string address::to_string() const {
   std::string string;

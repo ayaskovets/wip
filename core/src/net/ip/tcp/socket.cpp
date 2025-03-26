@@ -12,8 +12,8 @@ constexpr int kSyscallError = -1;
 
 }  // namespace
 
-socket::socket(ip::version version)
-    : net::ip::socket(ip::protocol::kTcp, version) {}
+socket::socket(net::ip::version version)
+    : net::ip::socket(net::ip::protocol::kTcp, version) {}
 
 void socket::listen(std::size_t backlog) {
   if (::listen(fd_, backlog) == kSyscallError) [[unlikely]] {

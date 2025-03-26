@@ -2,12 +2,12 @@
 
 namespace core::net::ip::tcp {
 
-connection::connection(ip::tcp::socket socket) noexcept
+connection::connection(net::ip::tcp::socket socket) noexcept
     : socket_(std::move(socket)) {}
 
 std::optional<connection> connection::try_accept(
     const net::ip::tcp::acceptor& acceptor) {
-  if (std::optional<ip::tcp::socket> socket = acceptor.try_accept();
+  if (std::optional<net::ip::tcp::socket> socket = acceptor.try_accept();
       socket.has_value()) {
     return connection(std::move(*socket));
   }
@@ -21,8 +21,8 @@ std::optional<connection> connection::try_accept(
 std::optional<connection> connection::try_connect(
     const net::ip::endpoint& endpoint) {
   net::ip::tcp::socket socket(endpoint.get_address().get_version());
-  socket.set_flag(ip::socket::flag::kNonblocking, true);
-  socket.set_flag(ip::socket::flag::kKeepalive, true);
+  socket.set_flag(net::ip::socket::flag::kNonblocking, true);
+  socket.set_flag(net::ip::socket::flag::kKeepalive, true);
   if (socket.connect(endpoint) ==
       net::ip::socket::connection_status::kFailure) {
     return std::nullopt;
@@ -33,7 +33,7 @@ std::optional<connection> connection::try_connect(
 std::optional<connection> connection::connect(
     const net::ip::endpoint& endpoint) {
   net::ip::tcp::socket socket(endpoint.get_address().get_version());
-  socket.set_flag(ip::socket::flag::kKeepalive, true);
+  socket.set_flag(net::ip::socket::flag::kKeepalive, true);
   if (socket.connect(endpoint) !=
       net::ip::socket::connection_status::kSuccess) {
     return std::nullopt;

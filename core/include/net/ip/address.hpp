@@ -12,9 +12,9 @@ namespace core::net::ip {
 
 class address final {
  public:
-  static const address& kLocalhost(ip::version version) noexcept;
-  static const address& kNonRoutable(ip::version version) noexcept;
-  static const address& kAny(ip::version version) noexcept;
+  static const address& kLocalhost(net::ip::version version) noexcept;
+  static const address& kNonRoutable(net::ip::version version) noexcept;
+  static const address& kAny(net::ip::version version) noexcept;
   static const address& kBroadcast(/* net::ip::version::kIPv4 */) noexcept;
 
  public:

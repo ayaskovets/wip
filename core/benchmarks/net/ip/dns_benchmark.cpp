@@ -2,7 +2,7 @@
 
 #include "net/ip/dns.hpp"
 
-namespace benchmarks::ip {
+namespace benchmarks::net::ip {
 
 void BM_resolve_localhost(benchmark::State& state) {
   for (const auto _ : state) {
@@ -20,4 +20,4 @@ void BM_resolve_google(benchmark::State& state) {
 }
 BENCHMARK(BM_resolve_google)->Unit(benchmark::kMicrosecond);
 
-}  // namespace benchmarks::ip
+}  // namespace benchmarks::net::ip

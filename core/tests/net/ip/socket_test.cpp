@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-namespace tests::ip {
+namespace tests::net::ip {
 
 TEST(ip_socket, size) {
   static_assert(sizeof(core::net::ip::socket) == 4);
@@ -107,4 +107,4 @@ TEST(ip_socket, endpoints) {
   }
 }
 
-}  // namespace tests::ip
+}  // namespace tests::net::ip

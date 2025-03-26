@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-namespace tests::ip {
+namespace tests::net::ip {
 
 TEST(ip_address, size) {
   static_assert(sizeof(core::net::ip::address) == 17);
@@ -65,4 +65,4 @@ INSTANTIATE_TEST_SUITE_P(
                         "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
                         core::net::ip::version::kIPv6)));
 
-}  // namespace tests::ip
+}  // namespace tests::net::ip

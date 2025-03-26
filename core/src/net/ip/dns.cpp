@@ -14,7 +14,7 @@ namespace {
 
 constexpr std::size_t kGuessResultsSize = 5;
 
-ip::endpoint to_endpoint(const ::addrinfo &addrinfo) {
+net::ip::endpoint to_endpoint(const ::addrinfo &addrinfo) {
   switch (addrinfo.ai_family) {
     case AF_INET: {
       const auto sockaddr =
@@ -49,9 +49,9 @@ ip::endpoint to_endpoint(const ::addrinfo &addrinfo) {
 
 }  // namespace
 
-std::vector<ip::endpoint> resolve(std::string_view hostname,
-                                  std::optional<ip::protocol> protocol,
-                                  std::optional<ip::version> version) {
+std::vector<net::ip::endpoint> resolve(
+    std::string_view hostname, std::optional<net::ip::protocol> protocol,
+    std::optional<net::ip::version> version) {
   ::addrinfo *results = nullptr;
   const utils::scope_exit _([results]() noexcept {
     if (results) {
@@ -97,7 +97,7 @@ std::vector<ip::endpoint> resolve(std::string_view hostname,
                       ::gai_strerror(error)));
   }
 
-  std::vector<ip::endpoint> addresses;
+  std::vector<net::ip::endpoint> addresses;
   addresses.reserve(kGuessResultsSize);
   for (const ::addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
     addresses.emplace_back(to_endpoint(*ptr));
