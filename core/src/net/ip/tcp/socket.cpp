@@ -2,8 +2,6 @@
 
 #include <sys/socket.h>
 
-#include <cassert>
-
 namespace core::net::ip::tcp {
 
 namespace {

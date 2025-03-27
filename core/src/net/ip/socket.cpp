@@ -39,7 +39,7 @@ constexpr int get_protocol(net::ip::protocol protocol) noexcept {
   }
 }
 
-::sockaddr_storage to_sockaddr_storage(net::ip::endpoint endpoint) {
+::sockaddr_storage to_sockaddr_storage(const net::ip::endpoint &endpoint) {
   ::sockaddr_storage storage;
   switch (endpoint.get_address().get_version()) {
     case net::ip::version::kIPv4: {

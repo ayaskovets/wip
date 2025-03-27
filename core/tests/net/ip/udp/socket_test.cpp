@@ -116,4 +116,5 @@ TEST(net_ip_udp_socket, nonblocking_echo_handshake) {
     EXPECT_EQ(buffer, kBuffer);
   }
 }
+
 }  // namespace tests::net::ip::udp

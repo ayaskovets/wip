@@ -4,7 +4,7 @@
 
 namespace tests::net::ip {
 
-TEST(net_ip_resolve, localhost_tcp_ip6) {
+TEST(net_ip_dns, resolve_localhost_tcp_ip6) {
   const auto results =
       core::net::ip::resolve("localhost", core::net::ip::protocol::kTcp,
                              core::net::ip::version::kIPv6);
@@ -14,7 +14,7 @@ TEST(net_ip_resolve, localhost_tcp_ip6) {
   EXPECT_EQ(endpoint.get_address(), core::net::ip::address("::1"));
 }
 
-TEST(net_ip_resolve, localhost_udp_ip4) {
+TEST(net_ip_dns, resolve_localhost_udp_ip4) {
   const auto results =
       core::net::ip::resolve("localhost", core::net::ip::protocol::kUdp,
                              core::net::ip::version::kIPv4);
