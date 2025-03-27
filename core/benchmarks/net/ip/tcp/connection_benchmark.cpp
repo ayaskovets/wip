@@ -5,7 +5,7 @@
 
 namespace benchmarks::net::ip::tcp {
 
-void BM_connection_try_accept(benchmark::State& state) {
+void BM_net_ip_tcp_connection_try_accept(benchmark::State& state) {
   const core::net::ip::tcp::acceptor acceptor(
       core::net::ip::endpoint(
           core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),
@@ -17,9 +17,9 @@ void BM_connection_try_accept(benchmark::State& state) {
         core::net::ip::tcp::connection::try_accept(acceptor));
   }
 }
-BENCHMARK(BM_connection_try_accept);
+BENCHMARK(BM_net_ip_tcp_connection_try_accept);
 
-void BM_connection_try_connect(benchmark::State& state) {
+void BM_net_ip_tcp_connection_try_connect(benchmark::State& state) {
   const core::net::ip::endpoint endpoint(
       core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),
       core::net::ip::port(9996));
@@ -29,6 +29,7 @@ void BM_connection_try_connect(benchmark::State& state) {
         core::net::ip::tcp::connection::try_connect(endpoint));
   }
 }
-BENCHMARK(BM_connection_try_connect)->Unit(benchmark::TimeUnit::kMicrosecond);
+BENCHMARK(BM_net_ip_tcp_connection_try_connect)
+    ->Unit(benchmark::TimeUnit::kMicrosecond);
 
 }  // namespace benchmarks::net::ip::tcp

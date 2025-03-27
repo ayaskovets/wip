@@ -4,7 +4,7 @@
 
 namespace benchmarks::net::ip::tcp {
 
-void BM_acceptor_try_accept(benchmark::State& state) {
+void BM_net_ip_tcp_acceptor_try_accept(benchmark::State& state) {
   const core::net::ip::tcp::acceptor acceptor(
       core::net::ip::endpoint(
           core::net::ip::address::kLocalhost(core::net::ip::version::kIPv4),
@@ -15,6 +15,6 @@ void BM_acceptor_try_accept(benchmark::State& state) {
     benchmark::DoNotOptimize(acceptor.try_accept());
   }
 }
-BENCHMARK(BM_acceptor_try_accept);
+BENCHMARK(BM_net_ip_tcp_acceptor_try_accept);
 
 }  // namespace benchmarks::net::ip::tcp
