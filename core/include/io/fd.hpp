@@ -9,7 +9,7 @@ class fd {
   static const fd& kStderr() noexcept;
 
  public:
-  // NOTE: this class is merely a copy-featured wrapper around a file
+  // NOTE: this class is merely a copy-featured owning wrapper around a file
   // descriptor. It is assumed that the programmer is responsible for the
   // parameter of the constructor representing an open file descriptor. The
   // constructor still verifies whether the value itself is in the range is a
