@@ -15,8 +15,8 @@ socket::socket(net::ip::version version)
 
 void socket::listen(std::size_t backlog) {
   if (::listen(fd_, backlog) == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format(
-        "failed to set nonblocking mode on socket: {}", std::strerror(errno)));
+    throw std::runtime_error(
+        std::format("listen failed: {}", std::strerror(errno)));
   }
 }
 
