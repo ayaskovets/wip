@@ -179,6 +179,11 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_tuple(5, 1), std::make_tuple(6, 2),
                       std::make_tuple(7, 2), std::make_tuple(10, 1),
                       std::make_tuple(20, 2), std::make_tuple(100, 10),
-                      std::make_tuple(10000, 100)));
+                      std::make_tuple(10000, 100)),
+    ([](const auto& info) {
+      const auto& [items_size, queue_size] = info.param;
+      return std::format("{}_items_size__{}_queue_size", items_size,
+                         queue_size);
+    }));
 
 }  // namespace tests::threading

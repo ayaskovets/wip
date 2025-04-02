@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <atomic>
+#include <format>
 #include <latch>
 #include <numeric>
 #include <thread>
@@ -169,11 +169,17 @@ TEST_P(threading_locked_mpmc_queue, workload) {
   EXPECT_EQ(popped_items, items_to_push);
 }
 
-INSTANTIATE_TEST_SUITE_P(threading_locked_mpmc_queue,
-                         threading_locked_mpmc_queue,
-                         ::testing::Values(std::make_tuple(5, 3, 1, 1),
-                                           std::make_tuple(100, 10, 4, 1),
-                                           std::make_tuple(100, 10, 1, 4),
-                                           std::make_tuple(10000, 100, 4, 4)));
+INSTANTIATE_TEST_SUITE_P(
+    threading_locked_mpmc_queue, threading_locked_mpmc_queue,
+    ::testing::Values(std::make_tuple(5, 3, 1, 1),
+                      std::make_tuple(100, 10, 4, 1),
+                      std::make_tuple(100, 10, 1, 4),
+                      std::make_tuple(10000, 100, 4, 4)),
+    ([](const auto& info) {
+      const auto& [items_size, queue_size, producers, consumers] = info.param;
+      return std::format(
+          "{}_items_size__{}_queue_size__{}_producers__{}_consumers",
+          items_size, queue_size, producers, consumers);
+    }));
 
 }  // namespace tests::threading
