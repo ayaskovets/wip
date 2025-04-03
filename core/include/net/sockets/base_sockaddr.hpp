@@ -30,11 +30,8 @@ class base_sockaddr {
  public:
   std::size_t get_length() const;
   net::sockets::family get_family() const;
-
- public:
   const storage* get_storage() const noexcept;
 
- public:
  public:
   std::string to_string() const;
 

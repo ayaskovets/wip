@@ -31,6 +31,10 @@ base_sockaddr::base_sockaddr(net::sockets::family family) {
   }
 }
 
+base_sockaddr::storage* base_sockaddr::get_storage() noexcept {
+  return storage_.get();
+}
+
 bool base_sockaddr::operator==(const base_sockaddr& that) const noexcept {
   return storage_ == that.storage_ ||
          !std::memcmp(storage_.get(), that.storage_.get(), get_length());
@@ -67,10 +71,6 @@ net::sockets::family base_sockaddr::get_family() const {
 }
 
 const base_sockaddr::storage* base_sockaddr::get_storage() const noexcept {
-  return storage_.get();
-}
-
-base_sockaddr::storage* base_sockaddr::get_storage() noexcept {
   return storage_.get();
 }
 
