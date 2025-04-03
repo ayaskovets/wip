@@ -20,7 +20,7 @@ class base_sockaddr {
   explicit base_sockaddr(net::sockets::family family);
 
   // NOTE: this method must not be used anywhere except the subclass
-  // constructor, intended only two-step creation of a base_sockaddr object
+  // constructor, intended only for two-step creation of a base_sockaddr object
   storage* get_storage() noexcept;
 
  public:
