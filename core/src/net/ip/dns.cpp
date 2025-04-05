@@ -6,7 +6,7 @@
 #include <format>
 #include <span>
 
-#include "utils/declarative.hpp"
+#include "utils/scope.hpp"
 
 namespace core::net::ip {
 
@@ -97,12 +97,12 @@ std::vector<net::ip::endpoint> resolve(
                       ::gai_strerror(error)));
   }
 
-  std::vector<net::ip::endpoint> addresses;
-  addresses.reserve(kGuessResultsSize);
+  std::vector<net::ip::endpoint> endpoints;
+  endpoints.reserve(kGuessResultsSize);
   for (const ::addrinfo *ptr = results; ptr; ptr = ptr->ai_next) {
-    addresses.emplace_back(to_endpoint(*ptr));
+    endpoints.emplace_back(to_endpoint(*ptr));
   }
-  return addresses;
+  return endpoints;
 }
 
 }  // namespace core::net::ip
