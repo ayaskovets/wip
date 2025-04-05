@@ -26,15 +26,15 @@ constexpr auto kResetColor = "\033[0m";
 }  // namespace
 
 const renderer& renderer::kNoop() {
-  static renderer renderer(
+  static const renderer renderer(
       []([[maybe_unused]] logging::level level, std::string_view fmt,
          std::format_args args) { return std::vformat(fmt, std::move(args)); });
   return renderer;
 }
 
 const renderer& renderer::kColoredLeveled() {
-  static renderer renderer([](logging::level level, std::string_view fmt,
-                              std::format_args args) {
+  static const renderer renderer([](logging::level level, std::string_view fmt,
+                                    std::format_args args) {
     return std::vformat(
         std::format("{}{}{}\t{}\n", kSetColor(level), level, kResetColor, fmt),
         std::move(args));
@@ -43,7 +43,7 @@ const renderer& renderer::kColoredLeveled() {
 }
 
 const renderer& renderer::kColoredLeveledTimestamped() {
-  static renderer renderer(
+  static const renderer renderer(
       [](logging::level level, std::string_view fmt, std::format_args args) {
         return std::vformat(
             std::format("{}\t{}{}{}\t{}\n",

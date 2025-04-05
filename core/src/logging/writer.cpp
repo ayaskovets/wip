@@ -6,7 +6,7 @@
 namespace core::logging {
 
 const writer& writer::kStdout() {
-  static writer writer(
+  static const writer writer(
       []([[maybe_unused]] logging::level level, std::string_view message) {
         if (std::fputs(message.data(), stdout) == EOF) [[unlikely]] {
           throw std::runtime_error(std::format(
@@ -17,7 +17,7 @@ const writer& writer::kStdout() {
 }
 
 const writer& writer::kStderr() {
-  static writer writer(
+  static const writer writer(
       []([[maybe_unused]] logging::level level, std::string_view message) {
         if (std::fputs(message.data(), stderr) == EOF) [[unlikely]] {
           throw std::runtime_error(std::format(
@@ -28,8 +28,8 @@ const writer& writer::kStderr() {
 }
 
 const writer& writer::kNoop() {
-  static writer writer([]([[maybe_unused]] logging::level level,
-                          [[maybe_unused]] std::string_view message) {});
+  static const writer writer([]([[maybe_unused]] logging::level level,
+                                [[maybe_unused]] std::string_view message) {});
   return writer;
 }
 
