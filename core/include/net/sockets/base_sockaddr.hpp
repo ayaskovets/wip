@@ -35,7 +35,7 @@ class base_sockaddr {
  public:
   std::string to_string() const;
 
- protected:
+ private:
   std::shared_ptr<storage> storage_;
 };
 
