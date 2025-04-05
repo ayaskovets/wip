@@ -15,17 +15,17 @@ constexpr int kInvalidFd = -1;
 }  // namespace
 
 const fd& fd::kStdin() noexcept {
-  static fd fd(STDIN_FILENO);
+  static const fd fd(STDIN_FILENO);
   return fd;
 }
 
 const fd& fd::kStdout() noexcept {
-  static fd fd(STDOUT_FILENO);
+  static const fd fd(STDOUT_FILENO);
   return fd;
 }
 
 const fd& fd::kStderr() noexcept {
-  static fd fd(STDERR_FILENO);
+  static const fd fd(STDERR_FILENO);
   return fd;
 }
 
@@ -36,14 +36,20 @@ fd::fd(int fd) : fd_(fd) {
 }
 
 fd::fd(const fd& that) {
-  if ((fd_ = ::dup(that.fd_)) == kSyscallError) [[unlikely]] {
+  if (that.fd_ == kInvalidFd) [[unlikely]] {
+    fd_ = kInvalidFd;
+  } else if (that.fd_ != kInvalidFd && (fd_ = ::dup(that.fd_)) == kSyscallError)
+      [[unlikely]] {
     throw std::runtime_error(std::format("failed to clone file descriptor: {}",
                                          std::strerror(errno)));
   }
 }
 
 fd& fd::operator=(const fd& that) {
-  if (::dup2(that.fd_, fd_) == kSyscallError) [[unlikely]] {
+  if (that.fd_ == kInvalidFd) [[unlikely]] {
+    fd_ = kInvalidFd;
+  } else if (fd_ != that.fd_ && ::dup2(that.fd_, fd_) == kSyscallError)
+      [[unlikely]] {
     throw std::runtime_error(std::format("failed to clone file descriptor: {}",
                                          std::strerror(errno)));
   }
@@ -53,7 +59,7 @@ fd& fd::operator=(const fd& that) {
 fd::fd(fd&& that) noexcept : fd_(std::exchange(that.fd_, kInvalidFd)) {}
 
 fd& fd::operator=(fd&& that) {
-  if (fd_ != kInvalidFd &&
+  if (fd_ != that.fd_ && fd_ != kInvalidFd &&
       ::close(std::exchange(fd_, kInvalidFd)) == kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to close file descriptor: {}",
                                          std::strerror(errno)));
