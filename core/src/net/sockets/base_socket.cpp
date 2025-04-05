@@ -254,28 +254,51 @@ base_socket::connection_status base_socket::connect(
   return connection_status::kSuccess;
 }
 
-void base_socket::get_bind_sockaddr(
-    net::sockets::base_sockaddr &sockaddr) const {
+net::sockets::base_sockaddr base_socket::get_bind_sockaddr() const {
+  net::sockets::base_sockaddr sockaddr(get_family());
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   if (::getsockname(fd_, reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
                     &socklen) == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
         std::format("failed to get bind address: {}", std::strerror(errno)));
   }
+  return sockaddr;
 }
 
-void base_socket::get_connect_sockaddr(
-    net::sockets::base_sockaddr &sockaddr) const {
+net::sockets::base_sockaddr base_socket::get_connect_sockaddr() const {
+  net::sockets::base_sockaddr sockaddr(get_family());
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   if (::getpeername(fd_, reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
                     &socklen) == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
         std::format("failed to get peer address: {}", std::strerror(errno)));
   }
+  return sockaddr;
+}
+
+void base_socket::listen(std::size_t backlog) {
+  if (::listen(fd_, static_cast<int>(backlog)) == kSyscallError) {
+    throw std::runtime_error(
+        std::format("listen failed: {}", std::strerror(errno)));
+  }
+}
+
+base_socket::accept_status base_socket::accept(
+    std::optional<base_socket> &socket) const {
+  const int accepted = ::accept(fd_, nullptr, nullptr);
+  if (accepted == kSyscallError) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+      return base_socket::accept_status::kEmptyQueue;
+    }
+    throw std::runtime_error(
+        std::format("accept failed: {}", std::strerror(errno)));
+  }
+  socket.emplace(base_socket(io::fd(accepted)));
+  return base_socket::accept_status::kSuccess;
 }
 
 std::size_t base_socket::send(std::span<const std::uint8_t> bytes) const {
-  const ssize_t sent = ::send(fd_, bytes.data(), bytes.size(), 0);
+  const ::ssize_t sent = ::send(fd_, bytes.data(), bytes.size(), 0);
   if (sent == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return 0;
@@ -283,13 +306,13 @@ std::size_t base_socket::send(std::span<const std::uint8_t> bytes) const {
     throw std::runtime_error(
         std::format("send failed: {}", std::strerror(errno)));
   }
-  return sent;
+  return static_cast<std::size_t>(sent);
 }
 
 std::size_t base_socket::send_to(
     std::span<const std::uint8_t> bytes,
     const net::sockets::base_sockaddr &sockaddr) const {
-  const ssize_t sent =
+  const ::ssize_t sent =
       ::sendto(fd_, bytes.data(), bytes.size(), 0,
                reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
                sockaddr.get_length());
@@ -304,7 +327,7 @@ std::size_t base_socket::send_to(
 }
 
 std::size_t base_socket::receive(std::span<std::uint8_t> bytes) const {
-  const ssize_t received = ::recv(fd_, bytes.data(), bytes.size(), 0);
+  const ::ssize_t received = ::recv(fd_, bytes.data(), bytes.size(), 0);
   if (received == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       return 0;
@@ -312,14 +335,14 @@ std::size_t base_socket::receive(std::span<std::uint8_t> bytes) const {
     throw std::runtime_error(
         std::format("recv failed: {}", std::strerror(errno)));
   }
-  return received;
+  return static_cast<std::size_t>(received);
 }
 
 std::size_t base_socket::receive_from(
     std::span<std::uint8_t> bytes,
     net::sockets::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
-  const ssize_t received = ::recvfrom(
+  const ::ssize_t received = ::recvfrom(
       fd_, bytes.data(), bytes.size(), 0,
       reinterpret_cast<::sockaddr *>(sockaddr.get_storage()), &socklen);
   if (received == kSyscallError) {
@@ -329,7 +352,7 @@ std::size_t base_socket::receive_from(
     throw std::runtime_error(
         std::format("recvfrom failed: {}", std::strerror(errno)));
   }
-  return received;
+  return static_cast<std::size_t>(received);
 }
 
 }  // namespace core::net::sockets

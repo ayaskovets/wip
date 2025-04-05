@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <span>
 
 #include "io/fd.hpp"
@@ -12,7 +13,7 @@ namespace core::net::sockets {
 
 class base_socket : public io::fd {
  protected:
-  base_socket(io::fd fd) noexcept;
+  explicit base_socket(io::fd fd) noexcept;
 
  public:
   base_socket(net::sockets::family family, net::sockets::type type,
@@ -48,8 +49,17 @@ class base_socket : public io::fd {
   connection_status connect(const net::sockets::base_sockaddr& sockaddr);
 
  public:
-  void get_bind_sockaddr(net::sockets::base_sockaddr& sockaddr) const;
-  void get_connect_sockaddr(net::sockets::base_sockaddr& sockaddr) const;
+  net::sockets::base_sockaddr get_bind_sockaddr() const;
+  net::sockets::base_sockaddr get_connect_sockaddr() const;
+
+ public:
+  void listen(std::size_t backlog);
+
+  enum class accept_status : std::uint8_t {
+    kSuccess,
+    kEmptyQueue,
+  };
+  accept_status accept(std::optional<base_socket>& socket) const;
 
  public:
   std::size_t send(std::span<const std::uint8_t> bytes) const;
