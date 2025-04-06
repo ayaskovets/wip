@@ -11,8 +11,20 @@ namespace {
 
 constexpr int kSyscallError = -1;
 constexpr int kInvalidFd = -1;
+constexpr int kAnyValidFd = 0;
 
 }  // namespace
+
+const fd& fd::kUninitialized() noexcept {
+  static const fd fd([] {
+    // NOTE: kAnyValidFd is required to bypass the constructor check of the file
+    // descriptor value validity
+    class fd fd(kAnyValidFd);
+    fd.fd_ = kInvalidFd;
+    return fd;
+  }());
+  return fd;
+}
 
 const fd& fd::kStdin() noexcept {
   static const fd fd(STDIN_FILENO);
@@ -38,9 +50,8 @@ fd::fd(int fd) : fd_(fd) {
 fd::fd(const fd& that) {
   if (that.fd_ == kInvalidFd) [[unlikely]] {
     fd_ = kInvalidFd;
-  } else if (that.fd_ != kInvalidFd && (fd_ = ::dup(that.fd_)) == kSyscallError)
-      [[unlikely]] {
-    throw std::runtime_error(std::format("failed to clone file descriptor: {}",
+  } else if ((fd_ = ::dup(that.fd_)) == kSyscallError) [[unlikely]] {
+    throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
                                          std::strerror(errno)));
   }
 }
@@ -50,7 +61,7 @@ fd& fd::operator=(const fd& that) {
     fd_ = kInvalidFd;
   } else if (fd_ != that.fd_ && ::dup2(that.fd_, fd_) == kSyscallError)
       [[unlikely]] {
-    throw std::runtime_error(std::format("failed to clone file descriptor: {}",
+    throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
                                          std::strerror(errno)));
   }
   return *this;

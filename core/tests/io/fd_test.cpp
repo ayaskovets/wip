@@ -16,6 +16,14 @@ TEST(io_fd, manual_close) {
   EXPECT_ANY_THROW(fd.close());
 }
 
+TEST(io_fd, assign_to_itself) {
+  core::io::fd fd(core::io::fd::kStdin());
+  core::io::fd& fd_ref = fd;
+  fd = fd_ref;
+  EXPECT_NO_THROW(fd.close());
+  EXPECT_ANY_THROW(fd.close());
+}
+
 TEST(io_fd, transfer_ownership) {
   core::io::fd moved_from(core::io::fd::kStdin());
   core::io::fd moved_to = std::move(moved_from);
@@ -23,7 +31,7 @@ TEST(io_fd, transfer_ownership) {
   EXPECT_ANY_THROW(moved_from.close());
   EXPECT_NE(moved_from, moved_to);
   EXPECT_NO_THROW(moved_to.close());
-  EXPECT_NE(moved_from, moved_to);
+  EXPECT_EQ(moved_from, moved_to);
 }
 
 TEST(io_fd, duplicate) {
@@ -32,7 +40,7 @@ TEST(io_fd, duplicate) {
   EXPECT_NE(original, copy);
   EXPECT_NO_THROW(original.close());
   EXPECT_NO_THROW(copy.close());
-  EXPECT_NE(original, copy);
+  EXPECT_EQ(original, copy);
 }
 
 TEST(io_fd, equality) {

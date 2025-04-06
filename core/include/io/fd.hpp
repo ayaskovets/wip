@@ -3,6 +3,9 @@
 namespace core::io {
 
 class fd {
+ protected:
+  static const fd& kUninitialized() noexcept;
+
  public:
   static const fd& kStdin() noexcept;
   static const fd& kStdout() noexcept;
