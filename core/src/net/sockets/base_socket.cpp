@@ -2,7 +2,7 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <sys/un.h>
+#include <sys/socket.h>
 
 #include <cerrno>
 #include <format>
@@ -82,7 +82,12 @@ constexpr int to_native_protocol(net::sockets::protocol protocol) noexcept {
 
 }  // namespace
 
-base_socket::base_socket(io::fd fd) noexcept : io::fd(std::move(fd)) {}
+base_socket::base_socket() : io::fd(io::fd::kUninitialized()) {}
+
+const base_socket &base_socket::kUninitialized() {
+  static const base_socket socket;
+  return socket;
+}
 
 base_socket::base_socket(net::sockets::family family, net::sockets::type type,
                          net::sockets::protocol protocol)
@@ -254,26 +259,24 @@ base_socket::connection_status base_socket::connect(
   return connection_status::kSuccess;
 }
 
-net::sockets::base_sockaddr base_socket::get_bind_sockaddr() const {
-  net::sockets::base_sockaddr sockaddr(get_family());
+void base_socket::get_bind_sockaddr(
+    net::sockets::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   if (::getsockname(fd_, reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
                     &socklen) == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
         std::format("failed to get bind address: {}", std::strerror(errno)));
   }
-  return sockaddr;
 }
 
-net::sockets::base_sockaddr base_socket::get_connect_sockaddr() const {
-  net::sockets::base_sockaddr sockaddr(get_family());
+void base_socket::get_connect_sockaddr(
+    net::sockets::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   if (::getpeername(fd_, reinterpret_cast<::sockaddr *>(sockaddr.get_storage()),
                     &socklen) == kSyscallError) [[unlikely]] {
     throw std::runtime_error(
         std::format("failed to get peer address: {}", std::strerror(errno)));
   }
-  return sockaddr;
 }
 
 void base_socket::listen(std::size_t backlog) {
@@ -283,8 +286,7 @@ void base_socket::listen(std::size_t backlog) {
   }
 }
 
-base_socket::accept_status base_socket::accept(
-    std::optional<base_socket> &socket) const {
+base_socket::accept_status base_socket::accept(base_socket &socket) const {
   const int accepted = ::accept(fd_, nullptr, nullptr);
   if (accepted == kSyscallError) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -293,7 +295,7 @@ base_socket::accept_status base_socket::accept(
     throw std::runtime_error(
         std::format("accept failed: {}", std::strerror(errno)));
   }
-  socket.emplace(base_socket(io::fd(accepted)));
+  static_cast<io::fd &>(socket) = io::fd(accepted);
   return base_socket::accept_status::kSuccess;
 }
 

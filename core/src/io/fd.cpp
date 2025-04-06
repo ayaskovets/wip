@@ -11,18 +11,13 @@ namespace {
 
 constexpr int kSyscallError = -1;
 constexpr int kInvalidFd = -1;
-constexpr int kAnyValidFd = 0;
 
 }  // namespace
 
+fd::fd() noexcept : fd_(kInvalidFd) {}
+
 const fd& fd::kUninitialized() noexcept {
-  static const fd fd([] {
-    // NOTE: kAnyValidFd is required to bypass the constructor check of the file
-    // descriptor value validity
-    class fd fd(kAnyValidFd);
-    fd.fd_ = kInvalidFd;
-    return fd;
-  }());
+  static const fd fd;
   return fd;
 }
 

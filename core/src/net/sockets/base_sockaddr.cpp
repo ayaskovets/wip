@@ -1,7 +1,6 @@
 #include "net/sockets/base_sockaddr.hpp"
 
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <sys/un.h>
 
 #include <cassert>
@@ -35,12 +34,42 @@ base_sockaddr::storage* base_sockaddr::get_storage() noexcept {
   return storage_.get();
 }
 
-bool base_sockaddr::operator==(const base_sockaddr& that) const noexcept {
-  return storage_ == that.storage_ ||
-         !std::memcmp(storage_.get(), that.storage_.get(), get_length());
+bool base_sockaddr::operator==(const base_sockaddr& that) const {
+  if (storage_ == that.storage_) {
+    return true;
+  }
+  switch (reinterpret_cast<const ::sockaddr*>(storage_.get())->sa_family) {
+    case AF_INET: {
+      const ::sockaddr_in* this_sockaddr =
+          reinterpret_cast<const ::sockaddr_in*>(storage_.get());
+      const ::sockaddr_in* that_sockaddr =
+          reinterpret_cast<const ::sockaddr_in*>(that.storage_.get());
+      return !std::memcmp(&this_sockaddr->sin_addr, &that_sockaddr->sin_addr,
+                          sizeof(::sockaddr_in{}.sin_addr)) &&
+             this_sockaddr->sin_port == that_sockaddr->sin_port;
+    }
+    case AF_INET6: {
+      const ::sockaddr_in6* this_sockaddr =
+          reinterpret_cast<const ::sockaddr_in6*>(storage_.get());
+      const ::sockaddr_in6* that_sockaddr =
+          reinterpret_cast<const ::sockaddr_in6*>(that.storage_.get());
+      return !std::memcmp(&this_sockaddr->sin6_addr, &that_sockaddr->sin6_addr,
+                          sizeof(::sockaddr_in6{}.sin6_addr)) &&
+             this_sockaddr->sin6_port == that_sockaddr->sin6_port;
+    }
+    case AF_UNIX: {
+      const ::sockaddr_un* this_sockaddr =
+          reinterpret_cast<const ::sockaddr_un*>(storage_.get());
+      const ::sockaddr_un* that_sockaddr =
+          reinterpret_cast<const ::sockaddr_un*>(that.storage_.get());
+      return !std::strcmp(this_sockaddr->sun_path, that_sockaddr->sun_path);
+    }
+    [[unlikely]] default:
+      throw std::runtime_error("unimplemented");
+  }
 }
 
-bool base_sockaddr::operator!=(const base_sockaddr& that) const noexcept {
+bool base_sockaddr::operator!=(const base_sockaddr& that) const {
   return !operator==(that);
 }
 
@@ -99,7 +128,7 @@ std::string base_sockaddr::to_string() const {
       string = reinterpret_cast<const ::sockaddr_un*>(storage_.get())->sun_path;
       break;
     [[unlikely]] default:
-      throw std::runtime_error("uninitialized family");
+      throw std::runtime_error("unimplemented");
   }
   return string;
 }
