@@ -10,13 +10,13 @@ constexpr int kSyscallError = -1;
 
 }  // namespace
 
-socket::socket() noexcept
-    : net::sockets::base_socket(net::sockets::base_socket::kUninitialized()) {}
-
 const socket& socket::kUninitialized() noexcept {
   static const socket socket;
   return socket;
 }
+
+socket::socket() noexcept
+    : net::sockets::base_socket(net::sockets::base_socket::kUninitialized()) {}
 
 socket::socket(net::sockets::type type)
     : net::sockets::base_socket(net::sockets::family::kUnix, type,

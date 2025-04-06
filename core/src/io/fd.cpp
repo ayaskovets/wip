@@ -14,8 +14,6 @@ constexpr int kInvalidFd = -1;
 
 }  // namespace
 
-fd::fd() noexcept : fd_(kInvalidFd) {}
-
 const fd& fd::kUninitialized() noexcept {
   static const fd fd;
   return fd;
@@ -35,6 +33,8 @@ const fd& fd::kStderr() noexcept {
   static const fd fd(STDERR_FILENO);
   return fd;
 }
+
+fd::fd() noexcept : fd_(kInvalidFd) {}
 
 fd::fd(int fd) : fd_(fd) {
   if (fd_ < 0) [[unlikely]] {

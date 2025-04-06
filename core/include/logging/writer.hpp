@@ -8,15 +8,15 @@
 namespace core::logging {
 
 class writer final {
- private:
-  using write_t =
-      std::function<void(logging::level level, std::string_view message)>;
-
  public:
   static const writer& kStdout();
   static const writer& kStderr();
   static const writer& kNoop();
   static const writer& kDefault();
+
+ private:
+  using write_t =
+      std::function<void(logging::level level, std::string_view message)>;
 
  public:
   explicit writer(write_t write) : write_(write) {}

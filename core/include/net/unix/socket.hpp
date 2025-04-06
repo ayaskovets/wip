@@ -6,11 +6,11 @@
 namespace core::net::unix {
 
 class socket : public net::sockets::base_socket {
- private:
-  socket() noexcept;
-
  protected:
   static const socket& kUninitialized() noexcept;
+
+ private:
+  socket() noexcept;
 
  protected:
   socket(core::net::sockets::type type);

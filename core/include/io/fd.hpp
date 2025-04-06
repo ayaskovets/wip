@@ -3,9 +3,6 @@
 namespace core::io {
 
 class fd {
- private:
-  fd() noexcept;
-
  protected:
   static const fd& kUninitialized() noexcept;
 
@@ -13,6 +10,9 @@ class fd {
   static const fd& kStdin() noexcept;
   static const fd& kStdout() noexcept;
   static const fd& kStderr() noexcept;
+
+ private:
+  fd() noexcept;
 
  public:
   // NOTE: this class is merely a copy-featured RAII wrapper around a file

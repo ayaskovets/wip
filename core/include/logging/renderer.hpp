@@ -8,15 +8,15 @@
 namespace core::logging {
 
 class renderer final {
- private:
-  using render_t = std::string (*)(logging::level level, std::string_view fmt,
-                                   std::format_args args);
-
  public:
   static const renderer& kNoop();
   static const renderer& kColoredLeveled();
   static const renderer& kColoredLeveledTimestamped();
   static const renderer& kDefault();
+
+ private:
+  using render_t = std::string (*)(logging::level level, std::string_view fmt,
+                                   std::format_args args);
 
  public:
   constexpr explicit renderer(render_t render) noexcept

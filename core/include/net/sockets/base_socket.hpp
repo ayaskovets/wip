@@ -12,11 +12,11 @@
 namespace core::net::sockets {
 
 class base_socket : public io::fd {
- private:
-  base_socket();
-
  protected:
   static const base_socket& kUninitialized();
+
+ private:
+  base_socket();
 
  protected:
   base_socket(net::sockets::family family, net::sockets::type type,

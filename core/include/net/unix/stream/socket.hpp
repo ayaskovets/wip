@@ -5,11 +5,11 @@
 namespace core::net::unix::stream {
 
 class socket final : public net::unix::socket {
- private:
-  socket(int) noexcept;
-
  public:
   static const socket& kUninitialized() noexcept;
+
+ private:
+  socket(int) noexcept;
 
  public:
   socket();
