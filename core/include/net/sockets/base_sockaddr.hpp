@@ -1,7 +1,6 @@
 #pragma once
 
 #include <format>
-#include <functional>
 #include <memory>
 #include <string>
 
@@ -9,28 +8,32 @@
 
 namespace core::net::sockets {
 
+class base_socket;
 class base_sockaddr {
  private:
-  class storage;
+  friend class base_socket;
 
- public:
+ protected:
   // NOTE: base_sockaddr always allocates enough memory to hold a sockaddr of
   // the provided family. It is the responsibility of the derived class to fill
   // the memory as needed
   explicit base_sockaddr(net::sockets::family family);
 
-  // NOTE: this method must not be used anywhere except the subclass
-  // constructor, intended only for two-step creation of a base_sockaddr object
+ protected:
+  // NOTE: get_storage() methods are expected to be used only in the subclasses
+  // to wrap access to the allocated storage or for two-step creation of a
+  // base_sockaddr object
+  class storage;
   storage* get_storage() noexcept;
+  const storage* get_storage() const noexcept;
 
  public:
-  bool operator==(const base_sockaddr& that) const noexcept;
-  bool operator!=(const base_sockaddr& that) const noexcept;
+  bool operator==(const base_sockaddr& that) const;
+  bool operator!=(const base_sockaddr& that) const;
 
  public:
   std::size_t get_length() const;
   net::sockets::family get_family() const;
-  const storage* get_storage() const noexcept;
 
  public:
   std::string to_string() const;

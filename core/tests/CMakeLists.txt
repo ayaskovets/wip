@@ -1,24 +1,19 @@
 set(TARGET tests)
 
 find_package(GTest REQUIRED)
+set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 
 add_executable(${TARGET})
 target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_test.cpp
     io/fd_test.cpp
-    net/ip/address_test.cpp
-    net/ip/dns_test.cpp
-    net/ip/endpoint_test.cpp
-    net/ip/port_test.cpp
-    net/ip/socket_test.cpp
-    net/ip/tcp/acceptor_test.cpp
-    net/ip/tcp/connection_test.cpp
-    net/ip/tcp/socket_test.cpp
-    net/ip/udp/socket_test.cpp
     logging/logger_test.cpp
-    threading/locked_mpmc_queue_test.cpp
-    threading/lockfree_spsc_queue_test.cpp
+    net/sockets/base_sockaddr_test.cpp
+    net/sockets/base_socket_test.cpp
+    net/unix/dgram/socket_test.cpp
+    net/unix/sockaddr_test.cpp
+    net/unix/stream/socket_test.cpp
     utils/conditionally_runtime_test.cpp
     utils/predicates_test.cpp
 )

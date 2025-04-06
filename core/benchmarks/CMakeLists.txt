@@ -7,10 +7,6 @@ target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_benchmark.cpp
     logging/logger_benchmark.cpp
-    net/ip/address_benchmark.cpp
-    net/ip/dns_benchmark.cpp
-    net/ip/tcp/acceptor_benchmark.cpp
-    net/ip/tcp/connection_benchmark.cpp
     threading/locked_mpmc_queue_benchmark.cpp
     threading/lockfree_spsc_queue_benchmark.cpp
     main.cpp

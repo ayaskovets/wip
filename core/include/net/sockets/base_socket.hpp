@@ -12,10 +12,13 @@
 namespace core::net::sockets {
 
 class base_socket : public io::fd {
- protected:
-  explicit base_socket(io::fd fd) noexcept;
+ private:
+  base_socket();
 
- public:
+ protected:
+  static const base_socket& kUninitialized();
+
+ protected:
   base_socket(net::sockets::family family, net::sockets::type type,
               net::sockets::protocol protocol);
 
@@ -26,12 +29,12 @@ class base_socket : public io::fd {
   void set_keepalive(bool value);
 
  public:
-  net::sockets::family get_family() const;
-  net::sockets::type get_type() const;
   bool get_nonblock() const;
   bool get_reuseaddr() const;
   bool get_reuseport() const;
   bool get_keepalive() const;
+  net::sockets::family get_family() const;
+  net::sockets::type get_type() const;
 
  public:
   enum class bind_status : std::uint8_t {
@@ -49,17 +52,19 @@ class base_socket : public io::fd {
   connection_status connect(const net::sockets::base_sockaddr& sockaddr);
 
  public:
-  net::sockets::base_sockaddr get_bind_sockaddr() const;
-  net::sockets::base_sockaddr get_connect_sockaddr() const;
+  void get_bind_sockaddr(net::sockets::base_sockaddr& sockaddr) const;
+  void get_connect_sockaddr(net::sockets::base_sockaddr& sockaddr) const;
 
  public:
   void listen(std::size_t backlog);
 
+  // NOTE: one should use a copy the special kUninitialized value as the out
+  // parameter to avoid creating two sockets on each accept
   enum class accept_status : std::uint8_t {
     kSuccess,
     kEmptyQueue,
   };
-  accept_status accept(std::optional<base_socket>& socket) const;
+  accept_status accept(base_socket& socket) const;
 
  public:
   std::size_t send(std::span<const std::uint8_t> bytes) const;
