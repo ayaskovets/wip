@@ -147,4 +147,11 @@ TEST(net_unix_dgram_socket, get_sockaddrs) {
             sockaddr);
 }
 
+TEST(net_unix_stream_socket, get_unknown_bind_address) {
+  core::net::unix::dgram::socket server;
+
+  core::net::unix::sockaddr out_sockaddr(core::net::unix::sockaddr::kEmpty());
+  EXPECT_NO_THROW(server.get_bind_sockaddr(out_sockaddr));
+}
+
 }  // namespace tests::net::unix::dgram

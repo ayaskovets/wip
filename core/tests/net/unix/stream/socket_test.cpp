@@ -172,6 +172,7 @@ TEST(net_unix_stream_socket, get_sockaddrs) {
   EXPECT_EQ((server.get_bind_sockaddr(out_sockaddr), out_sockaddr), sockaddr);
   EXPECT_EQ((client.get_connect_sockaddr(out_sockaddr), out_sockaddr),
             sockaddr);
+  EXPECT_NO_THROW(client.get_bind_sockaddr(out_sockaddr));
 }
 
 }  // namespace tests::ipc::unix::stream
