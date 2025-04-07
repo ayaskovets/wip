@@ -13,8 +13,11 @@ namespace {
 
 constexpr int kSyscallError = -1;
 
-constexpr int to_native_family(net::sockets::family family) noexcept {
+constexpr int to_native_family(net::sockets::family family) {
   switch (family) {
+    case net::sockets::family::kUnspecified:
+      throw std::invalid_argument(
+          std::format("invalid socket family: {}", family));
     case net::sockets::family::kInet:
       return AF_INET;
     case net::sockets::family::kInet6:

@@ -10,13 +10,17 @@ namespace core::net::sockets {
 
 namespace {
 
-constexpr std::size_t kPortSuffixStrlen = 6;
-constexpr std::size_t kInet6BracketsStrlen = 2;
+constexpr std::size_t kPortStrlen = 6;
+constexpr std::size_t kColonStrlen = 1;
+constexpr std::size_t kBracketStrlen = 1;
 
 }  // namespace
 
 base_sockaddr::base_sockaddr(net::sockets::family family) {
   switch (family) {
+    case net::sockets::family::kUnspecified:
+      throw std::invalid_argument(
+          std::format("invalid sockaddr family: {}", family));
     case net::sockets::family::kInet:
       storage_.reset(reinterpret_cast<storage*>(new ::sockaddr_in{
           .sin_family = AF_INET,
@@ -117,7 +121,7 @@ std::string base_sockaddr::to_string() const {
       const ::sockaddr_in* sockaddr =
           reinterpret_cast<const ::sockaddr_in*>(storage_.get());
 
-      string.resize(INET_ADDRSTRLEN + kPortSuffixStrlen);
+      string.resize(INET_ADDRSTRLEN + kColonStrlen + kPortStrlen);
       if (!::inet_ntop(AF_INET, &sockaddr->sin_addr, string.data(),
                        string.size())) [[unlikely]] {
         throw std::runtime_error(
@@ -132,14 +136,17 @@ std::string base_sockaddr::to_string() const {
       const ::sockaddr_in6* sockaddr =
           reinterpret_cast<const ::sockaddr_in6*>(storage_.get());
 
-      string.resize(INET6_ADDRSTRLEN + kInet6BracketsStrlen +
-                    kPortSuffixStrlen);
-      if (!::inet_ntop(AF_INET6, get_storage(), string.data(), string.size()))
+      string.resize(kBracketStrlen + INET6_ADDRSTRLEN + kBracketStrlen +
+                    kColonStrlen + kPortStrlen);
+      string.front() = '[';
+      if (!::inet_ntop(AF_INET6, &sockaddr->sin6_addr,
+                       string.data() + kBracketStrlen, string.size()))
           [[unlikely]] {
         throw std::runtime_error(
             std::format("inet_ntop failed: {}", std::strerror(errno)));
       }
       string.resize(string.find('\0'));
+      string.push_back(']');
       string.push_back(':');
       string.append(std::to_string(ntohs(sockaddr->sin6_port)));
       break;

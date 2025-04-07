@@ -35,4 +35,9 @@ TEST(net_unix_sockaddr, to_string) {
       "net_unix_sockaddr_to_string");
 }
 
+TEST(net_unix_sockaddr, format) {
+  const core::net::unix::sockaddr sockaddr("net_unix_sockaddr_to_string");
+  EXPECT_EQ(std::format("{}", sockaddr), sockaddr.to_string());
+}
+
 }  // namespace tests::net::unix

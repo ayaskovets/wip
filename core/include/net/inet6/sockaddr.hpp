@@ -16,3 +16,17 @@ class sockaddr final : public net::sockets::base_sockaddr {
 };
 
 }  // namespace core::net::inet6
+
+template <>
+struct std::formatter<core::net::inet6::sockaddr> {
+  template <class FormatContext>
+  constexpr auto parse(FormatContext& ctx) const {
+    return ctx.begin();
+  }
+
+  template <class FormatContext>
+  constexpr auto format(const core::net::inet6::sockaddr& sockaddr,
+                        FormatContext& ctx) const {
+    return std::format_to(ctx.out(), "{}", sockaddr.to_string());
+  }
+};

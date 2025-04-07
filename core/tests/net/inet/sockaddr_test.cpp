@@ -43,4 +43,10 @@ TEST(net_inet_sockaddr, to_string) {
             "100.1.4.224:1452");
 }
 
+TEST(net_inet_sockaddr, format) {
+  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kAny(),
+                                           core::net::inet::port(0));
+  EXPECT_EQ(std::format("{}", sockaddr), sockaddr.to_string());
+}
+
 }  // namespace tests::net::inet

@@ -64,4 +64,9 @@ TEST(net_inet_ip, to_string) {
   EXPECT_EQ(core::net::inet::ip("255.255.255.0").to_string(), "255.255.255.0");
 }
 
+TEST(net_inet_ip, format) {
+  const core::net::inet::ip ip(core::net::inet::ip::kAny());
+  EXPECT_EQ(std::format("{}", ip), ip.to_string());
+}
+
 }  // namespace tests::net::inet

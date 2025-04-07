@@ -52,8 +52,8 @@ struct std::formatter<core::net::sockets::base_sockaddr> {
   }
 
   template <class FormatContext>
-  constexpr auto format(const core::net::sockets::base_sockaddr& base_sockaddr,
+  constexpr auto format(const core::net::sockets::base_sockaddr& sockaddr,
                         FormatContext& ctx) const {
-    return std::format_to(ctx.out(), "{}", base_sockaddr.to_string());
+    return std::format_to(ctx.out(), "{}", sockaddr.to_string());
   }
 };

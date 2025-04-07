@@ -50,4 +50,9 @@ TEST(net_inet6_ip, to_string) {
   EXPECT_EQ(core::net::inet6::ip("2001:db8::1").to_string(), "2001:db8::1");
 }
 
+TEST(net_inet6_ip, format) {
+  const core::net::inet6::ip ip(core::net::inet6::ip::kAny());
+  EXPECT_EQ(std::format("{}", ip), ip.to_string());
+}
+
 }  // namespace tests::net::inet6

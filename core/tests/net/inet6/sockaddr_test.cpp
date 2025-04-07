@@ -43,4 +43,10 @@ TEST(net_inet6_sockaddr, to_string) {
             "[2001:db8::1]:1123");
 }
 
+TEST(net_inet6_sockaddr, format) {
+  const core::net::inet6::sockaddr sockaddr(core::net::inet6::ip::kAny(),
+                                            core::net::inet6::port(0));
+  EXPECT_EQ(std::format("{}", sockaddr), sockaddr.to_string());
+}
+
 }  // namespace tests::net::inet6
