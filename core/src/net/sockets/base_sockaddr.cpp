@@ -8,7 +8,12 @@
 
 namespace core::net::sockets {
 
-class base_sockaddr::storage {};
+namespace {
+
+constexpr std::size_t kPortSuffixStrlen = 6;
+constexpr std::size_t kInet6BracketsStrlen = 2;
+
+}  // namespace
 
 base_sockaddr::base_sockaddr(net::sockets::family family) {
   switch (family) {
@@ -30,7 +35,13 @@ base_sockaddr::base_sockaddr(net::sockets::family family) {
   }
 }
 
+class base_sockaddr::storage {};
+
 base_sockaddr::storage* base_sockaddr::get_storage() noexcept {
+  return storage_.get();
+}
+
+const base_sockaddr::storage* base_sockaddr::get_storage() const noexcept {
   return storage_.get();
 }
 
@@ -99,34 +110,47 @@ net::sockets::family base_sockaddr::get_family() const {
   }
 }
 
-const base_sockaddr::storage* base_sockaddr::get_storage() const noexcept {
-  return storage_.get();
-}
-
 std::string base_sockaddr::to_string() const {
   std::string string;
   switch (reinterpret_cast<const ::sockaddr*>(storage_.get())->sa_family) {
-    case AF_INET:
-      string.resize(INET_ADDRSTRLEN);
-      if (!::inet_ntop(AF_INET, get_storage(), string.data(), string.size()))
-          [[unlikely]] {
+    case AF_INET: {
+      const ::sockaddr_in* sockaddr =
+          reinterpret_cast<const ::sockaddr_in*>(storage_.get());
+
+      string.resize(INET_ADDRSTRLEN + kPortSuffixStrlen);
+      if (!::inet_ntop(AF_INET, &sockaddr->sin_addr, string.data(),
+                       string.size())) [[unlikely]] {
         throw std::runtime_error(
             std::format("inet_ntop failed: {}", std::strerror(errno)));
       }
       string.resize(string.find('\0'));
+      string.push_back(':');
+      string.append(std::to_string(ntohs(sockaddr->sin_port)));
       break;
-    case AF_INET6:
-      string.resize(INET6_ADDRSTRLEN);
+    }
+    case AF_INET6: {
+      const ::sockaddr_in6* sockaddr =
+          reinterpret_cast<const ::sockaddr_in6*>(storage_.get());
+
+      string.resize(INET6_ADDRSTRLEN + kInet6BracketsStrlen +
+                    kPortSuffixStrlen);
       if (!::inet_ntop(AF_INET6, get_storage(), string.data(), string.size()))
           [[unlikely]] {
         throw std::runtime_error(
             std::format("inet_ntop failed: {}", std::strerror(errno)));
       }
       string.resize(string.find('\0'));
+      string.push_back(':');
+      string.append(std::to_string(ntohs(sockaddr->sin6_port)));
       break;
-    case AF_UNIX:
-      string = reinterpret_cast<const ::sockaddr_un*>(storage_.get())->sun_path;
+    }
+    case AF_UNIX: {
+      const ::sockaddr_un* sockaddr =
+          reinterpret_cast<const ::sockaddr_un*>(storage_.get());
+
+      string.assign(sockaddr->sun_path);
       break;
+    }
     [[unlikely]] default:
       throw std::runtime_error("unimplemented");
   }
