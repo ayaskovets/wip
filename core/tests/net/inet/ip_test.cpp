@@ -9,7 +9,7 @@ TEST(net_inet_ip, size) {
   static_assert(alignof(core::net::inet::ip) == 4);
 }
 
-TEST(net_inet_ip, localhost) {
+TEST(net_inet_ip, loopback) {
   EXPECT_EQ(core::net::inet::ip("127.0.0.1"), core::net::inet::ip::kLoopback());
 }
 
