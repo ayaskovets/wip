@@ -13,6 +13,10 @@ target_sources(${TARGET}
     src/net/inet/sockaddr.cpp
     src/net/inet/tcp/socket.cpp
     src/net/inet/udp/socket.cpp
+    src/net/inet6/ip.cpp
+    src/net/inet6/sockaddr.cpp
+    src/net/inet6/tcp/socket.cpp
+    src/net/inet6/udp/socket.cpp
     src/net/sockets/base_sockaddr.cpp
     src/net/sockets/base_socket.cpp
     src/net/unix/dgram/socket.cpp

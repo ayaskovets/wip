@@ -14,6 +14,11 @@ target_sources(${TARGET}
     net/inet/sockaddr_test.cpp
     net/inet/tcp/socket_test.cpp
     net/inet/udp/socket_test.cpp
+    net/inet6/ip_test.cpp
+    net/inet6/port_test.cpp
+    net/inet6/sockaddr_test.cpp
+    net/inet6/tcp/socket_test.cpp
+    net/inet6/udp/socket_test.cpp
     net/sockets/base_sockaddr_test.cpp
     net/sockets/base_socket_test.cpp
     net/unix/dgram/socket_test.cpp
