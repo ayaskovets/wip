@@ -9,7 +9,7 @@ class socket final : public net::unix::socket {
   static const socket& kUninitialized() noexcept;
 
  private:
-  socket(int) noexcept;
+  socket(bool) noexcept;
 
  public:
   socket();
