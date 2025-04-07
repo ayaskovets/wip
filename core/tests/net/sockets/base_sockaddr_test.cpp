@@ -35,16 +35,6 @@ TEST_P(net_sockets_base_sockaddr, smoke) {
   EXPECT_NO_THROW(sockaddr.to_string());
 }
 
-TEST_P(net_sockets_base_sockaddr, uninitialized) {
-  const auto& family = GetParam();
-  const impl_sockaddr sockaddr(family);
-
-  EXPECT_GT(sockaddr.get_length(), 0);
-  EXPECT_EQ(sockaddr.get_family(), family);
-  EXPECT_TRUE(sockaddr.get_storage());
-  EXPECT_NO_THROW(sockaddr.to_string());
-}
-
 TEST_P(net_sockets_base_sockaddr, copy) {
   const auto& family = GetParam();
   const impl_sockaddr original(family);
