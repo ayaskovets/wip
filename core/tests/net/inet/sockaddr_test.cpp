@@ -10,17 +10,17 @@ TEST(net_inet_sockaddr, size) {
 }
 
 TEST(net_inet_sockaddr, equality) {
-  EXPECT_EQ(core::net::inet::sockaddr(core::net::inet::ip::kLocalhost(),
+  EXPECT_EQ(core::net::inet::sockaddr(core::net::inet::ip::kLoopback(),
                                       core::net::inet::port(1)),
-            core::net::inet::sockaddr(core::net::inet::ip::kLocalhost(),
+            core::net::inet::sockaddr(core::net::inet::ip::kLoopback(),
                                       core::net::inet::port(1)));
-  EXPECT_NE(core::net::inet::sockaddr(core::net::inet::ip::kLocalhost(),
+  EXPECT_NE(core::net::inet::sockaddr(core::net::inet::ip::kLoopback(),
                                       core::net::inet::port(2)),
-            core::net::inet::sockaddr(core::net::inet::ip::kLocalhost(),
+            core::net::inet::sockaddr(core::net::inet::ip::kLoopback(),
                                       core::net::inet::port(1)));
   EXPECT_NE(core::net::inet::sockaddr(core::net::inet::ip::kAny(),
                                       core::net::inet::port(1)),
-            core::net::inet::sockaddr(core::net::inet::ip::kLocalhost(),
+            core::net::inet::sockaddr(core::net::inet::ip::kLoopback(),
                                       core::net::inet::port(1)));
 }
 
@@ -33,11 +33,10 @@ TEST(net_inet_sockaddr, get_parts) {
 }
 
 TEST(net_inet_sockaddr, to_string) {
-  EXPECT_EQ(core::net::inet::sockaddr(core::net::inet::ip::kLocalhost(),
+  EXPECT_EQ(core::net::inet::sockaddr(core::net::inet::ip::kLoopback(),
                                       core::net::inet::port(65110))
                 .to_string(),
             "127.0.0.1:65110");
-
   EXPECT_EQ(core::net::inet::sockaddr(core::net::inet::ip("100.1.4.224"),
                                       core::net::inet::port(1452))
                 .to_string(),

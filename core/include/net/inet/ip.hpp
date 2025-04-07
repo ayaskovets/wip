@@ -7,7 +7,7 @@ namespace core::net::inet {
 
 class ip final {
  public:
-  static const ip& kLocalhost() noexcept;
+  static const ip& kLoopback() noexcept;
   static const ip& kNonRoutable() noexcept;
   static const ip& kAny() noexcept;
   static const ip& kBroadcast() noexcept;
@@ -17,7 +17,7 @@ class ip final {
 
  public:
   explicit ip(std::uint32_t bytes) noexcept;
-  explicit ip(std::uint32_t bytes, network_byte_order_t) noexcept;
+  ip(std::uint32_t bytes, network_byte_order_t) noexcept;
   explicit ip(std::string_view string);
 
  public:

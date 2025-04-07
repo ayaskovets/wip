@@ -25,7 +25,7 @@ TEST(net_inet_udp_socket, nonblocking_send_receive_error) {
 }
 
 TEST(net_inet_udp_socket, bind) {
-  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLocalhost(),
+  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9999));
 
   core::net::inet::udp::socket socket;
@@ -36,7 +36,7 @@ TEST(net_inet_udp_socket, bind) {
 }
 
 TEST(net_inet_udp_socket, connect) {
-  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLocalhost(),
+  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9998));
 
   core::net::inet::udp::socket socket;
@@ -51,9 +51,9 @@ TEST(net_inet_udp_socket, connect) {
 
 TEST(net_inet_udp_socket, sockaddrs) {
   const core::net::inet::sockaddr bind_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9997));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9997));
   const core::net::inet::sockaddr connect_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9996));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9996));
 
   core::net::inet::udp::socket socket;
   socket.set_reuseaddr(true);
@@ -79,9 +79,9 @@ TEST(net_inet_udp_socket, blocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::inet::sockaddr server_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9995));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9995));
   const core::net::inet::sockaddr client_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9996));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9996));
 
   core::net::inet::udp::socket server;
   server.set_reuseaddr(true);
@@ -127,9 +127,9 @@ TEST(net_inet_udp_socket, nonblocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::inet::sockaddr server_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9995));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9995));
   const core::net::inet::sockaddr client_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9996));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9996));
 
   core::net::inet::udp::socket server;
   server.set_nonblock(true);

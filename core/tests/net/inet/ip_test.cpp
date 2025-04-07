@@ -10,8 +10,7 @@ TEST(net_inet_ip, size) {
 }
 
 TEST(net_inet_ip, localhost) {
-  EXPECT_EQ(core::net::inet::ip("127.0.0.1"),
-            core::net::inet::ip::kLocalhost());
+  EXPECT_EQ(core::net::inet::ip("127.0.0.1"), core::net::inet::ip::kLoopback());
 }
 
 TEST(net_inet_ip, any) {

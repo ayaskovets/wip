@@ -14,7 +14,7 @@ constexpr auto kInetNtopError = nullptr;
 
 }  // namespace
 
-const ip& ip::kLocalhost() noexcept {
+const ip& ip::kLoopback() noexcept {
   static const ip ip(INADDR_LOOPBACK);
   return ip;
 }

@@ -36,7 +36,7 @@ TEST(net_inet_tcp_socket, nonblocking_send_receive_error) {
 }
 
 TEST(net_inet_tcp_socket, bind) {
-  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLocalhost(),
+  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9999));
 
   core::net::inet::tcp::socket socket;
@@ -47,7 +47,7 @@ TEST(net_inet_tcp_socket, bind) {
 }
 
 TEST(net_inet_tcp_socket, connect) {
-  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLocalhost(),
+  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9998));
 
   core::net::inet::tcp::socket socket;
@@ -61,9 +61,9 @@ TEST(net_inet_tcp_socket, connect) {
 
 TEST(net_inet_tcp_socket, sockaddrs) {
   const core::net::inet::sockaddr bind_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9997));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9997));
   const core::net::inet::sockaddr connect_sockaddr(
-      core::net::inet::ip::kLocalhost(), core::net::inet::port(9996));
+      core::net::inet::ip::kLoopback(), core::net::inet::port(9996));
 
   core::net::inet::tcp::socket socket;
   socket.set_nonblock(true);
@@ -102,7 +102,7 @@ TEST(net_inet_tcp_socket, accept_error) {
 TEST(net_inet_tcp_socket, blocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
-  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLocalhost(),
+  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9995));
 
   core::net::inet::tcp::socket server;
@@ -139,7 +139,7 @@ TEST(net_inet_tcp_socket, blocking_echo_handshake) {
 TEST(net_inet_tcp_socket, nonblocking_echo_handshake) {
   static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
-  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLocalhost(),
+  const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9996));
 
   core::net::inet::tcp::socket server;
