@@ -9,6 +9,7 @@ target_sources(${TARGET}
     datetime/iso8601_test.cpp
     io/fd_test.cpp
     logging/logger_test.cpp
+    net/dns/resolve_test.cpp
     net/inet/ip_test.cpp
     net/inet/port_test.cpp
     net/inet/sockaddr_test.cpp

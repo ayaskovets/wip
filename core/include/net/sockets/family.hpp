@@ -6,6 +6,7 @@
 namespace core::net::sockets {
 
 enum class family : std::uint8_t {
+  kUnspecified,
   kInet,
   kInet6,
   kUnix,
@@ -24,6 +25,8 @@ struct std::formatter<core::net::sockets::family> {
   constexpr auto format(const core::net::sockets::family& family,
                         FormatContext& ctx) const {
     switch (family) {
+      case core::net::sockets::family::kUnspecified:
+        return std::format_to(ctx.out(), "AF_UNSPEC");
       case core::net::sockets::family::kInet:
         return std::format_to(ctx.out(), "AF_INET");
       case core::net::sockets::family::kInet6:
