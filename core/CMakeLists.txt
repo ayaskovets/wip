@@ -8,6 +8,11 @@ target_sources(${TARGET}
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
+    src/net/inet/ip.cpp
+    src/net/inet/port.cpp
+    src/net/inet/sockaddr.cpp
+    src/net/inet/tcp/socket.cpp
+    src/net/inet/udp/socket.cpp
     src/net/sockets/base_sockaddr.cpp
     src/net/sockets/base_socket.cpp
     src/net/unix/dgram/socket.cpp
