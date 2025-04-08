@@ -306,7 +306,7 @@ base_socket::accept_status base_socket::accept(base_socket &socket) const {
 std::size_t base_socket::send(std::span<const std::uint8_t> bytes) const {
   const ::ssize_t sent = ::send(fd_, bytes.data(), bytes.size(), 0);
   if (sent == kSyscallError) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENOBUFS) {
       return 0;
     }
     throw std::runtime_error(
@@ -323,7 +323,7 @@ std::size_t base_socket::send_to(
                reinterpret_cast<const ::sockaddr *>(sockaddr.get_storage()),
                sockaddr.get_length());
   if (sent == kSyscallError) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENOBUFS) {
       return 0;
     }
     throw std::runtime_error(
