@@ -14,7 +14,7 @@ void BM_net_unix_tcp_nonblock_handshake(benchmark::State& state) {
     server.set_nonblock(true);
     server.set_reuseaddr(true);
     server.set_reuseport(true);
-    server.bind(sockaddr);
+    server.unlink_bind(sockaddr);
     server.listen(1);
 
     core::net::unix::stream::socket client;
