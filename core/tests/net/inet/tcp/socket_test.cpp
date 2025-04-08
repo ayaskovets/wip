@@ -100,7 +100,7 @@ TEST(net_inet_tcp_socket, accept_error) {
 }
 
 TEST(net_inet_tcp_socket, blocking_echo_handshake) {
-  static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9995));
@@ -115,7 +115,7 @@ TEST(net_inet_tcp_socket, blocking_echo_handshake) {
   client.set_reuseaddr(true);
   client.set_reuseport(true);
 
-  std::thread server_thread([&server] {
+  std::thread server_thread([&server, &kBuffer] {
     core::net::inet::tcp::socket peer;
     EXPECT_EQ(server.accept(peer),
               core::net::inet::tcp::socket::accept_status::kSuccess);
@@ -137,7 +137,7 @@ TEST(net_inet_tcp_socket, blocking_echo_handshake) {
 }
 
 TEST(net_inet_tcp_socket, nonblocking_echo_handshake) {
-  static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9996));

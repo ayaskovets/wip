@@ -87,7 +87,7 @@ TEST(net_unix_stream_socket, accept_error) {
 }
 
 TEST(net_unix_stream_socket, blocking_echo_handshake) {
-  static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::unix::sockaddr sockaddr(
       "net_unix_stream_socket_blocking_echo_handshake");
@@ -98,7 +98,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
 
   core::net::unix::stream::socket client;
 
-  std::thread server_thread([&server] {
+  std::thread server_thread([&server, &kBuffer] {
     core::net::unix::stream::socket peer(
         core::net::unix::stream::socket::kUninitialized());
     EXPECT_EQ(server.accept(peer),
@@ -121,7 +121,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
 }
 
 TEST(net_unix_stream_socket, nonblocking_echo_handshake) {
-  static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::unix::sockaddr sockaddr(
       "net_unix_stream_socket_nonblocking_echo_handshake");

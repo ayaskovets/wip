@@ -76,7 +76,7 @@ TEST(net_inet_udp_socket, sockaddrs) {
 }
 
 TEST(net_inet_udp_socket, blocking_echo_handshake) {
-  static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::inet::sockaddr server_sockaddr(
       core::net::inet::ip::kLoopback(), core::net::inet::port(9995));
@@ -93,7 +93,7 @@ TEST(net_inet_udp_socket, blocking_echo_handshake) {
   client.set_reuseport(true);
   client.bind(client_sockaddr);
 
-  std::thread server_thread([&server, &client_sockaddr] {
+  std::thread server_thread([&server, &client_sockaddr, &kBuffer] {
     core::net::inet::sockaddr peer(core::net::inet::ip::kAny(),
                                    core::net::inet::port(0));
     std::vector<std::uint8_t> buffer(kBuffer.size());
@@ -124,7 +124,7 @@ TEST(net_inet_udp_socket, blocking_echo_handshake) {
 }
 
 TEST(net_inet_udp_socket, nonblocking_echo_handshake) {
-  static const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
 
   const core::net::inet::sockaddr server_sockaddr(
       core::net::inet::ip::kLoopback(), core::net::inet::port(9995));
