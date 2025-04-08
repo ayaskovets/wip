@@ -7,6 +7,16 @@ target_sources(${TARGET}
     PRIVATE
     datetime/iso8601_benchmark.cpp
     logging/logger_benchmark.cpp
+    net/dns/resolve_benchmark.cpp
+    net/inet/sockaddr_benchmark.cpp
+    net/inet/tcp/socket_benchmark.cpp
+    net/inet/udp/socket_benchmark.cpp
+    net/inet6/sockaddr_benchmark.cpp
+    net/inet6/tcp/socket_benchmark.cpp
+    net/inet6/udp/socket_benchmark.cpp
+    net/unix/dgram/socket_benchmark.cpp
+    net/unix/sockaddr_benchmark.cpp
+    net/unix/stream/socket_benchmark.cpp
     threading/locked_mpmc_queue_benchmark.cpp
     threading/lockfree_spsc_queue_benchmark.cpp
     main.cpp
