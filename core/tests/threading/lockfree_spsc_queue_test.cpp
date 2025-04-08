@@ -39,6 +39,48 @@ TEST(threading_lockfree_spsc_queue, smoke) {
   EXPECT_FALSE(queue.try_pop().has_value());
 }
 
+TEST(threading_lockfree_spsc_queue, allocator) {
+  std::unordered_map<int*, std::size_t> allocations;
+
+  class allocator : public std::allocator<int> {
+   public:
+    allocator(std::unordered_map<int*, std::size_t>& allocations)
+        : allocations_(allocations) {}
+
+    int* allocate(std::size_t n) {
+      int* ptr = new int[n];
+      allocations_[ptr] = n;
+      return ptr;
+    }
+    void deallocate(int* ptr, std::size_t n) {
+      if ((allocations_[ptr] -= n) == 0) {
+        allocations_.erase(ptr);
+      }
+      operator delete[](ptr, n);
+    }
+
+   private:
+    std::unordered_map<int*, std::size_t>& allocations_;
+  };
+
+  {
+    core::threading::lockfree_spsc_queue<int, 2, allocator> queue(
+        (allocator(allocations)));
+
+    EXPECT_FALSE(queue.try_pop().has_value());
+    EXPECT_TRUE(queue.try_push(1));
+    EXPECT_TRUE(queue.try_push(2));
+    EXPECT_FALSE(queue.try_push(3));
+    EXPECT_EQ(queue.try_pop(), 1);
+    EXPECT_TRUE(queue.try_push(4));
+    EXPECT_FALSE(queue.try_push(5));
+    EXPECT_EQ(queue.try_pop(), 2);
+    EXPECT_EQ(queue.try_pop(), 4);
+    EXPECT_FALSE(queue.try_pop().has_value());
+  }
+  EXPECT_TRUE(allocations.empty());
+}
+
 TEST(threading_lockfree_spsc_queue, rollover) {
   core::threading::lockfree_spsc_queue<int> queue(5);
 
