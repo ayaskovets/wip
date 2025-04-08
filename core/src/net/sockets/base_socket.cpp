@@ -253,6 +253,7 @@ base_socket::connection_status base_socket::connect(
       case EALREADY:
         return connection_status::kPending;
       case ECONNREFUSED:
+      case ENOENT:
         return connection_status::kRefused;
       [[unlikely]] default:
         throw std::runtime_error(std::format(
