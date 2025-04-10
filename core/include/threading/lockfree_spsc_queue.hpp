@@ -25,6 +25,12 @@ template <typename T, std::size_t Capacity = std::dynamic_extent,
   requires(std::is_nothrow_destructible_v<T> &&
            std::is_nothrow_move_constructible_v<T>)
 class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
+ private:
+  static_assert(sizeof(typename Allocator::value_type) <=
+                utils::kCacheLineSize);
+  static_assert(alignof(typename Allocator::value_type) <=
+                utils::kCacheLineSize);
+
  public:
   constexpr lockfree_spsc_queue(const Allocator& allocator = Allocator())
     requires(Capacity != std::dynamic_extent)
