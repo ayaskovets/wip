@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <atomic>
+#include <format>
 #include <latch>
 #include <numeric>
 #include <thread>

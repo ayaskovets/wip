@@ -1,8 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <cerrno>
-#include <format>
 #include <optional>
 #include <span>
 #include <type_traits>
@@ -33,8 +31,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     requires(Capacity != std::dynamic_extent)
       : ring_buffer_(nullptr), allocator_(allocator) {
     if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
-      throw std::runtime_error(
-          std::format("failed to allocate memory: {}", std::strerror(errno)));
+      throw std::runtime_error("failed to allocate memory");
     }
   }
 
@@ -43,8 +40,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     requires(Capacity == std::dynamic_extent)
       : ring_buffer_(nullptr), allocator_(allocator), capacity_(capacity) {
     if (!(ring_buffer_ = allocator_.allocate(capacity + 1))) [[unlikely]] {
-      throw std::runtime_error(
-          std::format("failed to allocate memory :{}", std::strerror(errno)));
+      throw std::runtime_error("failed to allocate memory");
     }
   }
 
