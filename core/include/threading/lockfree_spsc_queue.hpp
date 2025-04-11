@@ -35,7 +35,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr lockfree_spsc_queue(const Allocator& allocator = Allocator())
     requires(Capacity != std::dynamic_extent)
       : ring_buffer_(nullptr), allocator_(allocator) {
-    if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
+    if (!(ring_buffer_ = allocator_.allocate(Capacity + 1))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
   }
