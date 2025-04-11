@@ -116,25 +116,25 @@ class threading_locked_mpmc_queue
 TEST_P(threading_locked_mpmc_queue, workload) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
+  core::threading::locked_mpmc_queue<int> queue(queue_size);
+
   std::vector<int> items_to_push(items_size);
   std::iota(items_to_push.begin(), items_to_push.end(), 0);
 
-  core::threading::locked_mpmc_queue<int> queue(queue_size);
+  std::vector<int> popped_items(items_size);
 
-  std::atomic<std::size_t> pushed = 0;
-
-  std::mutex mutex;
-  std::vector<int> popped_items;
-  popped_items.reserve(items_to_push.size());
+  std::atomic<std::size_t> pushed_items_count = 0;
+  std::atomic<std::size_t> popped_items_count = 0;
 
   std::latch latch(producers + consumers);
   std::vector<std::thread> threads;
   threads.reserve(producers + consumers);
 
-  const auto producer = [&latch, &queue, &items_to_push, &pushed] {
+  const auto producer = [&latch, &queue, &items_to_push, &pushed_items_count] {
     latch.arrive_and_wait();
     while (true) {
-      const std::size_t index = pushed.fetch_add(1, std::memory_order::relaxed);
+      const std::size_t index =
+          pushed_items_count.fetch_add(1, std::memory_order::relaxed);
       if (index >= items_to_push.size()) {
         return;
       }
@@ -142,15 +142,16 @@ TEST_P(threading_locked_mpmc_queue, workload) {
     }
   };
 
-  const auto consumer = [&latch, &queue, &items_to_push, &mutex,
-                         &popped_items] {
+  const auto consumer = [&latch, &queue, &items_to_push, &popped_items_count,
+                         &popped_items]() {
     latch.arrive_and_wait();
     while (true) {
-      std::unique_lock<std::mutex> lock(mutex);
-      if (popped_items.size() == items_to_push.size()) {
+      const std::size_t index =
+          popped_items_count.fetch_add(1, std::memory_order::relaxed);
+      if (index >= items_to_push.size()) {
         return;
       }
-      popped_items.push_back(queue.pop());
+      popped_items[index] = queue.pop();
     }
   };
 
@@ -164,14 +165,16 @@ TEST_P(threading_locked_mpmc_queue, workload) {
     thread.join();
   }
 
-  std::sort(std::begin(popped_items), std::end(popped_items));
-  EXPECT_EQ(popped_items.size(), items_to_push.size());
-  EXPECT_EQ(popped_items, items_to_push);
+  std::sort(popped_items.begin(), popped_items.end());
+  EXPECT_EQ(popped_items.size(), popped_items.size());
+  EXPECT_EQ(std::vector<int>(popped_items.begin(), popped_items.end()),
+            items_to_push);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     threading_locked_mpmc_queue, threading_locked_mpmc_queue,
     ::testing::Values(std::make_tuple(5, 3, 1, 1),
+                      std::make_tuple(20, 10, 2, 1),
                       std::make_tuple(100, 10, 4, 1),
                       std::make_tuple(100, 10, 1, 4),
                       std::make_tuple(10000, 100, 4, 4)),
