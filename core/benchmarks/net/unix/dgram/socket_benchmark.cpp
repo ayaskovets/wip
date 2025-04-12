@@ -26,7 +26,7 @@ void BM_net_unix_dgram_throughput(benchmark::State& state) try {
       std::size_t received = 0;
       while (received < data_size) {
         const std::size_t _received = socket.receive(buffer);
-        if (_received == 0 && sender_done.load(std::memory_order_relaxed)) {
+        if (_received == 0 && sender_done.load(std::memory_order::relaxed)) {
           break;
         }
         received += _received;
