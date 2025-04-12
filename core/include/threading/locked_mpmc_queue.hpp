@@ -17,14 +17,17 @@ template <typename T, std::size_t Capacity = std::dynamic_extent>
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   constexpr locked_mpmc_queue() noexcept
-    requires(Capacity != std::dynamic_extent)
+    requires(Capacity != std::dynamic_extent && Capacity > 0)
   = default;
 
-  constexpr explicit locked_mpmc_queue(std::size_t capacity) noexcept
+  constexpr explicit locked_mpmc_queue(std::size_t capacity)
     requires(Capacity == std::dynamic_extent)
-      : capacity_(capacity) {}
+      : capacity_(capacity) {
+    if (Capacity == 0) {
+      throw std::invalid_argument("capacity must be greater than zero");
+    }
+  }
 
-  // NOTE: unbounded queue constructor
   constexpr locked_mpmc_queue() noexcept
     requires(Capacity == std::dynamic_extent)
       : capacity_(std::dynamic_extent) {}
@@ -32,20 +35,34 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
   void push(T value) {
     std::unique_lock<std::mutex> lock(mutex_);
-    push_available_cv_.wait(lock,
-                            [this] { return queue_.size() < *capacity_; });
+    push_available_cv_.wait(
+        lock, [this] { return stop_requested_ || queue_.size() < *capacity_; });
+    if (stop_requested_) {
+      throw std::runtime_error("push unblocked by destruction");
+    }
     queue_.push_back(std::move(value));
     pop_available_cv_.notify_one();
   }
 
   T pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
+    pop_available_cv_.wait(
+        lock, [this] { return stop_requested_ || !queue_.empty(); });
+    if (stop_requested_) {
+      throw std::runtime_error("pop unblocked by destruction");
+    }
     // NOTE: correct iff noexcept(pop_front)
     T front(std::move(queue_.front()));
     queue_.pop_front();
     push_available_cv_.notify_one();
     return front;
+  }
+
+ public:
+  constexpr void request_stop() noexcept {
+    stop_requested_ = true;
+    pop_available_cv_.notify_all();
+    push_available_cv_.notify_all();
   }
 
  public:
@@ -62,6 +79,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   std::deque<T> queue_;
   [[no_unique_address]] const utils::conditionally_runtime<
       std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
+  bool stop_requested_ = false;
 };
 
 }  // namespace core::threading
