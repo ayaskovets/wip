@@ -1,5 +1,3 @@
-#include "threading/lockfree_mpmc_queue.hpp"
-
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -8,25 +6,27 @@
 #include <numeric>
 #include <thread>
 
+#include "threading/lockless_mpmc_queue.hpp"
+
 namespace tests::threading {
 
-TEST(threading_lockfree_mpmc_queue, size) {
-  static_assert(sizeof(core::threading::lockfree_mpmc_queue<int, 10>) == 192);
-  static_assert(alignof(core::threading::lockfree_mpmc_queue<int, 10>) == 64);
+TEST(threading_lockless_mpmc_queue, size) {
+  static_assert(sizeof(core::threading::lockless_mpmc_queue<int, 10>) == 192);
+  static_assert(alignof(core::threading::lockless_mpmc_queue<int, 10>) == 64);
 
-  static_assert(sizeof(core::threading::lockfree_mpmc_queue<int>) == 192);
-  static_assert(alignof(core::threading::lockfree_mpmc_queue<int>) == 64);
+  static_assert(sizeof(core::threading::lockless_mpmc_queue<int>) == 192);
+  static_assert(alignof(core::threading::lockless_mpmc_queue<int>) == 64);
 }
 
-TEST(threading_lockfree_mpmc_queue, capacity) {
-  EXPECT_EQ(core::threading::lockfree_mpmc_queue<std::string>(128).capacity(),
+TEST(threading_lockless_mpmc_queue, capacity) {
+  EXPECT_EQ(core::threading::lockless_mpmc_queue<std::string>(128).capacity(),
             128);
-  EXPECT_EQ(core::threading::lockfree_mpmc_queue<std::string>(64).capacity(),
+  EXPECT_EQ(core::threading::lockless_mpmc_queue<std::string>(64).capacity(),
             64);
 }
 
-TEST(threading_lockfree_mpmc_queue, smoke) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+TEST(threading_lockless_mpmc_queue, smoke) {
+  core::threading::lockless_mpmc_queue<int> queue(2);
 
   EXPECT_FALSE(queue.try_pop().has_value());
   EXPECT_TRUE(queue.try_push(1));
@@ -40,14 +40,14 @@ TEST(threading_lockfree_mpmc_queue, smoke) {
   EXPECT_FALSE(queue.try_pop().has_value());
 }
 
-TEST(threading_lockfree_mpmc_queue, capacity_one) {
-  EXPECT_ANY_THROW(core::threading::lockfree_mpmc_queue<int>(1));
+TEST(threading_lockless_mpmc_queue, capacity_one) {
+  EXPECT_ANY_THROW(core::threading::lockless_mpmc_queue<int>(1));
 }
 
-TEST(threading_lockfree_mpmc_queue, shared_ptr) {
+TEST(threading_lockless_mpmc_queue, shared_ptr) {
   auto ptr = std::make_shared<int>(42);
 
-  core::threading::lockfree_mpmc_queue<std::shared_ptr<int>> queue(2);
+  core::threading::lockless_mpmc_queue<std::shared_ptr<int>> queue(2);
   EXPECT_EQ(ptr.use_count(), 1);
   EXPECT_TRUE(queue.try_push(ptr));
   EXPECT_EQ(ptr.use_count(), 2);
@@ -64,7 +64,7 @@ TEST(threading_lockfree_mpmc_queue, shared_ptr) {
 }
 
 // TODO:
-// TEST(threading_lockfree_mpmc_queue, allocator) {
+// TEST(threading_lockless_mpmc_queue, allocator) {
 //   std::unordered_map<int*, std::size_t> allocations;
 
 //   class allocator : public std::allocator<int> {
@@ -89,7 +89,7 @@ TEST(threading_lockfree_mpmc_queue, shared_ptr) {
 //   };
 
 //   {
-//     core::threading::lockfree_mpmc_queue<int, 2, allocator> queue(
+//     core::threading::lockless_mpmc_queue<int, 2, allocator> queue(
 //         (allocator(allocations)));
 
 //     EXPECT_FALSE(queue.try_pop().has_value());
@@ -106,8 +106,8 @@ TEST(threading_lockfree_mpmc_queue, shared_ptr) {
 //   EXPECT_TRUE(allocations.empty());
 // }
 
-TEST(threading_lockfree_mpmc_queue, rollover) {
-  core::threading::lockfree_mpmc_queue<int> queue(8);
+TEST(threading_lockless_mpmc_queue, rollover) {
+  core::threading::lockless_mpmc_queue<int> queue(8);
 
   for (std::size_t i = 0; i < 100; ++i) {
     EXPECT_TRUE(queue.try_push(i));
@@ -115,13 +115,13 @@ TEST(threading_lockfree_mpmc_queue, rollover) {
   }
 }
 
-TEST(threading_lockfree_mpmc_queue, non_copyable_item_type) {
-  core::threading::lockfree_mpmc_queue<std::unique_ptr<int>, 2> queue;
+TEST(threading_lockless_mpmc_queue, non_copyable_item_type) {
+  core::threading::lockless_mpmc_queue<std::unique_ptr<int>, 2> queue;
   queue.try_push(std::unique_ptr<int>{});
   [[maybe_unused]] const auto value = queue.try_pop();
 }
 
-TEST(threading_lockfree_mpmc_queue, item_destructor) {
+TEST(threading_lockless_mpmc_queue, item_destructor) {
   struct non_copyable_counter {
     constexpr non_copyable_counter(std::size_t& constructed,
                                    std::size_t& move_constructed,
@@ -152,7 +152,7 @@ TEST(threading_lockfree_mpmc_queue, item_destructor) {
     std::size_t move_constructed = 0;
     std::size_t destructed = 0;
 
-    core::threading::lockfree_mpmc_queue<non_copyable_counter> queue(2);
+    core::threading::lockless_mpmc_queue<non_copyable_counter> queue(2);
 
     non_copyable_counter pushed_item(constructed, move_constructed, destructed);
 
@@ -177,7 +177,7 @@ TEST(threading_lockfree_mpmc_queue, item_destructor) {
     std::size_t move_constructed = 0;
     std::size_t destructed = 0;
     {
-      core::threading::lockfree_mpmc_queue<non_copyable_counter> queue(2);
+      core::threading::lockless_mpmc_queue<non_copyable_counter> queue(2);
       non_copyable_counter pushed_item(constructed, move_constructed,
                                        destructed);
       EXPECT_TRUE(queue.try_push(std::move(pushed_item)));
@@ -188,14 +188,14 @@ TEST(threading_lockfree_mpmc_queue, item_destructor) {
   }
 }
 
-class threading_lockfree_mpmc_queue
+class threading_lockless_mpmc_queue
     : public ::testing::TestWithParam<
           std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> {};
 
-TEST_P(threading_lockfree_mpmc_queue, workload) {
+TEST_P(threading_lockless_mpmc_queue, workload) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
-  core::threading::lockfree_mpmc_queue<int> queue(queue_size);
+  core::threading::lockless_mpmc_queue<int> queue(queue_size);
 
   std::vector<int> items_to_push(items_size);
   std::iota(items_to_push.begin(), items_to_push.end(), 0);
@@ -255,7 +255,7 @@ TEST_P(threading_lockfree_mpmc_queue, workload) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    threading_lockfree_mpmc_queue, threading_lockfree_mpmc_queue,
+    threading_lockless_mpmc_queue, threading_lockless_mpmc_queue,
     ::testing::Values(std::make_tuple(5, 4, 1, 1),
                       std::make_tuple(100, 16, 4, 1),
                       std::make_tuple(100, 16, 1, 4),

@@ -26,7 +26,7 @@ template <typename T, std::size_t Capacity = std::dynamic_extent,
           typename Allocator = std::allocator<detail::value_counter_pair<T>>>
   requires(std::is_nothrow_destructible_v<T> &&
            std::is_nothrow_move_constructible_v<T>)
-class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
+class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
  private:
   static_assert(sizeof(typename Allocator::value_type) <=
                 utils::kCacheLineSize);
@@ -35,7 +35,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::atomic<std::size_t>::is_always_lock_free);
 
  public:
-  constexpr lockfree_mpmc_queue(const Allocator& allocator = Allocator())
+  constexpr lockless_mpmc_queue(const Allocator& allocator = Allocator())
     requires(Capacity != std::dynamic_extent &&
              utils::is_power_of_two(Capacity) && Capacity > 1)
       : ring_buffer_(nullptr), allocator_(allocator) {
@@ -48,7 +48,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr explicit lockfree_mpmc_queue(
+  constexpr explicit lockless_mpmc_queue(
       std::size_t capacity, const Allocator& allocator = Allocator())
     requires(Capacity == std::dynamic_extent)
       : ring_buffer_(nullptr), allocator_(allocator), capacity_(capacity) {
@@ -66,7 +66,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr ~lockfree_mpmc_queue() noexcept {
+  constexpr ~lockless_mpmc_queue() noexcept {
     while (try_pop().has_value()) {
     }
     allocator_.deallocate(ring_buffer_, *capacity_);
