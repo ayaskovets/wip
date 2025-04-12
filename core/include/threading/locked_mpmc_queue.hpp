@@ -11,26 +11,28 @@
 
 namespace core::threading {
 
-template <typename T, std::size_t Capacity = std::dynamic_extent>
+template <typename T, std::size_t Capacity = std::dynamic_extent,
+          typename Allocator = std::allocator<T>>
   requires(std::is_nothrow_destructible_v<T> &&
            std::is_nothrow_move_constructible_v<T>)
 class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  public:
-  constexpr locked_mpmc_queue() noexcept
+  constexpr locked_mpmc_queue(const Allocator& allocator = Allocator()) noexcept
     requires(Capacity != std::dynamic_extent && Capacity > 0)
-  = default;
+      : queue_(allocator) {}
 
-  constexpr explicit locked_mpmc_queue(std::size_t capacity)
+  constexpr explicit locked_mpmc_queue(std::size_t capacity,
+                                       const Allocator& allocator = Allocator())
     requires(Capacity == std::dynamic_extent)
-      : capacity_(capacity) {
+      : queue_(allocator), capacity_(capacity) {
     if (Capacity == 0) {
       throw std::invalid_argument("capacity must be greater than zero");
     }
   }
 
-  constexpr locked_mpmc_queue() noexcept
+  constexpr locked_mpmc_queue(const Allocator& allocator = Allocator()) noexcept
     requires(Capacity == std::dynamic_extent)
-      : capacity_(std::dynamic_extent) {}
+      : queue_(allocator), capacity_(std::dynamic_extent) {}
 
  public:
   void push(T value) {
@@ -76,7 +78,9 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
+
   std::deque<T> queue_;
+
   [[no_unique_address]] const utils::conditionally_runtime<
       std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
   bool stop_requested_ = false;

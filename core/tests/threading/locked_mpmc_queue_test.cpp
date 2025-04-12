@@ -120,6 +120,44 @@ TEST(threading_locked_mpmc_queue, non_copyable_item_type) {
   [[maybe_unused]] const auto value = queue.pop();
 }
 
+TEST(threading_lockfree_spsc_queue, allocator) {
+  std::unordered_map<int*, std::size_t> allocations;
+
+  class allocator : public std::allocator<int> {
+   public:
+    allocator(std::unordered_map<int*, std::size_t>& allocations)
+        : allocations_(allocations) {}
+
+    int* allocate(std::size_t n) {
+      int* ptr = new int[n];
+      allocations_[ptr] = n;
+      return ptr;
+    }
+    void deallocate(int* ptr, std::size_t n) {
+      if ((allocations_[ptr] -= n) == 0) {
+        allocations_.erase(ptr);
+      }
+      operator delete[](ptr, n);
+    }
+
+   private:
+    std::unordered_map<int*, std::size_t>& allocations_;
+  };
+
+  {
+    core::threading::locked_mpmc_queue<int, 2, allocator> queue(
+        (allocator(allocations)));
+
+    queue.push(1);
+    queue.push(2);
+    EXPECT_EQ(queue.pop(), 1);
+    queue.push(4);
+    EXPECT_EQ(queue.pop(), 2);
+    EXPECT_EQ(queue.pop(), 4);
+  }
+  EXPECT_TRUE(allocations.empty());
+}
+
 class threading_locked_mpmc_queue
     : public ::testing::TestWithParam<
           std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> {};
