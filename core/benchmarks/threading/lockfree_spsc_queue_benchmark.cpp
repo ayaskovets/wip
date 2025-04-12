@@ -9,8 +9,8 @@ namespace benchmarks::threading {
 
 template <typename ValueConstructor>
 void BM_threading_lockfree_spsc_queue_spsc_throughput(benchmark::State& state) {
-  const auto capacity = state.range(0);
-  const auto items = state.range(1);
+  const std::size_t capacity = state.range(0);
+  const std::size_t items = state.range(1);
   const auto value = ValueConstructor();
 
   for (const auto _ : state) {
@@ -18,18 +18,18 @@ void BM_threading_lockfree_spsc_queue_spsc_throughput(benchmark::State& state) {
 
     core::threading::lockfree_spsc_queue<std::decay_t<decltype(value)>> queue(
         capacity);
-    std::latch latch(1 + 1 + 1);
+    std::latch latch(3);
 
     std::thread producer([&latch, &queue, items, value = value] {
       latch.arrive_and_wait();
-      for (std::int64_t i = 0; i < items;) {
+      for (std::size_t i = 0; i < items;) {
         i += queue.try_push(value);
       }
     });
 
     std::thread consumer([&latch, &queue, items] {
       latch.arrive_and_wait();
-      for (std::int64_t i = 0; i < items;) {
+      for (std::size_t i = 0; i < items;) {
         i += queue.try_pop().has_value();
       }
     });
@@ -42,13 +42,13 @@ void BM_threading_lockfree_spsc_queue_spsc_throughput(benchmark::State& state) {
   }
 }
 BENCHMARK_TEMPLATE(BM_threading_lockfree_spsc_queue_spsc_throughput, int)
-    ->Args({1024, 1048576})
+    ->Args({1023, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_threading_lockfree_spsc_queue_spsc_throughput,
                    std::shared_ptr<int>)
-    ->Args({1024, 1048576})
+    ->Args({1023, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);

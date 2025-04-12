@@ -36,7 +36,8 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr lockfree_spsc_queue(const Allocator& allocator = Allocator())
     requires(Capacity != std::dynamic_extent && Capacity > 0)
       : ring_buffer_(nullptr), allocator_(allocator) {
-    if (!(ring_buffer_ = allocator_.allocate(Capacity + 1))) [[unlikely]] {
+    if (!(ring_buffer_ = allocator_.allocate(
+              Capacity + static_cast<std::size_t>(1)))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
   }
@@ -49,7 +50,8 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
       throw std::invalid_argument("capacity can not be zero");
     }
 
-    if (!(ring_buffer_ = allocator_.allocate(capacity + 1))) [[unlikely]] {
+    if (!(ring_buffer_ = allocator_.allocate(
+              capacity + static_cast<std::size_t>(1)))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
   }
@@ -57,13 +59,15 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr ~lockfree_spsc_queue() noexcept {
     while (try_pop().has_value()) {
     }
-    allocator_.deallocate(ring_buffer_, *capacity_ + 1);
+    allocator_.deallocate(ring_buffer_,
+                          *capacity_ + static_cast<std::size_t>(1));
   }
 
  public:
   constexpr bool try_push(T value) noexcept {
     const std::size_t push_to = push_to_.load(std::memory_order::relaxed);
-    const std::size_t next_push_to = (push_to == *capacity_) ? 0 : push_to + 1;
+    const std::size_t next_push_to =
+        (push_to == *capacity_) ? 0 : push_to + static_cast<std::size_t>(1);
 
     if (next_push_to == cached_pop_from_ &&
         (next_push_to ==
@@ -91,7 +95,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
 
     std::destroy_at(&ring_buffer_[pop_from]);
     const std::size_t next_pop_from =
-        (pop_from == *capacity_) ? 0 : pop_from + 1;
+        (pop_from == *capacity_) ? 0 : pop_from + static_cast<std::size_t>(1);
     pop_from_.store(next_pop_from, std::memory_order::release);
     return value;
   }
