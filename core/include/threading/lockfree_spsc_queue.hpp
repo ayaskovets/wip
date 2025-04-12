@@ -30,6 +30,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
                 utils::kCacheLineSize);
   static_assert(alignof(typename Allocator::value_type) <=
                 utils::kCacheLineSize);
+  static_assert(std::atomic<std::size_t>::is_always_lock_free);
 
  public:
   constexpr lockfree_spsc_queue(const Allocator& allocator = Allocator())

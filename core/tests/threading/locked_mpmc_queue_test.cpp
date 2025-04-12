@@ -94,19 +94,9 @@ TEST(threading_locked_mpmc_queue, unblocking_pop) {
 }
 
 TEST(threading_locked_mpmc_queue, non_copyable_item_type) {
-  struct non_copyable {
-    constexpr non_copyable() noexcept = default;
-    constexpr non_copyable(const non_copyable&) = delete;
-    constexpr non_copyable& operator=(const non_copyable&) = delete;
-    constexpr non_copyable(non_copyable&&) = default;
-    constexpr non_copyable& operator=(non_copyable&&) = default;
-  };
-
-  core::threading::locked_mpmc_queue<non_copyable> queue(1);
-  {
-    queue.push(non_copyable{});
-    [[maybe_unused]] const auto value = queue.pop();
-  }
+  core::threading::locked_mpmc_queue<std::unique_ptr<int>> queue(1);
+  queue.push(std::unique_ptr<int>{});
+  [[maybe_unused]] const auto value = queue.pop();
 }
 
 class threading_locked_mpmc_queue

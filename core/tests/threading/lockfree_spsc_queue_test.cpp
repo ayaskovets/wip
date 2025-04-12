@@ -92,19 +92,9 @@ TEST(threading_lockfree_spsc_queue, rollover) {
 }
 
 TEST(threading_lockfree_spsc_queue, non_copyable_item_type) {
-  struct non_copyable {
-    constexpr non_copyable() noexcept = default;
-    constexpr non_copyable(const non_copyable&) = delete;
-    constexpr non_copyable& operator=(const non_copyable&) = delete;
-    constexpr non_copyable(non_copyable&&) = default;
-    constexpr non_copyable& operator=(non_copyable&&) = default;
-  };
-
-  core::threading::lockfree_spsc_queue<non_copyable, 1> queue;
-  {
-    queue.try_push(non_copyable{});
-    [[maybe_unused]] const auto value = queue.try_pop();
-  }
+  core::threading::lockfree_spsc_queue<std::unique_ptr<int>, 1> queue;
+  queue.try_push(std::unique_ptr<int>{});
+  [[maybe_unused]] const auto value = queue.try_pop();
 }
 
 TEST(threading_lockfree_spsc_queue, item_destructor) {

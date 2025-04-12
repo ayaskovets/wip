@@ -8,7 +8,7 @@
 namespace benchmarks::threading {
 
 template <typename ValueConstructor>
-void BM_threading_locked_spsc_queue_spsc_throughput(benchmark::State& state) {
+void BM_threading_lockfree_spsc_queue_spsc_throughput(benchmark::State& state) {
   const auto capacity = state.range(0);
   const auto items = state.range(1);
   const auto value = ValueConstructor();
@@ -41,12 +41,12 @@ void BM_threading_locked_spsc_queue_spsc_throughput(benchmark::State& state) {
     consumer.join();
   }
 }
-BENCHMARK_TEMPLATE(BM_threading_locked_spsc_queue_spsc_throughput, int)
+BENCHMARK_TEMPLATE(BM_threading_lockfree_spsc_queue_spsc_throughput, int)
     ->Args({1024, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(BM_threading_locked_spsc_queue_spsc_throughput,
+BENCHMARK_TEMPLATE(BM_threading_lockfree_spsc_queue_spsc_throughput,
                    std::shared_ptr<int>)
     ->Args({1024, 1048576})
     ->MeasureProcessCPUTime()
