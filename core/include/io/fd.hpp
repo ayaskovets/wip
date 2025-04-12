@@ -40,10 +40,6 @@ class fd {
   // in an exception
   void close();
 
- public:
-  // NOTE: this method throws for closed descriptor
-  int get_fd() const;
-
  protected:
   int fd_;
 };

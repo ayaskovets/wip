@@ -96,11 +96,4 @@ void fd::close() {
   }
 }
 
-int fd::get_fd() const {
-  if (fd_ == kInvalidFd) [[unlikely]] {
-    throw std::runtime_error("get_fd() called on a closed file descriptor");
-  }
-  return fd_;
-}
-
 }  // namespace core::io
