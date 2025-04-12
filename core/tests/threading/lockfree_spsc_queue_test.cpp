@@ -40,6 +40,20 @@ TEST(threading_lockfree_spsc_queue, smoke) {
   EXPECT_FALSE(queue.try_pop().has_value());
 }
 
+TEST(threading_lockfree_spsc_queue, capacity_one) {
+  core::threading::lockfree_spsc_queue<int> queue(1);
+
+  EXPECT_FALSE(queue.try_pop().has_value());
+  EXPECT_TRUE(queue.try_push(1));
+  EXPECT_FALSE(queue.try_push(3));
+  EXPECT_EQ(queue.try_pop(), 1);
+  EXPECT_TRUE(queue.try_push(4));
+  EXPECT_FALSE(queue.try_push(5));
+  EXPECT_EQ(queue.try_pop(), 1);
+  EXPECT_EQ(queue.try_pop(), 4);
+  EXPECT_FALSE(queue.try_pop().has_value());
+}
+
 TEST(threading_lockfree_spsc_queue, allocator) {
   std::unordered_map<int*, std::size_t> allocations;
 
