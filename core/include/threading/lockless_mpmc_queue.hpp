@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <concepts>
 #include <optional>
 #include <span>
 #include <type_traits>
@@ -14,16 +15,32 @@ namespace core::threading {
 
 namespace detail {
 
+template <typename Allocator, typename T>
+concept lockless_mpmc_queue_entry_concept =
+    requires(typename Allocator::value_type allocator_value_type) {
+      { allocator_value_type.get_value() } -> std::same_as<T&>;
+      {
+        allocator_value_type.get_seqnum()
+      } -> std::same_as<std::atomic<std::size_t>&>;
+    };
+
 template <typename T>
-struct alignas(utils::kCacheLineSize) value_counter_pair final {
+struct alignas(utils::kCacheLineSize)
+    lockless_mpmc_queue_default_aligned_entry final {
+ public:
   T value;
   std::atomic<std::size_t> seqnum;
+
+ public:
+  constexpr T& get_value() noexcept { return value; }
+  constexpr std::atomic<std::size_t>& get_seqnum() noexcept { return seqnum; }
 };
 
 }  // namespace detail
 
 template <typename T, std::size_t Capacity = std::dynamic_extent,
-          typename Allocator = std::allocator<detail::value_counter_pair<T>>>
+          typename Allocator = std::allocator<
+              detail::lockless_mpmc_queue_default_aligned_entry<T>>>
   requires(std::is_nothrow_destructible_v<T> &&
            std::is_nothrow_move_constructible_v<T>)
 class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
@@ -33,6 +50,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(alignof(typename Allocator::value_type) <=
                 utils::kCacheLineSize);
   static_assert(std::atomic<std::size_t>::is_always_lock_free);
+  static_assert(detail::lockless_mpmc_queue_entry_concept<Allocator, T>);
 
  public:
   constexpr lockless_mpmc_queue(const Allocator& allocator = Allocator())
@@ -44,7 +62,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     for (std::size_t i = 0; i < *capacity_; ++i) {
-      ring_buffer_[i].seqnum.store(i, std::memory_order::relaxed);
+      ring_buffer_[i].get_seqnum().store(i, std::memory_order::relaxed);
     }
   }
 
@@ -62,7 +80,7 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     for (std::size_t i = 0; i < *capacity_; ++i) {
-      ring_buffer_[i].seqnum.store(i, std::memory_order::relaxed);
+      ring_buffer_[i].get_seqnum().store(i, std::memory_order::relaxed);
     }
   }
 
@@ -77,14 +95,15 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     std::size_t push_to = push_to_.load(std::memory_order::relaxed);
     typename Allocator::value_type& entry =
         ring_buffer_[push_to & (*capacity_ - static_cast<std::size_t>(1))];
-    const std::size_t seqnum = entry.seqnum.load(std::memory_order::acquire);
+    const std::size_t seqnum =
+        entry.get_seqnum().load(std::memory_order::acquire);
     if (seqnum == push_to) {
       if (push_to_.compare_exchange_weak(push_to,
                                          push_to + static_cast<std::size_t>(1),
                                          std::memory_order::relaxed)) {
-        std::construct_at(&entry.value, std::move(value));
-        entry.seqnum.store(push_to + static_cast<std::size_t>(1),
-                           std::memory_order::release);
+        std::construct_at(&entry.get_value(), std::move(value));
+        entry.get_seqnum().store(push_to + static_cast<std::size_t>(1),
+                                 std::memory_order::release);
         return true;
       }
     }
@@ -96,15 +115,17 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
     typename Allocator::value_type& entry =
         ring_buffer_[pop_from & (*capacity_ - static_cast<std::size_t>(1))];
-    const std::size_t seqnum = entry.seqnum.load(std::memory_order::acquire);
+    const std::size_t seqnum =
+        entry.get_seqnum().load(std::memory_order::acquire);
     if (seqnum ==
         static_cast<std::size_t>(pop_from + static_cast<std::size_t>(1))) {
       if (pop_from_.compare_exchange_weak(
               pop_from, pop_from + static_cast<std::size_t>(1),
               std::memory_order::relaxed)) {
-        value.emplace(std::move(entry.value));
-        std::destroy_at(&entry.value);
-        entry.seqnum.store(pop_from + *capacity_, std::memory_order::release);
+        value.emplace(std::move(entry.get_value()));
+        std::destroy_at(&entry.get_value());
+        entry.get_seqnum().store(pop_from + *capacity_,
+                                 std::memory_order::release);
         return value;
       }
     }

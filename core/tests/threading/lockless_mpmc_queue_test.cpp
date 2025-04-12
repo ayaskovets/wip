@@ -1,3 +1,5 @@
+#include "threading/lockless_mpmc_queue.hpp"
+
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -5,8 +7,6 @@
 #include <latch>
 #include <numeric>
 #include <thread>
-
-#include "threading/lockless_mpmc_queue.hpp"
 
 namespace tests::threading {
 
@@ -63,48 +63,56 @@ TEST(threading_lockless_mpmc_queue, shared_ptr) {
   EXPECT_EQ(ptr.use_count(), 1);
 }
 
-// TODO:
-// TEST(threading_lockless_mpmc_queue, allocator) {
-//   std::unordered_map<int*, std::size_t> allocations;
+TEST(threading_lockless_mpmc_queue, allocator) {
+  struct lockless_mpmc_queue_entry final {
+    int value;
+    std::atomic<std::size_t> seqnum;
 
-//   class allocator : public std::allocator<int> {
-//    public:
-//     allocator(std::unordered_map<int*, std::size_t>& allocations)
-//         : allocations_(allocations) {}
+    constexpr int& get_value() { return value; }
+    constexpr std::atomic<std::size_t>& get_seqnum() { return seqnum; }
+  };
 
-//     int* allocate(std::size_t n) {
-//       int* ptr = new int[n];
-//       allocations_[ptr] = n;
-//       return ptr;
-//     }
-//     void deallocate(int* ptr, std::size_t n) {
-//       if ((allocations_[ptr] -= n) == 0) {
-//         allocations_.erase(ptr);
-//       }
-//       operator delete[](ptr, n);
-//     }
+  std::unordered_map<lockless_mpmc_queue_entry*, std::size_t> allocations;
 
-//    private:
-//     std::unordered_map<int*, std::size_t>& allocations_;
-//   };
+  class allocator : public std::allocator<lockless_mpmc_queue_entry> {
+   public:
+    allocator(std::unordered_map<lockless_mpmc_queue_entry*, std::size_t>&
+                  allocations)
+        : allocations_(allocations) {}
 
-//   {
-//     core::threading::lockless_mpmc_queue<int, 2, allocator> queue(
-//         (allocator(allocations)));
+    lockless_mpmc_queue_entry* allocate(std::size_t n) {
+      lockless_mpmc_queue_entry* ptr = new lockless_mpmc_queue_entry[n];
+      allocations_[ptr] = n;
+      return ptr;
+    }
+    void deallocate(lockless_mpmc_queue_entry* ptr, std::size_t n) {
+      if ((allocations_[ptr] -= n) == 0) {
+        allocations_.erase(ptr);
+      }
+      operator delete[](ptr, n);
+    }
 
-//     EXPECT_FALSE(queue.try_pop().has_value());
-//     EXPECT_TRUE(queue.try_push(1));
-//     EXPECT_TRUE(queue.try_push(2));
-//     EXPECT_FALSE(queue.try_push(3));
-//     EXPECT_EQ(queue.try_pop(), 1);
-//     EXPECT_TRUE(queue.try_push(4));
-//     EXPECT_FALSE(queue.try_push(5));
-//     EXPECT_EQ(queue.try_pop(), 2);
-//     EXPECT_EQ(queue.try_pop(), 4);
-//     EXPECT_FALSE(queue.try_pop().has_value());
-//   }
-//   EXPECT_TRUE(allocations.empty());
-// }
+   private:
+    std::unordered_map<lockless_mpmc_queue_entry*, std::size_t>& allocations_;
+  };
+
+  {
+    core::threading::lockless_mpmc_queue<int, 2, allocator> queue(
+        (allocator(allocations)));
+
+    EXPECT_FALSE(queue.try_pop().has_value());
+    EXPECT_TRUE(queue.try_push(1));
+    EXPECT_TRUE(queue.try_push(2));
+    EXPECT_FALSE(queue.try_push(3));
+    EXPECT_EQ(queue.try_pop(), 1);
+    EXPECT_TRUE(queue.try_push(4));
+    EXPECT_FALSE(queue.try_push(5));
+    EXPECT_EQ(queue.try_pop(), 2);
+    EXPECT_EQ(queue.try_pop(), 4);
+    EXPECT_FALSE(queue.try_pop().has_value());
+  }
+  EXPECT_TRUE(allocations.empty());
+}
 
 TEST(threading_lockless_mpmc_queue, rollover) {
   core::threading::lockless_mpmc_queue<int> queue(8);

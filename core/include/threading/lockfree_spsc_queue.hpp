@@ -14,14 +14,16 @@ namespace core::threading {
 namespace detail {
 
 template <typename T>
-struct alignas(utils::kCacheLineSize) aligned_to_cache_line final {
+struct alignas(utils::kCacheLineSize)
+    lockfree_spsc_queue_default_aligned_entry final {
   T value;
 };
 
 }  // namespace detail
 
 template <typename T, std::size_t Capacity = std::dynamic_extent,
-          typename Allocator = std::allocator<detail::aligned_to_cache_line<T>>>
+          typename Allocator = std::allocator<
+              detail::lockfree_spsc_queue_default_aligned_entry<T>>>
   requires(std::is_nothrow_destructible_v<T> &&
            std::is_nothrow_move_constructible_v<T>)
 class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
