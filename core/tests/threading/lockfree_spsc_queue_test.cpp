@@ -49,9 +49,27 @@ TEST(threading_lockfree_spsc_queue, capacity_one) {
   EXPECT_EQ(queue.try_pop(), 1);
   EXPECT_TRUE(queue.try_push(4));
   EXPECT_FALSE(queue.try_push(5));
-  EXPECT_EQ(queue.try_pop(), 1);
   EXPECT_EQ(queue.try_pop(), 4);
   EXPECT_FALSE(queue.try_pop().has_value());
+}
+
+TEST(threading_lockfree_spsc_queue, shared_ptr) {
+  auto ptr = std::make_shared<int>(42);
+
+  core::threading::lockfree_spsc_queue<std::shared_ptr<int>> queue(2);
+  EXPECT_EQ(ptr.use_count(), 1);
+  EXPECT_TRUE(queue.try_push(ptr));
+  EXPECT_EQ(ptr.use_count(), 2);
+  EXPECT_TRUE(queue.try_push(ptr));
+  EXPECT_EQ(ptr.use_count(), 3);
+  EXPECT_TRUE(queue.try_pop().has_value());
+  EXPECT_EQ(ptr.use_count(), 2);
+  EXPECT_TRUE(queue.try_push(ptr));
+  EXPECT_EQ(ptr.use_count(), 3);
+  EXPECT_TRUE(queue.try_pop().has_value());
+  EXPECT_EQ(ptr.use_count(), 2);
+  EXPECT_TRUE(queue.try_pop().has_value());
+  EXPECT_EQ(ptr.use_count(), 1);
 }
 
 TEST(threading_lockfree_spsc_queue, allocator) {
