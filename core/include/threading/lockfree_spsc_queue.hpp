@@ -58,8 +58,8 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr bool try_push(T value) noexcept {
-    const auto push_to = push_to_.load(std::memory_order::relaxed);
-    const auto next_push_to = (push_to == *capacity_) ? 0 : push_to + 1;
+    const std::size_t push_to = push_to_.load(std::memory_order::relaxed);
+    const std::size_t next_push_to = (push_to == *capacity_) ? 0 : push_to + 1;
 
     if (next_push_to == cached_pop_from_ &&
         (next_push_to ==
@@ -76,7 +76,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr std::optional<T> try_pop() noexcept {
     std::optional<T> value;
 
-    const auto pop_from = pop_from_.load(std::memory_order::relaxed);
+    const std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
     if (pop_from == cached_push_to_ &&
         (pop_from ==
          (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
@@ -86,7 +86,8 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     value.emplace(std::move(reinterpret_cast<T&>(ring_buffer_[pop_from])));
 
     std::destroy_at(&ring_buffer_[pop_from]);
-    const auto next_pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
+    const std::size_t next_pop_from =
+        (pop_from == *capacity_) ? 0 : pop_from + 1;
     pop_from_.store(next_pop_from, std::memory_order::release);
     return value;
   }
