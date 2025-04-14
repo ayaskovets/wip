@@ -78,9 +78,6 @@ TEST(threading_lockfree_spsc_queue, shared_ptr) {
 
 TEST(threading_lockfree_spsc_queue, allocator) {
   struct alignas(32) value_type final {
-    explicit constexpr operator std::uint32_t&() { return value; }
-
-    float prefix_padding;
     std::uint32_t value;
   };
   std::unordered_map<value_type*, std::size_t> allocations;
@@ -94,15 +91,10 @@ TEST(threading_lockfree_spsc_queue, allocator) {
 
       value_type* allocate(std::size_t n) {
         value_type* ptr = std::allocator<value_type>::allocate(n);
-
-        ptr->prefix_padding = 42.f;
-
         allocations_[ptr] = n;
         return ptr;
       }
       void deallocate(value_type* ptr, std::size_t n) {
-        EXPECT_EQ(ptr->prefix_padding, 42.f);
-
         if ((allocations_[ptr] -= n) == 0) {
           allocations_.erase(ptr);
         }

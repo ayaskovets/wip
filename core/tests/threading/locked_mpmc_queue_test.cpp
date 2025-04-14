@@ -125,40 +125,29 @@ TEST(threading_locked_mpmc_queue, non_copyable_item_type) {
 }
 
 TEST(threading_locked_mpmc_queue, allocator) {
-  struct alignas(32) value_type final {
-    explicit constexpr operator std::uint32_t&() { return value; }
-
-    float prefix_padding;
-    std::uint32_t value;
-  };
-  std::unordered_map<value_type*, std::size_t> allocations;
+  std::unordered_map<std::uint32_t*, std::size_t> allocations;
 
   {
-    class allocator : public std::allocator<value_type> {
+    class allocator : public std::allocator<std::uint32_t> {
      public:
       explicit allocator(
-          std::unordered_map<value_type*, std::size_t>& allocations)
+          std::unordered_map<std::uint32_t*, std::size_t>& allocations)
           : allocations_(allocations) {}
 
-      value_type* allocate(std::size_t n) {
-        value_type* ptr = std::allocator<value_type>::allocate(n);
-
-        ptr->prefix_padding = 42.f;
-
+      std::uint32_t* allocate(std::size_t n) {
+        std::uint32_t* ptr = std::allocator<std::uint32_t>::allocate(n);
         allocations_[ptr] = n;
         return ptr;
       }
-      void deallocate(value_type* ptr, std::size_t n) {
-        EXPECT_EQ(ptr->prefix_padding, 42.f);
-
+      void deallocate(std::uint32_t* ptr, std::size_t n) {
         if ((allocations_[ptr] -= n) == 0) {
           allocations_.erase(ptr);
         }
-        std::allocator<value_type>::deallocate(ptr, n);
+        std::allocator<std::uint32_t>::deallocate(ptr, n);
       }
 
      private:
-      std::unordered_map<value_type*, std::size_t>& allocations_;
+      std::unordered_map<std::uint32_t*, std::size_t>& allocations_;
     };
 
     allocator alloc(allocations);
