@@ -16,6 +16,8 @@ class conditionally_runtime<T, true, CompileTimeValue> final {
  public:
   constexpr T& operator*() noexcept { return value_; }
   constexpr const T& operator*() const noexcept { return value_; }
+  constexpr T* operator->() noexcept { return &value_; };
+  constexpr const T* operator->() const noexcept { return &value_; };
 
  private:
   T value_;
@@ -28,6 +30,7 @@ class conditionally_runtime<T, false, CompileTimeValue> final {
 
  public:
   constexpr const T& operator*() const noexcept { return value_; }
+  constexpr const T* operator->() const noexcept { return &value_; };
 
  private:
   static inline const constinit T value_ = CompileTimeValue;

@@ -7,8 +7,12 @@ namespace tests::utils {
 TEST(utils_conditionally_runtime, size) {
   static_assert(
       sizeof(core::utils::conditionally_runtime<std::size_t, false, 42>) == 1);
-  static_assert(sizeof(core::utils::conditionally_runtime<int, true, 42>) ==
-                sizeof(int));
+  static_assert(
+      sizeof(core::utils::conditionally_runtime<std::size_t, true, 42>) == 8);
+  static_assert(
+      alignof(core::utils::conditionally_runtime<std::size_t, false, 42>) == 1);
+  static_assert(
+      alignof(core::utils::conditionally_runtime<std::size_t, true, 42>) == 8);
 }
 
 TEST(utils_conditionally_runtime, constructor) {
@@ -31,6 +35,22 @@ TEST(utils_conditionally_runtime, dereference) {
     const core::utils::conditionally_runtime<int, true> v(3);
     static_assert(std::is_same_v<decltype(*v), const int&>);
     EXPECT_EQ(*v, 3);
+  }
+}
+
+TEST(utils_conditionally_runtime, member_access) {
+  {
+    core::utils::conditionally_runtime<std::pair<int, int>, false,
+                                       std::pair<int, int>{0, 0}>
+        v;
+    EXPECT_EQ(v->first, 1);
+  }
+  {
+    core::utils::conditionally_runtime<std::pair<int, int>, true,
+                                       std::pair<int, int>{0, 0}>
+        v(std::pair<int, int>{1, 1});
+
+    EXPECT_EQ(v->second, 1);
   }
 }
 
