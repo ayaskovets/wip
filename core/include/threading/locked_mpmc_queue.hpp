@@ -35,7 +35,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
                                        const Allocator& allocator = Allocator())
     requires(Capacity == utils::kRuntimeCapacity)
       : queue_(allocator), capacity_(capacity) {
-    if (capacity == 0) {
+    if (*capacity_ <= 0) {
       throw std::invalid_argument("capacity must be greater than zero");
     }
   }
@@ -98,7 +98,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
-  std::atomic_flag stop_requested_;
+  std::atomic_flag stop_requested_ = false;
 
   std::deque<T> queue_;
 
