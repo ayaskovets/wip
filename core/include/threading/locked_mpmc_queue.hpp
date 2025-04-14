@@ -21,6 +21,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::is_nothrow_move_constructible_v<T>,
                 "T is required to be nothrow move destructible to remove "
                 "copies in pop()");
+  static_assert(std::is_same_v<T, typename Allocator::value_type>,
+                "T and allocator value_type must be the same type");
 
  public:
   struct unbounded_queue_t final {};
