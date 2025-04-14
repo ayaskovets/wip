@@ -39,7 +39,7 @@ class base_sockaddr {
   std::string to_string() const;
 
  private:
-  std::shared_ptr<storage> storage_;
+  std::shared_ptr<void> storage_;
 };
 
 }  // namespace core::net::sockets
