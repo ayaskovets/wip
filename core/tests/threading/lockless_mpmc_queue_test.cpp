@@ -25,6 +25,10 @@ TEST(threading_lockless_mpmc_queue, capacity) {
             64);
 }
 
+TEST(threading_lockless_mpmc_queue, minimal_capacity) {
+  EXPECT_ANY_THROW(core::threading::lockless_mpmc_queue<int> queue(0));
+}
+
 TEST(threading_lockless_mpmc_queue, smoke) {
   core::threading::lockless_mpmc_queue<int> queue(2);
 
