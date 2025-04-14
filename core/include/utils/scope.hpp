@@ -8,8 +8,12 @@
 namespace core::utils {
 
 template <std::invocable T>
-  requires(noexcept(std::declval<T>()()))
 class scope_exit final : utils::non_copyable, utils::non_movable {
+ private:
+  static_assert(
+      noexcept(std::declval<T>()()),
+      "scope_exit invocable must be noexcept not to throw in the destructor");
+
  public:
   constexpr explicit scope_exit(T&& finally)
       : finally_(std::forward<T>(finally)) {}
