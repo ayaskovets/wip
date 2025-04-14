@@ -2,7 +2,6 @@
 
 #include <atomic>
 #include <optional>
-#include <span>
 #include <type_traits>
 
 #include "utils/conditionally_runtime.hpp"
@@ -11,49 +10,42 @@
 
 namespace core::threading {
 
-namespace detail {
-
-template <typename T>
-struct alignas(utils::kCacheLineSize)
-    lockfree_spsc_queue_default_aligned_entry final {
-  T value;
-};
-
-}  // namespace detail
-
-template <typename T, std::size_t Capacity = std::dynamic_extent,
-          typename Allocator = std::allocator<
-              detail::lockfree_spsc_queue_default_aligned_entry<T>>>
-  requires(std::is_nothrow_destructible_v<T> &&
-           std::is_nothrow_move_constructible_v<T>)
+// NOTE: this queue contains an additional fake element to allow for an
+// efficient implementation of a ring buffer indexing, so the allocated buffer
+// is always equal to the provided capacity + 1
+template <typename T, std::size_t Capacity = utils::kRuntimeCapacity,
+          typename Allocator = std::allocator<T>>
 class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  private:
-  static_assert(sizeof(typename Allocator::value_type) <=
-                utils::kCacheLineSize);
-  static_assert(alignof(typename Allocator::value_type) <=
-                utils::kCacheLineSize);
-  static_assert(std::atomic<std::size_t>::is_always_lock_free);
+  static_assert(std::is_nothrow_destructible_v<T>,
+                "T is required to be nothrow move destructible to remove "
+                "copies in push()");
+  static_assert(std::is_nothrow_move_constructible_v<T>,
+                "T is required to be nothrow move destructible to remove "
+                "copies in pop()");
+  static_assert(std::atomic<std::size_t>::is_always_lock_free,
+                "std::atomic<std::size_t> is required to be lockfree for queue "
+                "to function efficiently");
 
  public:
-  constexpr lockfree_spsc_queue(const Allocator& allocator = Allocator())
-    requires(Capacity != std::dynamic_extent && Capacity > 0)
-      : ring_buffer_(nullptr), allocator_(allocator) {
-    if (!(ring_buffer_ = allocator_.allocate(
-              Capacity + static_cast<std::size_t>(1)))) [[unlikely]] {
+  constexpr explicit lockfree_spsc_queue(
+      const Allocator& allocator = Allocator())
+    requires(Capacity != utils::kRuntimeCapacity && Capacity > 0)
+      : allocator_(allocator) {
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
   }
 
   constexpr explicit lockfree_spsc_queue(
       std::size_t capacity, const Allocator& allocator = Allocator())
-    requires(Capacity == std::dynamic_extent)
-      : ring_buffer_(nullptr), allocator_(allocator), capacity_(capacity) {
-    if (capacity == 0) {
-      throw std::invalid_argument("capacity can not be zero");
+    requires(Capacity == utils::kRuntimeCapacity)
+      : allocator_(allocator), capacity_(capacity) {
+    if (*capacity_ <= 0) [[unlikely]] {
+      throw std::invalid_argument("capacity must be greater than zero");
     }
 
-    if (!(ring_buffer_ = allocator_.allocate(
-              capacity + static_cast<std::size_t>(1)))) [[unlikely]] {
+    if (!(ring_buffer_ = allocator_.allocate(*capacity_ + 1))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
   }
@@ -61,15 +53,13 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr ~lockfree_spsc_queue() noexcept {
     while (try_pop().has_value()) {
     }
-    allocator_.deallocate(ring_buffer_,
-                          *capacity_ + static_cast<std::size_t>(1));
+    allocator_.deallocate(ring_buffer_, *capacity_ + 1);
   }
 
  public:
   constexpr bool try_push(T value) noexcept {
     const std::size_t push_to = push_to_.load(std::memory_order::relaxed);
-    const std::size_t next_push_to =
-        (push_to == *capacity_) ? 0 : push_to + static_cast<std::size_t>(1);
+    const std::size_t next_push_to = (push_to == *capacity_) ? 0 : push_to + 1;
 
     if (next_push_to == cached_pop_from_ &&
         (next_push_to ==
@@ -95,9 +85,9 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
 
     value.emplace(std::move(reinterpret_cast<T&>(ring_buffer_[pop_from])));
 
-    std::destroy_at(&ring_buffer_[pop_from]);
+    std::destroy_at(&reinterpret_cast<T&>(ring_buffer_[pop_from]));
     const std::size_t next_pop_from =
-        (pop_from == *capacity_) ? 0 : pop_from + static_cast<std::size_t>(1);
+        (pop_from == *capacity_) ? 0 : pop_from + 1;
     pop_from_.store(next_pop_from, std::memory_order::release);
     return value;
   }
@@ -106,7 +96,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr std::size_t capacity() const noexcept { return *capacity_; }
 
  private:
-  typename Allocator::value_type* ring_buffer_;
+  typename Allocator::value_type* ring_buffer_ = nullptr;
 
   alignas(utils::kCacheLineSize) std::atomic<std::size_t> push_to_ = 0;
   alignas(utils::kCacheLineSize) std::size_t cached_push_to_ = 0;
@@ -115,7 +105,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
 
   [[no_unique_address]] Allocator allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      std::size_t, Capacity == std::dynamic_extent, Capacity> capacity_;
+      std::size_t, Capacity == utils::kRuntimeCapacity, Capacity> capacity_;
 };
 
 }  // namespace core::threading

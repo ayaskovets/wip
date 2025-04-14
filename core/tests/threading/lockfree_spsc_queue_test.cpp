@@ -18,11 +18,15 @@ TEST(threading_lockfree_spsc_queue, size) {
   static_assert(alignof(core::threading::lockfree_spsc_queue<int>) == 64);
 }
 
-TEST(threading_lockfree_spsc_queue_size, capacity) {
+TEST(threading_lockfree_spsc_queue, capacity) {
   EXPECT_EQ(core::threading::lockfree_spsc_queue<std::string>(128).capacity(),
             128);
   EXPECT_EQ(core::threading::lockfree_spsc_queue<std::string>(64).capacity(),
             64);
+}
+
+TEST(threading_lockfree_spsc_queue, minimal_capacity) {
+  EXPECT_ANY_THROW(core::threading::lockfree_spsc_queue<int> queue(0));
 }
 
 TEST(threading_lockfree_spsc_queue, smoke) {
@@ -73,32 +77,45 @@ TEST(threading_lockfree_spsc_queue, shared_ptr) {
 }
 
 TEST(threading_lockfree_spsc_queue, allocator) {
-  std::unordered_map<int*, std::size_t> allocations;
+  struct alignas(32) value_type final {
+    explicit constexpr operator std::uint32_t&() { return value; }
 
-  class allocator : public std::allocator<int> {
-   public:
-    allocator(std::unordered_map<int*, std::size_t>& allocations)
-        : allocations_(allocations) {}
-
-    int* allocate(std::size_t n) {
-      int* ptr = new int[n];
-      allocations_[ptr] = n;
-      return ptr;
-    }
-    void deallocate(int* ptr, std::size_t n) {
-      if ((allocations_[ptr] -= n) == 0) {
-        allocations_.erase(ptr);
-      }
-      operator delete[](ptr, n);
-    }
-
-   private:
-    std::unordered_map<int*, std::size_t>& allocations_;
+    float prefix_padding;
+    std::uint32_t value;
   };
+  std::unordered_map<value_type*, std::size_t> allocations;
 
   {
-    core::threading::lockfree_spsc_queue<int, 2, allocator> queue(
-        (allocator(allocations)));
+    class allocator : public std::allocator<value_type> {
+     public:
+      explicit allocator(
+          std::unordered_map<value_type*, std::size_t>& allocations)
+          : allocations_(allocations) {}
+
+      value_type* allocate(std::size_t n) {
+        value_type* ptr = std::allocator<value_type>::allocate(n);
+
+        ptr->prefix_padding = 42.f;
+
+        allocations_[ptr] = n;
+        return ptr;
+      }
+      void deallocate(value_type* ptr, std::size_t n) {
+        EXPECT_EQ(ptr->prefix_padding, 42.f);
+
+        if ((allocations_[ptr] -= n) == 0) {
+          allocations_.erase(ptr);
+        }
+        std::allocator<value_type>::deallocate(ptr, n);
+      }
+
+     private:
+      std::unordered_map<value_type*, std::size_t>& allocations_;
+    };
+
+    allocator alloc(allocations);
+    core::threading::lockfree_spsc_queue<std::uint32_t, 2, allocator> queue(
+        alloc);
 
     EXPECT_FALSE(queue.try_pop().has_value());
     EXPECT_TRUE(queue.try_push(1));
