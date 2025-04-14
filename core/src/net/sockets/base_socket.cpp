@@ -148,7 +148,7 @@ void base_socket::set_keepalive(bool value) {
 net::sockets::family base_socket::get_family() const {
 #ifdef SO_DOMAIN
   int optval;
-  ::socklen_t optlen;
+  ::socklen_t optlen = sizeof(int);
   if (::getsockopt(fd_, SOL_SOCKET, SO_DOMAIN, &optval, &optlen) ==
           kSyscallError ||
       optlen != sizeof(optval)) [[unlikely]] {
