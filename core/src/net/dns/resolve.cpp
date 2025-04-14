@@ -44,7 +44,7 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
     const ::addrinfo &addrinfo) {
   switch (addrinfo.ai_family) {
     case AF_INET: {
-      const auto sockaddr =
+      const ::sockaddr_in *sockaddr =
           reinterpret_cast<const ::sockaddr_in *>(addrinfo.ai_addr);
 
       return net::inet::sockaddr(
@@ -54,7 +54,7 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
                           net::inet::port::network_byte_order_t{}));
     }
     case AF_INET6: {
-      const auto sockaddr =
+      const ::sockaddr_in6 *sockaddr =
           reinterpret_cast<const ::sockaddr_in6 *>(addrinfo.ai_addr);
 
       return net::inet6::sockaddr(

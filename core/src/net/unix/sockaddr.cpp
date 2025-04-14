@@ -6,8 +6,7 @@ namespace core::net::unix {
 
 namespace {
 
-constexpr std::size_t kMaxPathSize =
-    sizeof(sockaddr_un{}.sun_path) - static_cast<std::size_t>(1);
+constexpr std::size_t kMaxPathSize = sizeof(sockaddr_un{}.sun_path) - 1;
 
 }  // namespace
 
