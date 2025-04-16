@@ -27,6 +27,7 @@ TEST(threading_lockless_mpmc_queue, capacity) {
 
 TEST(threading_lockless_mpmc_queue, minimal_capacity) {
   EXPECT_ANY_THROW(core::threading::lockless_mpmc_queue<int> queue(0));
+  EXPECT_ANY_THROW(core::threading::lockless_mpmc_queue<int> queue(1));
 }
 
 TEST(threading_lockless_mpmc_queue, smoke) {
@@ -68,41 +69,34 @@ TEST(threading_lockless_mpmc_queue, shared_ptr) {
 }
 
 TEST(threading_lockless_mpmc_queue, allocator) {
-  struct lockless_mpmc_queue_entry final {
-    int value;
-    std::atomic<std::size_t> seqnum;
+  using value_t = std::pair<int, std::atomic<std::size_t>>;
+  std::unordered_map<value_t*, std::size_t> allocations;
 
-    constexpr int& get_value() { return value; }
-    constexpr std::atomic<std::size_t>& get_seqnum() { return seqnum; }
-  };
-
-  std::unordered_map<lockless_mpmc_queue_entry*, std::size_t> allocations;
-
-  class allocator : public std::allocator<lockless_mpmc_queue_entry> {
+  class allocator : public std::allocator<value_t> {
    public:
-    allocator(std::unordered_map<lockless_mpmc_queue_entry*, std::size_t>&
-                  allocations)
+    constexpr explicit allocator(
+        std::unordered_map<value_t*, std::size_t>& allocations) noexcept
         : allocations_(allocations) {}
 
-    lockless_mpmc_queue_entry* allocate(std::size_t n) {
-      lockless_mpmc_queue_entry* ptr = new lockless_mpmc_queue_entry[n];
-      allocations_[ptr] = n;
+    constexpr value_t* allocate(std::size_t n) {
+      value_t* ptr = std::allocator<value_t>::allocate(n);
+      allocations_[ptr] += n;
       return ptr;
     }
-    void deallocate(lockless_mpmc_queue_entry* ptr, std::size_t n) {
+    constexpr void deallocate(value_t* ptr, std::size_t n) {
       if ((allocations_[ptr] -= n) == 0) {
         allocations_.erase(ptr);
       }
-      operator delete[](ptr, n);
+      std::allocator<value_t>::deallocate(ptr, n);
     }
 
    private:
-    std::unordered_map<lockless_mpmc_queue_entry*, std::size_t>& allocations_;
+    std::unordered_map<value_t*, std::size_t>& allocations_;
   };
 
   {
-    core::threading::lockless_mpmc_queue<int, 2, allocator> queue(
-        (allocator(allocations)));
+    allocator alloc(allocations);
+    core::threading::lockless_mpmc_queue<int, 2, allocator> queue(alloc);
 
     EXPECT_FALSE(queue.try_pop().has_value());
     EXPECT_TRUE(queue.try_push(1));
