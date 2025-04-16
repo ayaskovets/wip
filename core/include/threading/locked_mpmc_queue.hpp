@@ -102,7 +102,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   std::condition_variable push_available_cv_;
   std::atomic_flag stop_requested_ = false;
 
-  std::deque<T> queue_;
+  std::deque<T, Allocator> queue_;
 
   [[no_unique_address]] const utils::conditionally_runtime<
       std::size_t, Capacity == utils::kRuntimeCapacity, Capacity> capacity_;

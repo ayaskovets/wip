@@ -124,35 +124,56 @@ TEST(threading_locked_mpmc_queue, non_copyable_item_type) {
   [[maybe_unused]] const auto value = queue.pop();
 }
 
+namespace threading_locked_mpmc_queue_allocator {
+
+template <typename T>
+class allocator : public std::allocator<T> {
+ public:
+  constexpr allocator() noexcept : allocations_(nullptr) {}
+  constexpr explicit allocator(const allocator& other) noexcept
+      : allocations_(other.allocations_) {}
+
+  template <class U>
+  constexpr explicit allocator(const allocator<U>& other) noexcept
+      : allocations_(other.allocations_) {}
+
+  constexpr explicit allocator(
+      std::unordered_map<void*, std::size_t>* allocations) noexcept
+      : allocations_(allocations) {}
+
+  constexpr T* allocate(std::size_t n) {
+    T* ptr = std::allocator<T>::allocate(n);
+    (*allocations_)[ptr] += n;
+    return ptr;
+  }
+  constexpr void deallocate(T* ptr, std::size_t n) {
+    if ((allocations_->at(ptr) -= n) == 0) {
+      allocations_->erase(ptr);
+    }
+    std::allocator<T>::deallocate(ptr, n);
+  }
+
+  template <class U>
+  struct rebind {
+    typedef allocator<U> other;
+  };
+
+ public:
+  std::unordered_map<void*, std::size_t>* allocations_;
+};
+
+}  // namespace threading_locked_mpmc_queue_allocator
+
 TEST(threading_locked_mpmc_queue, allocator) {
-  std::unordered_map<std::uint32_t*, std::size_t> allocations;
+  using value_t = std::uint32_t;
+  std::unordered_map<void*, std::size_t> allocations;
 
   {
-    class allocator : public std::allocator<std::uint32_t> {
-     public:
-      explicit allocator(
-          std::unordered_map<std::uint32_t*, std::size_t>& allocations)
-          : allocations_(allocations) {}
-
-      std::uint32_t* allocate(std::size_t n) {
-        std::uint32_t* ptr = std::allocator<std::uint32_t>::allocate(n);
-        allocations_[ptr] = n;
-        return ptr;
-      }
-      void deallocate(std::uint32_t* ptr, std::size_t n) {
-        if ((allocations_[ptr] -= n) == 0) {
-          allocations_.erase(ptr);
-        }
-        std::allocator<std::uint32_t>::deallocate(ptr, n);
-      }
-
-     private:
-      std::unordered_map<std::uint32_t*, std::size_t>& allocations_;
-    };
-
-    allocator alloc(allocations);
-    core::threading::locked_mpmc_queue<std::uint32_t, 2, allocator> queue(
-        alloc);
+    threading_locked_mpmc_queue_allocator::allocator<value_t> alloc(
+        &allocations);
+    core::threading::locked_mpmc_queue<
+        value_t, 2, threading_locked_mpmc_queue_allocator::allocator<value_t>>
+        queue(alloc);
 
     queue.push(1);
     queue.push(2);

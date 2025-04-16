@@ -1,3 +1,5 @@
+#include "threading/waitfree_spsc_queue.hpp"
+
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -5,8 +7,6 @@
 #include <latch>
 #include <numeric>
 #include <thread>
-
-#include "threading/waitfree_spsc_queue.hpp"
 
 namespace tests::threading {
 
@@ -77,32 +77,32 @@ TEST(threading_waitfree_spsc_queue, shared_ptr) {
 }
 
 TEST(threading_waitfree_spsc_queue, allocator) {
-  struct alignas(32) value_type final {
+  struct alignas(32) value_t final {
     std::uint32_t value;
   };
-  std::unordered_map<value_type*, std::size_t> allocations;
+  std::unordered_map<value_t*, std::size_t> allocations;
 
   {
-    class allocator : public std::allocator<value_type> {
+    class allocator : public std::allocator<value_t> {
      public:
-      explicit allocator(
-          std::unordered_map<value_type*, std::size_t>& allocations)
+      constexpr explicit allocator(
+          std::unordered_map<value_t*, std::size_t>& allocations) noexcept
           : allocations_(allocations) {}
 
-      value_type* allocate(std::size_t n) {
-        value_type* ptr = std::allocator<value_type>::allocate(n);
-        allocations_[ptr] = n;
+      constexpr value_t* allocate(std::size_t n) {
+        value_t* ptr = std::allocator<value_t>::allocate(n);
+        allocations_[ptr] += n;
         return ptr;
       }
-      void deallocate(value_type* ptr, std::size_t n) {
+      constexpr void deallocate(value_t* ptr, std::size_t n) {
         if ((allocations_[ptr] -= n) == 0) {
           allocations_.erase(ptr);
         }
-        std::allocator<value_type>::deallocate(ptr, n);
+        std::allocator<value_t>::deallocate(ptr, n);
       }
 
      private:
-      std::unordered_map<value_type*, std::size_t>& allocations_;
+      std::unordered_map<value_t*, std::size_t>& allocations_;
     };
 
     allocator alloc(allocations);
