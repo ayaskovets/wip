@@ -1,5 +1,3 @@
-#include "threading/lockfree_spsc_queue.hpp"
-
 #include <gtest/gtest.h>
 
 #include <atomic>
@@ -8,29 +6,31 @@
 #include <numeric>
 #include <thread>
 
+#include "threading/waitfree_spsc_queue.hpp"
+
 namespace tests::threading {
 
-TEST(threading_lockfree_spsc_queue, size) {
-  static_assert(sizeof(core::threading::lockfree_spsc_queue<int, 128>) == 320);
-  static_assert(alignof(core::threading::lockfree_spsc_queue<int, 128>) == 64);
+TEST(threading_waitfree_spsc_queue, size) {
+  static_assert(sizeof(core::threading::waitfree_spsc_queue<int, 128>) == 320);
+  static_assert(alignof(core::threading::waitfree_spsc_queue<int, 128>) == 64);
 
-  static_assert(sizeof(core::threading::lockfree_spsc_queue<int>) == 320);
-  static_assert(alignof(core::threading::lockfree_spsc_queue<int>) == 64);
+  static_assert(sizeof(core::threading::waitfree_spsc_queue<int>) == 320);
+  static_assert(alignof(core::threading::waitfree_spsc_queue<int>) == 64);
 }
 
-TEST(threading_lockfree_spsc_queue, capacity) {
-  EXPECT_EQ(core::threading::lockfree_spsc_queue<std::string>(128).capacity(),
+TEST(threading_waitfree_spsc_queue, capacity) {
+  EXPECT_EQ(core::threading::waitfree_spsc_queue<std::string>(128).capacity(),
             128);
-  EXPECT_EQ(core::threading::lockfree_spsc_queue<std::string>(64).capacity(),
+  EXPECT_EQ(core::threading::waitfree_spsc_queue<std::string>(64).capacity(),
             64);
 }
 
-TEST(threading_lockfree_spsc_queue, minimal_capacity) {
-  EXPECT_ANY_THROW(core::threading::lockfree_spsc_queue<int> queue(0));
+TEST(threading_waitfree_spsc_queue, minimal_capacity) {
+  EXPECT_ANY_THROW(core::threading::waitfree_spsc_queue<int> queue(0));
 }
 
-TEST(threading_lockfree_spsc_queue, smoke) {
-  core::threading::lockfree_spsc_queue<int> queue(2);
+TEST(threading_waitfree_spsc_queue, smoke) {
+  core::threading::waitfree_spsc_queue<int> queue(2);
 
   EXPECT_FALSE(queue.try_pop().has_value());
   EXPECT_TRUE(queue.try_push(1));
@@ -44,8 +44,8 @@ TEST(threading_lockfree_spsc_queue, smoke) {
   EXPECT_FALSE(queue.try_pop().has_value());
 }
 
-TEST(threading_lockfree_spsc_queue, capacity_one) {
-  core::threading::lockfree_spsc_queue<int> queue(1);
+TEST(threading_waitfree_spsc_queue, capacity_one) {
+  core::threading::waitfree_spsc_queue<int> queue(1);
 
   EXPECT_FALSE(queue.try_pop().has_value());
   EXPECT_TRUE(queue.try_push(1));
@@ -57,10 +57,10 @@ TEST(threading_lockfree_spsc_queue, capacity_one) {
   EXPECT_FALSE(queue.try_pop().has_value());
 }
 
-TEST(threading_lockfree_spsc_queue, shared_ptr) {
+TEST(threading_waitfree_spsc_queue, shared_ptr) {
   auto ptr = std::make_shared<int>(42);
 
-  core::threading::lockfree_spsc_queue<std::shared_ptr<int>> queue(2);
+  core::threading::waitfree_spsc_queue<std::shared_ptr<int>> queue(2);
   EXPECT_EQ(ptr.use_count(), 1);
   EXPECT_TRUE(queue.try_push(ptr));
   EXPECT_EQ(ptr.use_count(), 2);
@@ -76,7 +76,7 @@ TEST(threading_lockfree_spsc_queue, shared_ptr) {
   EXPECT_EQ(ptr.use_count(), 1);
 }
 
-TEST(threading_lockfree_spsc_queue, allocator) {
+TEST(threading_waitfree_spsc_queue, allocator) {
   struct alignas(32) value_type final {
     std::uint32_t value;
   };
@@ -106,7 +106,7 @@ TEST(threading_lockfree_spsc_queue, allocator) {
     };
 
     allocator alloc(allocations);
-    core::threading::lockfree_spsc_queue<std::uint32_t, 2, allocator> queue(
+    core::threading::waitfree_spsc_queue<std::uint32_t, 2, allocator> queue(
         alloc);
 
     EXPECT_FALSE(queue.try_pop().has_value());
@@ -123,8 +123,8 @@ TEST(threading_lockfree_spsc_queue, allocator) {
   EXPECT_TRUE(allocations.empty());
 }
 
-TEST(threading_lockfree_spsc_queue, rollover) {
-  core::threading::lockfree_spsc_queue<int> queue(5);
+TEST(threading_waitfree_spsc_queue, rollover) {
+  core::threading::waitfree_spsc_queue<int> queue(5);
 
   for (std::size_t i = 0; i < 100; ++i) {
     EXPECT_TRUE(queue.try_push(i));
@@ -132,13 +132,13 @@ TEST(threading_lockfree_spsc_queue, rollover) {
   }
 }
 
-TEST(threading_lockfree_spsc_queue, non_copyable_item_type) {
-  core::threading::lockfree_spsc_queue<std::unique_ptr<int>, 1> queue;
+TEST(threading_waitfree_spsc_queue, non_copyable_item_type) {
+  core::threading::waitfree_spsc_queue<std::unique_ptr<int>, 1> queue;
   queue.try_push(std::unique_ptr<int>{});
   [[maybe_unused]] const auto value = queue.try_pop();
 }
 
-TEST(threading_lockfree_spsc_queue, item_destructor) {
+TEST(threading_waitfree_spsc_queue, item_destructor) {
   struct non_copyable_counter {
     constexpr non_copyable_counter(std::size_t& constructed,
                                    std::size_t& move_constructed,
@@ -169,7 +169,7 @@ TEST(threading_lockfree_spsc_queue, item_destructor) {
     std::size_t move_constructed = 0;
     std::size_t destructed = 0;
 
-    core::threading::lockfree_spsc_queue<non_copyable_counter> queue(1);
+    core::threading::waitfree_spsc_queue<non_copyable_counter> queue(1);
 
     non_copyable_counter pushed_item(constructed, move_constructed, destructed);
 
@@ -194,7 +194,7 @@ TEST(threading_lockfree_spsc_queue, item_destructor) {
     std::size_t move_constructed = 0;
     std::size_t destructed = 0;
     {
-      core::threading::lockfree_spsc_queue<non_copyable_counter> queue(1);
+      core::threading::waitfree_spsc_queue<non_copyable_counter> queue(1);
       non_copyable_counter pushed_item(constructed, move_constructed,
                                        destructed);
       EXPECT_TRUE(queue.try_push(std::move(pushed_item)));
@@ -205,16 +205,16 @@ TEST(threading_lockfree_spsc_queue, item_destructor) {
   }
 }
 
-class threading_lockfree_spsc_queue
+class threading_waitfree_spsc_queue
     : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
 
-TEST_P(threading_lockfree_spsc_queue, workload) {
+TEST_P(threading_waitfree_spsc_queue, workload) {
   const auto& [items_size, queue_size] = GetParam();
 
   std::vector<int> items_to_push(items_size);
   std::iota(items_to_push.begin(), items_to_push.end(), 0);
 
-  core::threading::lockfree_spsc_queue<int> queue(queue_size);
+  core::threading::waitfree_spsc_queue<int> queue(queue_size);
 
   std::vector<int> popped_items;
   popped_items.reserve(items_size);
@@ -248,7 +248,7 @@ TEST_P(threading_lockfree_spsc_queue, workload) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    threading_lockfree_spsc_queue, threading_lockfree_spsc_queue,
+    threading_waitfree_spsc_queue, threading_waitfree_spsc_queue,
     ::testing::Values(std::make_tuple(5, 3), std::make_tuple(8, 4),
                       std::make_tuple(5, 1), std::make_tuple(6, 2),
                       std::make_tuple(7, 2), std::make_tuple(10, 1),

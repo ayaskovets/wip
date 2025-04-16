@@ -15,7 +15,7 @@ namespace core::threading {
 // is always equal to the provided capacity + 1
 template <typename T, std::size_t Capacity = utils::kRuntimeCapacity,
           typename Allocator = std::allocator<T>>
-class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
+class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  private:
   static_assert(std::is_nothrow_destructible_v<T>,
                 "T is required to be nothrow move destructible to remove "
@@ -28,7 +28,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
                 "to function efficiently");
 
  public:
-  constexpr explicit lockfree_spsc_queue(
+  constexpr explicit waitfree_spsc_queue(
       const Allocator& allocator = Allocator())
     requires(Capacity != utils::kRuntimeCapacity && Capacity > 0)
       : allocator_(allocator) {
@@ -37,7 +37,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr explicit lockfree_spsc_queue(
+  constexpr explicit waitfree_spsc_queue(
       std::size_t capacity, const Allocator& allocator = Allocator())
     requires(Capacity == utils::kRuntimeCapacity)
       : allocator_(allocator), capacity_(capacity) {
@@ -50,7 +50,7 @@ class lockfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     }
   }
 
-  constexpr ~lockfree_spsc_queue() noexcept {
+  constexpr ~waitfree_spsc_queue() noexcept {
     while (try_pop().has_value()) {
     }
     allocator_.deallocate(ring_buffer_, *capacity_ + 1);
