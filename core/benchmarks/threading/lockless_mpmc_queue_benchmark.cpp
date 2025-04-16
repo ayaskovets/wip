@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "threading/lockless_mpmc_queue.hpp"
+#include "utils/constants.hpp"
 
 namespace benchmarks::threading {
 
@@ -11,13 +12,22 @@ template <typename ValueConstructor>
 void BM_threading_lockless_mpmc_queue_spsc_throughput(benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
-  const auto value = ValueConstructor();
+
+  using value_t = decltype(ValueConstructor());
+  const value_t value{};
+
+  struct allocator_value_t final {
+    value_t value;
+    std::atomic<std::size_t> seqnum;
+  };
+  using allocator_t = std::allocator<allocator_value_t>;
 
   for (const auto _ : state) {
     state.PauseTiming();
 
-    core::threading::lockless_mpmc_queue<std::decay_t<decltype(value)>> queue(
-        capacity);
+    core::threading::lockless_mpmc_queue<value_t, core::utils::kRuntimeCapacity,
+                                         allocator_t>
+        queue(capacity);
     std::latch latch(3);
 
     std::thread producer([&latch, &queue, items, value = value] {
@@ -59,14 +69,23 @@ void BM_threading_lockless_mpmc_queue_mpmc_throughput(benchmark::State& state) {
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
-  const auto value = ValueConstructor();
+
+  using value_t = decltype(ValueConstructor());
+  const value_t value{};
+
+  struct allocator_value_t final {
+    value_t value;
+    std::atomic<std::size_t> seqnum;
+  };
+  using allocator_t = std::allocator<allocator_value_t>;
 
   for (const auto _ : state) {
     state.PauseTiming();
 
-    core::threading::lockless_mpmc_queue<std::decay_t<decltype(value)>> queue(
-        capacity);
-    std::latch latch(producers + consumers + static_cast<std::size_t>(1));
+    core::threading::lockless_mpmc_queue<value_t, core::utils::kRuntimeCapacity,
+                                         allocator_t>
+        queue(capacity);
+    std::latch latch(producers + consumers + 1);
 
     std::vector<std::thread> threads;
     threads.reserve(producers + consumers);
@@ -104,6 +123,7 @@ void BM_threading_lockless_mpmc_queue_mpmc_throughput(benchmark::State& state) {
 BENCHMARK_TEMPLATE(BM_threading_lockless_mpmc_queue_mpmc_throughput, int)
     ->Args({1024, 1048576, 2, 2})
     ->Args({1024, 1048576, 1, 4})
+    ->Args({256, 1048576, 4, 1})
     ->Args({1024, 1048576, 4, 4})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
