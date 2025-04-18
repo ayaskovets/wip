@@ -22,10 +22,13 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
  private:
   static_assert(std::is_nothrow_destructible_v<T>,
                 "T is required to be nothrow move destructible to remove "
-                "copies in push()");
+                "copies in push() and try_push()");
   static_assert(std::is_nothrow_move_constructible_v<T>,
                 "T is required to be nothrow move destructible to remove "
                 "copies in pop()");
+  static_assert(std::is_nothrow_move_assignable_v<T>,
+                "T is required to be nothrow move assignable to remove "
+                "copies in try_pop()");
   static_assert(std::atomic<std::size_t>::is_always_lock_free,
                 "std::atomic<std::size_t> is required to be lockfree for queue "
                 "to function efficiently");
@@ -66,7 +69,15 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr ~lockless_mpmc_queue() noexcept {
-    while (try_pop().has_value()) {
+    std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    while (true) {
+      auto& [item, seqnum] = ring_buffer_[pop_from & (*capacity_ - 1)];
+      if (pop_from + 1 != seqnum.load(std::memory_order::acquire)) {
+        break;
+      }
+      std::destroy_at(&item);
+      seqnum.store(pop_from + *capacity_, std::memory_order::release);
+      pop_from += 1;
     }
     allocator_.deallocate(ring_buffer_, *capacity_);
   }
@@ -79,7 +90,6 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     if (push_to != seqnum.load(std::memory_order::acquire)) {
       return false;
     }
-
     if (!push_to_.compare_exchange_weak(push_to, push_to + 1,
                                         std::memory_order::relaxed)) {
       return false;
@@ -90,25 +100,57 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  constexpr std::optional<T> try_pop() noexcept {
-    std::optional<T> value;
+  constexpr void push(T value) noexcept {
+    do {
+      std::size_t push_to = push_to_.load(std::memory_order::relaxed);
+      auto& [item, seqnum] = ring_buffer_[push_to & (*capacity_ - 1)];
+      if (push_to != seqnum.load(std::memory_order::acquire)) {
+        continue;
+      }
 
+      if (push_to_.compare_exchange_weak(push_to, push_to + 1,
+                                         std::memory_order::relaxed)) {
+        std::construct_at(&item, std::move(value));
+        seqnum.store(push_to + 1, std::memory_order::release);
+        break;
+      }
+    } while (true);
+  }
+
+  constexpr bool try_pop(T& value) noexcept {
     std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
     auto& [item, seqnum] = ring_buffer_[pop_from & (*capacity_ - 1)];
 
     if (pop_from + 1 != seqnum.load(std::memory_order::acquire)) {
-      return value;
+      return false;
     }
-
     if (!pop_from_.compare_exchange_weak(pop_from, pop_from + 1,
                                          std::memory_order::relaxed)) {
-      return value;
+      return false;
     }
 
-    value.emplace(std::move(item));
+    value = std::move(item);
     std::destroy_at(&item);
     seqnum.store(pop_from + *capacity_, std::memory_order::release);
-    return value;
+    return true;
+  }
+
+  constexpr T pop() noexcept {
+    do {
+      std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
+      auto& [item, seqnum] = ring_buffer_[pop_from & (*capacity_ - 1)];
+      if (pop_from + 1 != seqnum.load(std::memory_order::acquire)) {
+        continue;
+      }
+
+      if (pop_from_.compare_exchange_weak(pop_from, pop_from + 1,
+                                          std::memory_order::relaxed)) {
+        T value(std::move(item));
+        std::destroy_at(&item);
+        seqnum.store(pop_from + *capacity_, std::memory_order::release);
+        return value;
+      }
+    } while (true);
   }
 
  public:

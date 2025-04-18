@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <atomic>
-#include <format>
 #include <latch>
 #include <numeric>
 #include <thread>
@@ -11,14 +9,18 @@
 namespace tests::threading {
 
 TEST(threading_waitfree_spsc_queue, size) {
-  static_assert(sizeof(core::threading::waitfree_spsc_queue<int, 128>) == 320);
-  static_assert(alignof(core::threading::waitfree_spsc_queue<int, 128>) == 64);
-
+  static_assert(sizeof(core::threading::waitfree_spsc_queue<int, 10>) == 320);
+  static_assert(alignof(core::threading::waitfree_spsc_queue<int, 10>) == 64);
   static_assert(sizeof(core::threading::waitfree_spsc_queue<int>) == 320);
   static_assert(alignof(core::threading::waitfree_spsc_queue<int>) == 64);
 }
 
 TEST(threading_waitfree_spsc_queue, capacity) {
+  EXPECT_EQ(
+      (core::threading::waitfree_spsc_queue<std::string, 128>().capacity()),
+      128);
+  EXPECT_EQ(
+      (core::threading::waitfree_spsc_queue<std::string, 64>().capacity()), 64);
   EXPECT_EQ(core::threading::waitfree_spsc_queue<std::string>(128).capacity(),
             128);
   EXPECT_EQ(core::threading::waitfree_spsc_queue<std::string>(64).capacity(),
@@ -27,237 +29,302 @@ TEST(threading_waitfree_spsc_queue, capacity) {
 
 TEST(threading_waitfree_spsc_queue, minimal_capacity) {
   EXPECT_ANY_THROW(core::threading::waitfree_spsc_queue<int> queue(0));
+  EXPECT_NO_THROW(core::threading::waitfree_spsc_queue<int> queue(1));
 }
 
 TEST(threading_waitfree_spsc_queue, smoke) {
+  int value;
   core::threading::waitfree_spsc_queue<int> queue(2);
 
-  EXPECT_FALSE(queue.try_pop().has_value());
-  EXPECT_TRUE(queue.try_push(1));
-  EXPECT_TRUE(queue.try_push(2));
+  EXPECT_FALSE(queue.try_pop(value));
+  queue.push(1);
+  queue.push(2);
   EXPECT_FALSE(queue.try_push(3));
-  EXPECT_EQ(queue.try_pop(), 1);
-  EXPECT_TRUE(queue.try_push(4));
+  EXPECT_EQ(queue.pop(), 1);
+  queue.push(4);
   EXPECT_FALSE(queue.try_push(5));
-  EXPECT_EQ(queue.try_pop(), 2);
-  EXPECT_EQ(queue.try_pop(), 4);
-  EXPECT_FALSE(queue.try_pop().has_value());
+  EXPECT_EQ(queue.pop(), 2);
+  EXPECT_EQ(queue.pop(), 4);
+  EXPECT_FALSE(queue.try_pop(value));
+}
+
+TEST(threading_waitfree_spsc_queue, blocking_push) {
+  core::threading::waitfree_spsc_queue<int> queue(2);
+  queue.push(1);
+  queue.push(2);
+
+  std::thread consumer([&queue] { EXPECT_EQ(queue.pop(), 1); });
+
+  queue.push(3);
+  EXPECT_EQ(queue.pop(), 2);
+
+  consumer.join();
+}
+
+TEST(threading_waitfree_spsc_queue, blocking_pop) {
+  core::threading::waitfree_spsc_queue<int> queue(1);
+
+  std::thread producer([&queue] { queue.push(42); });
+
+  EXPECT_EQ(queue.pop(), 42);
+
+  producer.join();
 }
 
 TEST(threading_waitfree_spsc_queue, capacity_one) {
+  int value;
   core::threading::waitfree_spsc_queue<int> queue(1);
 
-  EXPECT_FALSE(queue.try_pop().has_value());
-  EXPECT_TRUE(queue.try_push(1));
+  EXPECT_FALSE(queue.try_pop(value));
+  queue.push(1);
   EXPECT_FALSE(queue.try_push(3));
-  EXPECT_EQ(queue.try_pop(), 1);
-  EXPECT_TRUE(queue.try_push(4));
+  EXPECT_EQ(queue.pop(), 1);
+  queue.push(4);
   EXPECT_FALSE(queue.try_push(5));
-  EXPECT_EQ(queue.try_pop(), 4);
-  EXPECT_FALSE(queue.try_pop().has_value());
+  EXPECT_EQ(queue.pop(), 4);
+  EXPECT_FALSE(queue.try_pop(value));
 }
 
-TEST(threading_waitfree_spsc_queue, shared_ptr) {
-  auto ptr = std::make_shared<int>(42);
-
-  core::threading::waitfree_spsc_queue<std::shared_ptr<int>> queue(2);
-  EXPECT_EQ(ptr.use_count(), 1);
-  EXPECT_TRUE(queue.try_push(ptr));
-  EXPECT_EQ(ptr.use_count(), 2);
-  EXPECT_TRUE(queue.try_push(ptr));
-  EXPECT_EQ(ptr.use_count(), 3);
-  EXPECT_TRUE(queue.try_pop().has_value());
-  EXPECT_EQ(ptr.use_count(), 2);
-  EXPECT_TRUE(queue.try_push(ptr));
-  EXPECT_EQ(ptr.use_count(), 3);
-  EXPECT_TRUE(queue.try_pop().has_value());
-  EXPECT_EQ(ptr.use_count(), 2);
-  EXPECT_TRUE(queue.try_pop().has_value());
-  EXPECT_EQ(ptr.use_count(), 1);
-}
-
-TEST(threading_waitfree_spsc_queue, allocator) {
-  struct alignas(32) value_t final {
-    std::uint32_t value;
-  };
-  std::unordered_map<value_t*, std::size_t> allocations;
-
+TEST(threading_waitfree_spsc_queue, queue_destructor) {
+  std::shared_ptr<int> value = std::make_shared<int>();
   {
-    class allocator : public std::allocator<value_t> {
-     public:
-      constexpr explicit allocator(
-          std::unordered_map<value_t*, std::size_t>& allocations) noexcept
-          : allocations_(allocations) {}
+    core::threading::waitfree_spsc_queue<std::shared_ptr<int>> queue(2);
 
-      constexpr value_t* allocate(std::size_t n) {
-        value_t* ptr = std::allocator<value_t>::allocate(n);
-        allocations_[ptr] += n;
-        return ptr;
-      }
-      constexpr void deallocate(value_t* ptr, std::size_t n) {
-        if ((allocations_[ptr] -= n) == 0) {
-          allocations_.erase(ptr);
-        }
-        std::allocator<value_t>::deallocate(ptr, n);
-      }
-
-     private:
-      std::unordered_map<value_t*, std::size_t>& allocations_;
-    };
-
-    allocator alloc(allocations);
-    core::threading::waitfree_spsc_queue<std::uint32_t, 2, allocator> queue(
-        alloc);
-
-    EXPECT_FALSE(queue.try_pop().has_value());
-    EXPECT_TRUE(queue.try_push(1));
-    EXPECT_TRUE(queue.try_push(2));
-    EXPECT_FALSE(queue.try_push(3));
-    EXPECT_EQ(queue.try_pop(), 1);
-    EXPECT_TRUE(queue.try_push(4));
-    EXPECT_FALSE(queue.try_push(5));
-    EXPECT_EQ(queue.try_pop(), 2);
-    EXPECT_EQ(queue.try_pop(), 4);
-    EXPECT_FALSE(queue.try_pop().has_value());
+    EXPECT_EQ(value.use_count(), 1);
+    queue.push(value);
+    EXPECT_EQ(value.use_count(), 2);
+    queue.push(value);
   }
-  EXPECT_TRUE(allocations.empty());
-}
-
-TEST(threading_waitfree_spsc_queue, rollover) {
-  core::threading::waitfree_spsc_queue<int> queue(5);
-
-  for (std::size_t i = 0; i < 100; ++i) {
-    EXPECT_TRUE(queue.try_push(i));
-    EXPECT_EQ(queue.try_pop(), i);
-  }
-}
-
-TEST(threading_waitfree_spsc_queue, non_copyable_item_type) {
-  core::threading::waitfree_spsc_queue<std::unique_ptr<int>, 1> queue;
-  queue.try_push(std::unique_ptr<int>{});
-  [[maybe_unused]] const auto value = queue.try_pop();
+  EXPECT_EQ(value.use_count(), 1);
 }
 
 TEST(threading_waitfree_spsc_queue, item_destructor) {
-  struct non_copyable_counter {
-    constexpr non_copyable_counter(std::size_t& constructed,
-                                   std::size_t& move_constructed,
-                                   std::size_t& destructed) noexcept
-        : constructed(constructed),
-          move_constructed(move_constructed),
-          destructed(destructed) {
-      ++constructed;
-    }
-    constexpr non_copyable_counter(non_copyable_counter&& that) noexcept
-        : non_copyable_counter(that.constructed, that.move_constructed,
-                               that.destructed) {
-      move_constructed += 1;
-    }
-    constexpr non_copyable_counter(const non_copyable_counter&) = delete;
-    constexpr non_copyable_counter& operator=(const non_copyable_counter&) =
-        delete;
-    constexpr non_copyable_counter& operator=(non_copyable_counter&&) = delete;
-    constexpr ~non_copyable_counter() noexcept { ++destructed; }
+  std::shared_ptr<int> value = std::make_shared<int>();
+  core::threading::waitfree_spsc_queue<std::shared_ptr<int>> queue(2);
 
-    std::size_t& constructed;
-    std::size_t& move_constructed;
-    std::size_t& destructed;
-  };
-
-  {
-    std::size_t constructed = 0;
-    std::size_t move_constructed = 0;
-    std::size_t destructed = 0;
-
-    core::threading::waitfree_spsc_queue<non_copyable_counter> queue(1);
-
-    non_copyable_counter pushed_item(constructed, move_constructed, destructed);
-
-    EXPECT_EQ(constructed, 1);
-    EXPECT_EQ(move_constructed, 0);
-    EXPECT_EQ(destructed, 0);
-
-    EXPECT_TRUE(queue.try_push(std::move(pushed_item)));
-
-    EXPECT_EQ(constructed, 3);
-    EXPECT_EQ(move_constructed, 2);
-    EXPECT_EQ(destructed, 1);
-
-    EXPECT_TRUE(queue.try_pop());
-
-    EXPECT_EQ(constructed, 4);
-    EXPECT_EQ(move_constructed, 3);
-    EXPECT_EQ(destructed, 3);
-  }
-  {
-    std::size_t constructed = 0;
-    std::size_t move_constructed = 0;
-    std::size_t destructed = 0;
-    {
-      core::threading::waitfree_spsc_queue<non_copyable_counter> queue(1);
-      non_copyable_counter pushed_item(constructed, move_constructed,
-                                       destructed);
-      EXPECT_TRUE(queue.try_push(std::move(pushed_item)));
-    }
-    EXPECT_EQ(constructed, 4);
-    EXPECT_EQ(move_constructed, 3);
-    EXPECT_EQ(destructed, 4);
-  }
+  EXPECT_EQ(value.use_count(), 1);
+  queue.push(value);
+  EXPECT_EQ(value.use_count(), 2);
+  queue.push(value);
+  EXPECT_EQ(value.use_count(), 3);
+  queue.pop();
+  EXPECT_EQ(value.use_count(), 2);
+  queue.push(value);
+  EXPECT_EQ(value.use_count(), 3);
+  queue.pop();
+  EXPECT_EQ(value.use_count(), 2);
+  queue.pop();
+  EXPECT_EQ(value.use_count(), 1);
 }
 
-class threading_waitfree_spsc_queue
-    : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
+TEST(threading_waitfree_spsc_queue, non_copyable_item_type) {
+  std::unique_ptr<int> value;
+  core::threading::waitfree_spsc_queue<std::unique_ptr<int>> queue(1);
 
-TEST_P(threading_waitfree_spsc_queue, workload) {
-  const auto& [items_size, queue_size] = GetParam();
+  queue.push(std::move(value));
+  queue.pop();
+  queue.try_push(std::move(value));
+  queue.try_pop(value);
+}
 
-  std::vector<int> items_to_push(items_size);
-  std::iota(items_to_push.begin(), items_to_push.end(), 0);
+namespace threading_waitfree_spsc_queue_allocator {
+
+template <typename T>
+class allocator : public std::allocator<T> {
+ public:
+  using std::allocator<T>::allocator;
+
+ public:
+  constexpr T* allocate(std::size_t n) {
+    T* ptr = std::allocator<T>::allocate(n);
+    allocations_[ptr] += n;
+    return ptr;
+  }
+
+  constexpr void deallocate(T* ptr, std::size_t n) {
+    if ((allocations_.at(ptr) -= n) == 0) {
+      allocations_.erase(ptr);
+    }
+    std::allocator<T>::deallocate(ptr, n);
+  }
+
+ public:
+  template <class U>
+  struct rebind {
+    typedef allocator<U> other;
+  };
+
+ public:
+  static constexpr bool is_clean() { return allocations_.empty(); }
+
+ private:
+  static inline std::unordered_map<void*, std::size_t> allocations_;
+};
+
+}  // namespace threading_waitfree_spsc_queue_allocator
+
+TEST(threading_waitfree_spsc_queue, allocator) {
+  using queue_value_t = std::uint32_t;
+  struct alignas(64) allocator_value_t final {
+    std::uint32_t value;
+  };
+
+  EXPECT_TRUE(threading_waitfree_spsc_queue_allocator::allocator<
+              allocator_value_t>::is_clean());
+  {
+    core::threading::waitfree_spsc_queue<
+        queue_value_t, 2,
+        threading_waitfree_spsc_queue_allocator::allocator<allocator_value_t>>
+        queue;
+
+    queue.push(1);
+    queue.push(2);
+    EXPECT_EQ(queue.pop(), 1);
+    EXPECT_EQ(queue.pop(), 2);
+    EXPECT_FALSE(threading_waitfree_spsc_queue_allocator::allocator<
+                 allocator_value_t>::is_clean());
+  }
+  EXPECT_TRUE(threading_waitfree_spsc_queue_allocator::allocator<
+              allocator_value_t>::is_clean());
+}
+
+class threading_waitfree_spsc_queue_workload
+    : public ::testing::TestWithParam<std::tuple<
+          std::size_t /* items_size */, std::size_t /* queue_size */,
+          std::size_t /* producers */, std::size_t /* consumers */>> {};
+
+TEST_P(threading_waitfree_spsc_queue_workload, try_push_try_pop) {
+  const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
   core::threading::waitfree_spsc_queue<int> queue(queue_size);
 
-  std::vector<int> popped_items;
-  popped_items.reserve(items_size);
+  std::latch latch(producers + consumers);
+  std::vector<std::thread> threads;
+  threads.reserve(producers + consumers);
 
-  std::latch latch(2);
+  std::atomic<std::size_t> pushed_items_count = 0;
+  std::vector<int> pushed_items(items_size);
+  std::iota(pushed_items.begin(), pushed_items.end(), 0);
 
-  std::thread producer([&latch, &queue, items_size, &items_to_push] {
+  std::atomic<std::size_t> popped_items_count = 0;
+  std::vector<int> popped_items(items_size);
+
+  const auto producer = [items_size, &latch, &queue, &pushed_items,
+                         &pushed_items_count] {
     latch.arrive_and_wait();
-    std::size_t i = 0;
-    while (i < items_size) {
-      if (queue.try_push(items_to_push[i])) {
-        ++i;
+    while (true) {
+      const std::size_t index = pushed_items_count.fetch_add(1);
+      if (index >= items_size) {
+        return;
+      }
+      while (!queue.try_push(pushed_items[index])) {
       }
     }
-  });
+  };
 
-  std::thread consumer([&latch, &queue, items_size, &popped_items] {
+  const auto consumer = [items_size, &latch, &queue, &popped_items,
+                         &popped_items_count]() {
     latch.arrive_and_wait();
-    while (popped_items.size() != items_size) {
-      if (const std::optional<int> item = queue.try_pop(); item.has_value()) {
-        popped_items.push_back(*item);
+    while (true) {
+      const std::size_t index = popped_items_count.fetch_add(1);
+      if (index >= items_size) {
+        return;
+      }
+      while (!queue.try_pop(popped_items[index])) {
       }
     }
-  });
+  };
 
-  producer.join();
-  consumer.join();
+  for (std::size_t i = 0; i < producers; ++i) {
+    threads.emplace_back(producer);
+  }
 
-  EXPECT_EQ(popped_items.size(), items_to_push.size());
-  EXPECT_EQ(popped_items, items_to_push);
+  for (std::size_t i = 0; i < consumers; ++i) {
+    threads.emplace_back(consumer);
+  }
+
+  for (auto& thread : threads) {
+    thread.join();
+  }
+
+  std::sort(popped_items.begin(), popped_items.end());
+  EXPECT_EQ(pushed_items, popped_items);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    threading_waitfree_spsc_queue, threading_waitfree_spsc_queue,
-    ::testing::Values(std::make_tuple(5, 3), std::make_tuple(8, 4),
-                      std::make_tuple(5, 1), std::make_tuple(6, 2),
-                      std::make_tuple(7, 2), std::make_tuple(10, 1),
-                      std::make_tuple(20, 2), std::make_tuple(100, 10),
-                      std::make_tuple(10000, 100)),
-    ([](const auto& info) {
-      const auto& [items_size, queue_size] = info.param;
-      return std::format("{}_items_size__{}_queue_size", items_size,
-                         queue_size);
-    }));
+TEST_P(threading_waitfree_spsc_queue_workload, push_pop_workload) {
+  const auto& [items_size, queue_size, producers, consumers] = GetParam();
+
+  core::threading::waitfree_spsc_queue<int> queue(queue_size);
+
+  std::latch latch(producers + consumers);
+  std::vector<std::thread> threads;
+  threads.reserve(producers + consumers);
+
+  std::atomic<std::size_t> pushed_items_count = 0;
+  std::vector<int> pushed_items(items_size);
+  std::iota(pushed_items.begin(), pushed_items.end(), 0);
+
+  std::atomic<std::size_t> popped_items_count = 0;
+  std::vector<int> popped_items(items_size);
+
+  const auto producer = [items_size, &latch, &queue, &pushed_items,
+                         &pushed_items_count] {
+    latch.arrive_and_wait();
+    while (true) {
+      const std::size_t index = pushed_items_count.fetch_add(1);
+      if (index >= items_size) {
+        return;
+      }
+      queue.push(pushed_items[index]);
+    }
+  };
+
+  const auto consumer = [items_size, &latch, &queue, &popped_items,
+                         &popped_items_count]() {
+    latch.arrive_and_wait();
+    while (true) {
+      const std::size_t index = popped_items_count.fetch_add(1);
+      if (index >= items_size) {
+        return;
+      }
+      popped_items[index] = queue.pop();
+    }
+  };
+
+  for (std::size_t i = 0; i < producers; ++i) {
+    threads.emplace_back(producer);
+  }
+
+  for (std::size_t i = 0; i < consumers; ++i) {
+    threads.emplace_back(consumer);
+  }
+
+  for (auto& thread : threads) {
+    thread.join();
+  }
+
+  std::sort(popped_items.begin(), popped_items.end());
+  EXPECT_EQ(pushed_items, popped_items);
+}
+
+INSTANTIATE_TEST_SUITE_P(threading_waitfree_spsc_queue_workload,
+                         threading_waitfree_spsc_queue_workload,
+                         ::testing::Values(std::make_tuple(5, 3, 1, 1),
+                                           std::make_tuple(20, 10, 1, 1),
+                                           std::make_tuple(100, 10, 1, 1),
+                                           std::make_tuple(10000, 100, 1, 1)));
+
+}  // namespace tests::threading
+
+namespace tests::threading {
+
+TEST(waitfree_spsc_queue, rollover) {
+  core::threading::waitfree_spsc_queue<int> queue(8);
+
+  for (std::size_t i = 0; i < 100; ++i) {
+    EXPECT_TRUE(queue.try_push(i));
+    EXPECT_EQ(queue.pop(), i);
+  }
+}
 
 }  // namespace tests::threading

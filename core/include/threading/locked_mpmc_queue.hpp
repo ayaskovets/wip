@@ -17,15 +17,15 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
  private:
   static_assert(std::is_nothrow_destructible_v<T>,
                 "T is required to be nothrow move destructible to remove "
-                "copies in push()");
+                "copies in push() and try_push()");
   static_assert(std::is_nothrow_move_constructible_v<T>,
-                "T is required to be nothrow move destructible to remove "
+                "T is required to be nothrow move constructible to remove "
                 "copies in pop()");
+  static_assert(std::is_nothrow_move_assignable_v<T>,
+                "T is required to be nothrow move assignable to remove "
+                "copies in try_pop()");
   static_assert(std::is_same_v<T, typename Allocator::value_type>,
                 "T and allocator value_type must be the same type");
-
- public:
-  struct unbounded_queue_t final {};
 
  public:
   constexpr explicit locked_mpmc_queue(
@@ -41,11 +41,6 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       throw std::invalid_argument("capacity must be greater than zero");
     }
   }
-
-  constexpr explicit locked_mpmc_queue(
-      unbounded_queue_t, const Allocator& allocator = Allocator()) noexcept
-    requires(Capacity == utils::kRuntimeCapacity)
-      : queue_(allocator), capacity_(std::numeric_limits<std::size_t>::max()) {}
 
  public:
   bool try_push(T value) {
@@ -70,20 +65,18 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     pop_available_cv_.notify_one();
   }
 
-  std::optional<T> try_pop() {
-    std::optional<T> value;
-
+  bool try_pop(T& value) {
     std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
     if (!lock.try_lock()) {
-      return value;
+      return false;
     }
     if (queue_.empty()) {
-      return value;
+      return false;
     }
 
-    value.emplace(std::move(queue_.front()));
-    queue_.pop_front(std::move(value));
-    return value;
+    value = std::move(queue_.front());
+    queue_.pop_front();
+    return true;
   }
 
   T pop() {
@@ -100,10 +93,6 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr std::size_t capacity() const noexcept { return *capacity_; }
-  std::size_t size() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return queue_.size();
-  }
 
  private:
   mutable std::mutex mutex_;

@@ -19,10 +19,13 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
  private:
   static_assert(std::is_nothrow_destructible_v<T>,
                 "T is required to be nothrow move destructible to remove "
-                "copies in push()");
+                "copies in push() and try_push()");
   static_assert(std::is_nothrow_move_constructible_v<T>,
                 "T is required to be nothrow move destructible to remove "
                 "copies in pop()");
+  static_assert(std::is_nothrow_move_assignable_v<T>,
+                "T is required to be nothrow move assignable to remove "
+                "copies in try_pop()");
   static_assert(std::atomic<std::size_t>::is_always_lock_free,
                 "std::atomic<std::size_t> is required to be lockfree for queue "
                 "to function efficiently");
@@ -51,7 +54,10 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
   }
 
   constexpr ~waitfree_spsc_queue() noexcept {
-    while (try_pop().has_value()) {
+    std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    while (pop_from != push_to_.load(std::memory_order::relaxed)) {
+      std::destroy_at(&reinterpret_cast<T&>(ring_buffer_[pop_from]));
+      pop_from = (pop_from == *capacity_) ? 0 : pop_from + 1;
     }
     allocator_.deallocate(ring_buffer_, *capacity_ + 1);
   }
@@ -73,22 +79,51 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     return true;
   }
 
-  constexpr std::optional<T> try_pop() noexcept {
-    std::optional<T> value;
+  constexpr void push(T value) noexcept {
+    const std::size_t push_to = push_to_.load(std::memory_order::relaxed);
+    const std::size_t next_push_to = (push_to == *capacity_) ? 0 : push_to + 1;
 
+    while (next_push_to == cached_pop_from_ &&
+           (next_push_to ==
+            (cached_pop_from_ = pop_from_.load(std::memory_order::acquire)))) {
+    }
+
+    std::construct_at(&reinterpret_cast<T&>(ring_buffer_[push_to]),
+                      std::move(value));
+    push_to_.store(next_push_to, std::memory_order::release);
+  }
+
+  constexpr bool try_pop(T& value) noexcept {
     const std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
     if (pop_from == cached_push_to_ &&
         (pop_from ==
          (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
-      return value;
+      return false;
     }
 
-    value.emplace(std::move(reinterpret_cast<T&>(ring_buffer_[pop_from])));
+    value = std::move(reinterpret_cast<T&>(ring_buffer_[pop_from]));
 
     std::destroy_at(&reinterpret_cast<T&>(ring_buffer_[pop_from]));
     const std::size_t next_pop_from =
         (pop_from == *capacity_) ? 0 : pop_from + 1;
     pop_from_.store(next_pop_from, std::memory_order::release);
+    return true;
+  }
+
+  constexpr T pop() noexcept {
+    const std::size_t pop_from = pop_from_.load(std::memory_order::relaxed);
+    while (pop_from == cached_push_to_ &&
+           (pop_from ==
+            (cached_push_to_ = push_to_.load(std::memory_order::acquire)))) {
+    }
+
+    T value(std::move(reinterpret_cast<T&>(ring_buffer_[pop_from])));
+
+    std::destroy_at(&reinterpret_cast<T&>(ring_buffer_[pop_from]));
+    const std::size_t next_pop_from =
+        (pop_from == *capacity_) ? 0 : pop_from + 1;
+    pop_from_.store(next_pop_from, std::memory_order::release);
+    pop_from_.notify_one();
     return value;
   }
 
