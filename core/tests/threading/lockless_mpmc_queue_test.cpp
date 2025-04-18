@@ -51,10 +51,15 @@ TEST(threading_lockless_mpmc_queue, smoke) {
 
 TEST(threading_lockless_mpmc_queue, blocking_push) {
   core::threading::lockless_mpmc_queue<int> queue(2);
+
   queue.push(1);
   queue.push(2);
 
-  std::thread consumer([&queue] { EXPECT_EQ(queue.pop(), 1); });
+  std::thread consumer([&queue] {
+    int value;
+    EXPECT_TRUE(queue.try_pop(value));
+    EXPECT_EQ(value, 1);
+  });
 
   queue.push(3);
   EXPECT_EQ(queue.pop(), 2);
@@ -65,7 +70,7 @@ TEST(threading_lockless_mpmc_queue, blocking_push) {
 TEST(threading_lockless_mpmc_queue, blocking_pop) {
   core::threading::lockless_mpmc_queue<int> queue(2);
 
-  std::thread producer([&queue] { queue.push(42); });
+  std::thread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
   EXPECT_EQ(queue.pop(), 42);
 
@@ -156,7 +161,7 @@ class allocator : public std::allocator<T> {
 
 TEST(threading_lockless_mpmc_queue, allocator) {
   using queue_value_t = std::uint32_t;
-  struct alignas(64) allocator_value_t final {
+  struct alignas(core::utils::kCacheLineSize) allocator_value_t final {
     int value;
     std::atomic<std::size_t> seqnum;
   };

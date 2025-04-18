@@ -9,9 +9,9 @@
 namespace tests::threading {
 
 TEST(threading_locked_mpmc_queue, size) {
-  static_assert(sizeof(core::threading::locked_mpmc_queue<int, 10>) == 208);
+  static_assert(sizeof(core::threading::locked_mpmc_queue<int, 10>) == 216);
   static_assert(alignof(core::threading::locked_mpmc_queue<int, 10>) == 8);
-  static_assert(sizeof(core::threading::locked_mpmc_queue<int>) == 216);
+  static_assert(sizeof(core::threading::locked_mpmc_queue<int>) == 224);
   static_assert(alignof(core::threading::locked_mpmc_queue<int>) == 8);
 }
 
@@ -48,10 +48,15 @@ TEST(threading_locked_mpmc_queue, smoke) {
 
 TEST(threading_locked_mpmc_queue, blocking_push) {
   core::threading::locked_mpmc_queue<int> queue(2);
+
   queue.push(1);
   queue.push(2);
 
-  std::thread consumer([&queue] { EXPECT_EQ(queue.pop(), 1); });
+  std::thread consumer([&queue] {
+    int value;
+    EXPECT_TRUE(queue.try_pop(value));
+    EXPECT_EQ(value, 1);
+  });
 
   queue.push(3);
   EXPECT_EQ(queue.pop(), 2);
@@ -60,9 +65,9 @@ TEST(threading_locked_mpmc_queue, blocking_push) {
 }
 
 TEST(threading_locked_mpmc_queue, blocking_pop) {
-  core::threading::locked_mpmc_queue<int> queue(1);
+  core::threading::locked_mpmc_queue<int> queue(2);
 
-  std::thread producer([&queue] { queue.push(42); });
+  std::thread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
   EXPECT_EQ(queue.pop(), 42);
 
