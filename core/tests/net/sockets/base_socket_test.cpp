@@ -104,11 +104,6 @@ INSTANTIATE_TEST_SUITE_P(
                        ::testing::Values<core::net::sockets::protocol>(
                            core::net::sockets::protocol::kUnspecified,
                            core::net::sockets::protocol::kTcp,
-                           core::net::sockets::protocol::kUdp)),
-    ([](const testing::TestParamInfo<net_sockets_base_socket::ParamType>&
-            info) {
-      const auto& [family, type, protocol] = info.param;
-      return std::format("{}__{}__{}", family, type, protocol);
-    }));
+                           core::net::sockets::protocol::kUdp)));
 
 }  // namespace tests::net::sockets

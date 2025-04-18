@@ -60,11 +60,6 @@ TEST_P(net_sockets_base_sockaddr, move) {
 INSTANTIATE_TEST_SUITE_P(net_sockets_base_sockaddr, net_sockets_base_sockaddr,
                          ::testing::Values(core::net::sockets::family::kInet,
                                            core::net::sockets::family::kInet6,
-                                           core::net::sockets::family::kUnix),
-                         ([](const testing::TestParamInfo<
-                              net_sockets_base_sockaddr::ParamType>& info) {
-                           const auto& family = info.param;
-                           return std::format("{}", family);
-                         }));
+                                           core::net::sockets::family::kUnix));
 
 }  // namespace tests::net::sockets
