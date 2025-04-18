@@ -43,7 +43,7 @@ TEST(utils_conditionally_runtime, member_access) {
     core::utils::conditionally_runtime<std::pair<int, int>, false,
                                        std::pair<int, int>{0, 0}>
         v;
-    EXPECT_EQ(v->first, 1);
+    EXPECT_EQ(v->first, 0);
   }
   {
     core::utils::conditionally_runtime<std::pair<int, int>, true,
