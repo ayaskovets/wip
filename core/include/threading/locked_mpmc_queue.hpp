@@ -44,6 +44,9 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   bool try_push(T value) {
+    if (size_.load(std::memory_order::relaxed) >= *capacity_) {
+      return false;
+    }
     std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
     if (!lock.try_lock()) {
       return false;
@@ -53,6 +56,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     queue_.push_back(std::move(value));
+    pop_available_cv_.notify_one();
+    size_.fetch_add(1, std::memory_order::relaxed);
     return true;
   }
 
@@ -62,10 +67,14 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
                             [this] { return queue_.size() < *capacity_; });
 
     queue_.push_back(std::move(value));
+    size_.fetch_add(1, std::memory_order::relaxed);
     pop_available_cv_.notify_one();
   }
 
   bool try_pop(T& value) {
+    if (size_.load(std::memory_order::relaxed) == 0) {
+      return false;
+    }
     std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
     if (!lock.try_lock()) {
       return false;
@@ -76,6 +85,8 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
     value = std::move(queue_.front());
     queue_.pop_front();
+    size_.fetch_sub(1, std::memory_order::relaxed);
+    push_available_cv_.notify_one();
     return true;
   }
 
@@ -87,6 +98,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     T front(std::move(queue_.front()));
 
     queue_.pop_front();
+    size_.fetch_sub(1, std::memory_order::relaxed);
     push_available_cv_.notify_one();
     return front;
   }
@@ -100,6 +112,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   std::condition_variable push_available_cv_;
 
   std::deque<T, Allocator> queue_;
+  std::atomic<std::size_t> size_;
 
   [[no_unique_address]] const utils::conditionally_runtime<
       std::size_t, Capacity == utils::kRuntimeCapacity, Capacity> capacity_;
