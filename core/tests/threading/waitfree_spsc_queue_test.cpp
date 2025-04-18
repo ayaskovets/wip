@@ -193,7 +193,7 @@ class threading_waitfree_spsc_queue_workload
           std::size_t /* items_size */, std::size_t /* queue_size */,
           std::size_t /* producers */, std::size_t /* consumers */>> {};
 
-TEST_P(threading_waitfree_spsc_queue_workload, try_push_try_pop) {
+TEST_P(threading_waitfree_spsc_queue_workload, nonblocking) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
   core::threading::waitfree_spsc_queue<int> queue(queue_size);
@@ -251,7 +251,7 @@ TEST_P(threading_waitfree_spsc_queue_workload, try_push_try_pop) {
   EXPECT_EQ(pushed_items, popped_items);
 }
 
-TEST_P(threading_waitfree_spsc_queue_workload, push_pop_workload) {
+TEST_P(threading_waitfree_spsc_queue_workload, blocking) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
   core::threading::waitfree_spsc_queue<int> queue(queue_size);
