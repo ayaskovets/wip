@@ -48,7 +48,18 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       : queue_(allocator), capacity_(std::numeric_limits<std::size_t>::max()) {}
 
  public:
-  void try_push(T value) {}
+  bool try_push(T value) {
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
+    if (!lock.try_lock()) {
+      return false;
+    }
+    if (queue_.size() >= *capacity_) {
+      return false;
+    }
+
+    queue_.push_back(std::move(value));
+    return true;
+  }
 
   void push(T value) {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -57,6 +68,22 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
     queue_.push_back(std::move(value));
     pop_available_cv_.notify_one();
+  }
+
+  std::optional<T> try_pop() {
+    std::optional<T> value;
+
+    std::unique_lock<std::mutex> lock(mutex_, std::defer_lock_t{});
+    if (!lock.try_lock()) {
+      return value;
+    }
+    if (queue_.empty()) {
+      return value;
+    }
+
+    value.emplace(std::move(queue_.front()));
+    queue_.pop_front(std::move(value));
+    return value;
   }
 
   T pop() {
