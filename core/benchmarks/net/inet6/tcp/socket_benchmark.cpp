@@ -22,10 +22,14 @@ void BM_net_inet6_tcp_nonblock_handshake(benchmark::State& state) {
     client.set_reuseaddr(true);
     client.set_reuseport(true);
 
-    benchmark::DoNotOptimize(client.connect(sockaddr));
+    while (client.connect(sockaddr) !=
+           core::net::inet6::tcp::socket::connection_status::kPending) {
+    }
     core::net::inet6::tcp::socket peer(
         core::net::inet6::tcp::socket::kUninitialized());
-    benchmark::DoNotOptimize(server.accept(peer));
+    while (server.accept(peer) !=
+           core::net::inet6::tcp::socket::accept_status::kSuccess) {
+    }
   }
 }
 BENCHMARK(BM_net_inet6_tcp_nonblock_handshake)
