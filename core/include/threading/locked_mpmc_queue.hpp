@@ -48,16 +48,12 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       : queue_(allocator), capacity_(std::numeric_limits<std::size_t>::max()) {}
 
  public:
+  void try_push(T value) {}
+
   void push(T value) {
     std::unique_lock<std::mutex> lock(mutex_);
-    push_available_cv_.wait(lock, [this] {
-      return stop_requested_.test(std::memory_order::relaxed) ||
-             queue_.size() < *capacity_;
-    });
-
-    if (stop_requested_.test(std::memory_order::release)) {
-      throw std::runtime_error("push() cancelled");
-    }
+    push_available_cv_.wait(lock,
+                            [this] { return queue_.size() < *capacity_; });
 
     queue_.push_back(std::move(value));
     pop_available_cv_.notify_one();
@@ -65,14 +61,7 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   T pop() {
     std::unique_lock<std::mutex> lock(mutex_);
-    pop_available_cv_.wait(lock, [this] {
-      return stop_requested_.test(std::memory_order::relaxed) ||
-             !queue_.empty();
-    });
-
-    if (stop_requested_.test(std::memory_order::release)) {
-      throw std::runtime_error("pop() cancelled");
-    }
+    pop_available_cv_.wait(lock, [this] { return !queue_.empty(); });
 
     // NOTE: correct iff noexcept(pop_front)
     T front(std::move(queue_.front()));
@@ -80,13 +69,6 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
     queue_.pop_front();
     push_available_cv_.notify_one();
     return front;
-  }
-
- public:
-  constexpr void request_stop() noexcept {
-    stop_requested_.test_and_set(std::memory_order::acquire);
-    pop_available_cv_.notify_all();
-    push_available_cv_.notify_all();
   }
 
  public:
@@ -100,7 +82,6 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
   mutable std::mutex mutex_;
   std::condition_variable pop_available_cv_;
   std::condition_variable push_available_cv_;
-  std::atomic_flag stop_requested_ = false;
 
   std::deque<T, Allocator> queue_;
 

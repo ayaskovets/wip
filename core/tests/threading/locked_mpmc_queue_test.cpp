@@ -97,27 +97,6 @@ TEST(threading_locked_mpmc_queue, unblocking_pop) {
   consumer.join();
 }
 
-TEST(threading_locked_mpmc_queue, producer_request_stop) {
-  std::thread consumer;
-  core::threading::locked_mpmc_queue<int, 1> queue;
-  consumer = std::thread([&queue] {
-    EXPECT_NO_THROW(queue.push(1));
-    EXPECT_ANY_THROW(queue.push(2));
-  });
-  while (queue.size() == 0) {
-  }
-  queue.request_stop();
-  consumer.join();
-}
-
-TEST(threading_locked_mpmc_queue, consumer_request_stop) {
-  std::thread consumer;
-  core::threading::locked_mpmc_queue<int, 1> queue;
-  consumer = std::thread([&queue] { EXPECT_ANY_THROW(queue.pop()); });
-  queue.request_stop();
-  consumer.join();
-}
-
 TEST(threading_locked_mpmc_queue, non_copyable_item_type) {
   core::threading::locked_mpmc_queue<std::unique_ptr<int>> queue(1);
   queue.push(std::unique_ptr<int>{});
