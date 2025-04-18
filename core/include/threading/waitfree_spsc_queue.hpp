@@ -123,7 +123,6 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
     const std::size_t next_pop_from =
         (pop_from == *capacity_) ? 0 : pop_from + 1;
     pop_from_.store(next_pop_from, std::memory_order::release);
-    pop_from_.notify_one();
     return value;
   }
 
