@@ -52,13 +52,13 @@ void BM_threading_waitfree_spsc_queue_nonblocking_throughput_spsc(
 }
 BENCHMARK_TEMPLATE(BM_threading_waitfree_spsc_queue_nonblocking_throughput_spsc,
                    int)
-    ->Args({1024, 1048576})
+    ->Args({1023, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_threading_waitfree_spsc_queue_nonblocking_throughput_spsc,
                    std::shared_ptr<int>)
-    ->Args({1024, 1048576})
+    ->Args({1023, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
@@ -107,13 +107,13 @@ void BM_threading_waitfree_spsc_queue_blocking_throughput_spsc(
 }
 BENCHMARK_TEMPLATE(BM_threading_waitfree_spsc_queue_blocking_throughput_spsc,
                    int)
-    ->Args({1024, 1048576})
+    ->Args({1023, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 BENCHMARK_TEMPLATE(BM_threading_waitfree_spsc_queue_blocking_throughput_spsc,
                    std::shared_ptr<int>)
-    ->Args({1024, 1048576})
+    ->Args({1023, 1048576})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
