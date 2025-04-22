@@ -5,7 +5,7 @@
 
 namespace benchmarks::net::unix::stream {
 
-void BM_net_unix__nonblock_handshake(benchmark::State& state) {
+void BM_net_unix_stream_nonblock_handshake(benchmark::State& state) {
   const core::net::unix::sockaddr sockaddr(
       "BM_net_unix_stream_nonblock_handshake");
 
@@ -23,7 +23,7 @@ void BM_net_unix__nonblock_handshake(benchmark::State& state) {
     client.set_reuseport(true);
 
     while (client.connect(sockaddr) !=
-           core::net::unix::stream::socket::connection_status::kPending) {
+           core::net::unix::stream::socket::connection_status::kSuccess) {
     }
     core::net::unix::stream::socket peer(
         core::net::unix::stream::socket::kUninitialized());
