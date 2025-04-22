@@ -32,6 +32,16 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
   static_assert(std::atomic<std::size_t>::is_always_lock_free,
                 "std::atomic<std::size_t> is required to be lockfree for queue "
                 "to function efficiently");
+  static constexpr void static_assert_allocator_value_type() {
+    typename Allocator::value_type value_type;
+    auto&& [item, seqnum] = value_type;
+    static_assert(std::is_same_v<decltype(item), T>,
+                  "allocator value_type must be decomposable into [T, "
+                  "std::atomic<std::size_t>]");
+    static_assert(std::is_same_v<decltype(seqnum), std::atomic<std::size_t>>,
+                  "allocator value_type must be decomposable into [T, "
+                  "std::atomic<std::size_t>]");
+  }
 
  public:
   constexpr explicit lockless_mpmc_queue(
@@ -39,6 +49,8 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
     requires(Capacity != utils::kRuntimeCapacity &&
              utils::is_power_of_two(Capacity) && Capacity > 1)
       : allocator_(allocator) {
+    static_assert_allocator_value_type();
+
     if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
     }
@@ -53,6 +65,8 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
       std::size_t capacity, const Allocator& allocator = Allocator())
     requires(Capacity == utils::kRuntimeCapacity)
       : allocator_(allocator), capacity_(capacity) {
+    static_assert_allocator_value_type();
+
     if (!utils::is_power_of_two(*capacity_) || *capacity_ <= 1) {
       throw std::invalid_argument(
           "capacity must be a power of two greater than one");

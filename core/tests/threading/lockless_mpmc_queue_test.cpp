@@ -162,7 +162,7 @@ class allocator : public std::allocator<T> {
 TEST(threading_lockless_mpmc_queue, allocator) {
   using queue_value_t = std::uint32_t;
   struct alignas(core::utils::kCacheLineSize) allocator_value_t final {
-    int value;
+    std::uint32_t value;
     std::atomic<std::size_t> seqnum;
   };
 
