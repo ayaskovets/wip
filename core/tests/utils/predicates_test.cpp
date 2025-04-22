@@ -19,4 +19,11 @@ TEST(utils_predicates, is_power_of_two) {
   }
 }
 
+TEST(utils_predicates, is_even) {
+  static_assert(core::utils::is_even(0));
+  static_assert(!core::utils::is_even(1));
+  static_assert(core::utils::is_even(2));
+  static_assert(!core::utils::is_even(3));
+}
+
 }  // namespace tests::utils

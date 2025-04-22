@@ -96,7 +96,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr bool try_push(T value) noexcept {
-    const std::size_t size = size_.fetch_add(1, std::memory_order::relaxed);
+    const std::size_t size = size_.fetch_add(1, std::memory_order::acquire);
     if (size >= *capacity_) {
       size_.fetch_sub(1, std::memory_order::release);
       return false;
@@ -105,24 +105,26 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     const std::size_t push_to =
         push_to_.fetch_add(1, std::memory_order::relaxed);
     auto& [item, is_occupied] = ring_buffer_[push_to & (*capacity_ - 1)];
+
     std::construct_at(&reinterpret_cast<T&>(item), std::move(value));
+
     is_occupied.store(true, std::memory_order::release);
     is_occupied.notify_one();
     return true;
   }
 
   constexpr void push(T value) noexcept {
-    const std::size_t size = size_.fetch_add(1, std::memory_order::relaxed);
+    const std::size_t size = size_.fetch_add(1, std::memory_order::acquire);
     if (size >= *capacity_) {
-      do {
-        size_.wait(size, std::memory_order::relaxed);
-      } while (size_.load(std::memory_order::acquire) >= *capacity_);
+      while (size_.load(std::memory_order::acquire) >= *capacity_ + 1);
     }
 
     const std::size_t push_to =
         push_to_.fetch_add(1, std::memory_order::relaxed);
     auto& [item, is_occupied] = ring_buffer_[push_to & (*capacity_ - 1)];
+
     std::construct_at(&reinterpret_cast<T&>(item), std::move(value));
+
     is_occupied.store(true, std::memory_order::release);
     is_occupied.notify_one();
     return;
@@ -135,18 +137,17 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     }
 
     value = std::move(reinterpret_cast<T&>(item));
-
     std::destroy_at(&reinterpret_cast<T&>(item));
+
     pop_from_ += 1;
     is_occupied.store(false, std::memory_order::relaxed);
     size_.fetch_sub(1, std::memory_order::release);
-    size_.notify_one();
     return true;
   }
 
   constexpr T pop() noexcept {
     auto& [item, is_occupied] = ring_buffer_[pop_from_ & (*capacity_ - 1)];
-    is_occupied.wait(false, std::memory_order::relaxed);
+    is_occupied.wait(false, std::memory_order::acquire);
 
     T value(std::move(reinterpret_cast<T&>(item)));
     std::destroy_at(&reinterpret_cast<T&>(item));
@@ -154,7 +155,6 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     pop_from_ += 1;
     is_occupied.store(false, std::memory_order::relaxed);
     size_.fetch_sub(1, std::memory_order::release);
-    size_.notify_one();
     return value;
   }
 
