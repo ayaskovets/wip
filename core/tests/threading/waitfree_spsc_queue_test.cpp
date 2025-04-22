@@ -124,7 +124,7 @@ TEST(threading_waitfree_spsc_queue, item_destructor) {
 
 TEST(threading_waitfree_spsc_queue, non_copyable_item_type) {
   std::unique_ptr<int> value;
-  core::threading::waitfree_spsc_queue<std::unique_ptr<int>> queue(1);
+  core::threading::waitfree_spsc_queue<std::unique_ptr<int>> queue(2);
 
   queue.push(std::move(value));
   queue.pop();
@@ -312,12 +312,18 @@ TEST_P(threading_waitfree_spsc_queue_workload, blocking) {
   EXPECT_EQ(pushed_items, popped_items);
 }
 
-INSTANTIATE_TEST_SUITE_P(threading_waitfree_spsc_queue_workload,
-                         threading_waitfree_spsc_queue_workload,
-                         ::testing::Values(std::make_tuple(5, 3, 1, 1),
-                                           std::make_tuple(20, 10, 1, 1),
-                                           std::make_tuple(100, 10, 1, 1),
-                                           std::make_tuple(10000, 100, 1, 1)));
+INSTANTIATE_TEST_SUITE_P(
+    threading_waitfree_spsc_queue_workload,
+    threading_waitfree_spsc_queue_workload,
+    ::testing::Values(std::make_tuple(5 /* items_size */, 3 /* queue_size */,
+                                      1 /* producers */, 1 /* consumers */),
+                      std::make_tuple(20 /* items_size */, 10 /* queue_size */,
+                                      1 /* producers */, 1 /* consumers */),
+                      std::make_tuple(100 /* items_size */, 10 /* queue_size */,
+                                      1 /* producers */, 1 /* consumers */),
+                      std::make_tuple(10000 /* items_size */,
+                                      100 /* queue_size */, 1 /* producers */,
+                                      1 /* consumers */)));
 
 }  // namespace tests::threading
 

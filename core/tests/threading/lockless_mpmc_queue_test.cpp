@@ -161,10 +161,8 @@ class allocator : public std::allocator<T> {
 
 TEST(threading_lockless_mpmc_queue, allocator) {
   using queue_value_t = std::uint32_t;
-  struct alignas(core::utils::kCacheLineSize) allocator_value_t final {
-    std::uint32_t value;
-    std::atomic<std::size_t> seqnum;
-  };
+  struct alignas(core::utils::kCacheLineSize) allocator_value_t final
+      : public std::pair<queue_value_t, std::atomic<std::size_t>> {};
 
   EXPECT_TRUE(threading_lockless_mpmc_queue_allocator::allocator<
               allocator_value_t>::is_clean());
@@ -304,13 +302,20 @@ TEST_P(threading_lockless_mpmc_queue_workload, blocking) {
   EXPECT_EQ(pushed_items, popped_items);
 }
 
-INSTANTIATE_TEST_SUITE_P(threading_lockless_mpmc_queue_workload,
-                         threading_lockless_mpmc_queue_workload,
-                         ::testing::Values(std::make_tuple(5, 4, 1, 1),
-                                           std::make_tuple(100, 16, 4, 1),
-                                           std::make_tuple(100, 16, 1, 4),
-                                           std::make_tuple(30, 8, 4, 4),
-                                           std::make_tuple(10000, 128, 4, 4)));
+INSTANTIATE_TEST_SUITE_P(
+    threading_lockless_mpmc_queue_workload,
+    threading_lockless_mpmc_queue_workload,
+    ::testing::Values(std::make_tuple(5 /* items_size */, 4 /* queue_size */,
+                                      1 /* producers */, 1 /* consumers */),
+                      std::make_tuple(100 /* items_size */, 16 /* queue_size */,
+                                      4 /* producers */, 1 /* consumers */),
+                      std::make_tuple(100 /* items_size */, 16 /* queue_size */,
+                                      1 /* producers */, 4 /* consumers */),
+                      std::make_tuple(30 /* items_size */, 8 /* queue_size */,
+                                      4 /* producers */, 4 /* consumers */),
+                      std::make_tuple(10000 /* items_size */,
+                                      128 /* queue_size */, 4 /* producers */,
+                                      4 /* consumers */)));
 
 }  // namespace tests::threading
 

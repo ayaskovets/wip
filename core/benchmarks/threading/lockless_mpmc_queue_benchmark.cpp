@@ -17,10 +17,8 @@ void BM_threading_lockless_mpmc_queue_nonblocking_throughput(
   const ValueConstructor value{};
 
   using queue_value_t = ValueConstructor;
-  struct alignas(core::utils::kCacheLineSize) allocator_value_t final {
-    queue_value_t value;
-    std::atomic<std::size_t> seqnum;
-  };
+  struct alignas(core::utils::kCacheLineSize) allocator_value_t final
+      : public std::pair<queue_value_t, std::atomic<std::size_t>> {};
   using queue_t =
       core::threading::lockless_mpmc_queue<queue_value_t,
                                            core::utils::kRuntimeCapacity,
@@ -130,10 +128,8 @@ void BM_threading_lockless_mpmc_queue_blocking_throughput(
   const ValueConstructor value{};
 
   using queue_value_t = ValueConstructor;
-  struct alignas(core::utils::kCacheLineSize) allocator_value_t final {
-    queue_value_t value;
-    std::atomic<std::size_t> seqnum;
-  };
+  struct alignas(core::utils::kCacheLineSize) allocator_value_t
+      final public std::pair<queue_value_t, std::atomic<std::size_t>>{};
   using queue_t =
       core::threading::lockless_mpmc_queue<queue_value_t,
                                            core::utils::kRuntimeCapacity,
