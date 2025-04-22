@@ -18,7 +18,8 @@ target_sources(${TARGET}
     net/unix/sockaddr_benchmark.cpp
     net/unix/stream/socket_benchmark.cpp
     threading/locked_mpmc_queue_benchmark.cpp
-    threading/lockfree_mpmc_queue_benchmark.cpp
+    threading/lockfree_mpsc_queue_benchmark.cpp
+    threading/lockfree_spmc_queue_benchmark.cpp
     threading/lockless_mpmc_queue_benchmark.cpp
     threading/waitfree_spsc_queue_benchmark.cpp
     main.cpp
