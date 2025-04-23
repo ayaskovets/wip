@@ -22,8 +22,8 @@ void BM_net_unix_stream_nonblock_handshake(benchmark::State& state) {
     client.set_reuseaddr(true);
     client.set_reuseport(true);
 
-    while (client.connect(sockaddr) !=
-           core::net::unix::stream::socket::connection_status::kSuccess) {
+    while (client.connect(sockaddr) ==
+           core::net::unix::stream::socket::connection_status::kRefused) {
     }
     core::net::unix::stream::socket peer(
         core::net::unix::stream::socket::kUninitialized());
