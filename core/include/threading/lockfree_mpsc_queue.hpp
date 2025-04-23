@@ -116,11 +116,7 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
   constexpr void push(T value) noexcept {
     const std::size_t size = size_.fetch_add(1, std::memory_order::acquire);
     if (size >= *capacity_) {
-      std::size_t actual_size = size;
-      do {
-        size_.wait(actual_size, std::memory_order::acquire);
-      } while ((actual_size = size_.load(std::memory_order::acquire)) >=
-               size + 1);
+      while (size_.load(std::memory_order::acquire) >= size + 1);
     }
 
     const std::size_t push_to =
@@ -144,9 +140,8 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     std::destroy_at(&reinterpret_cast<T&>(item));
 
     pop_from_ += 1;
-    is_occupied.store(false, std::memory_order::relaxed);
+    is_occupied.store(false, std::memory_order::release);
     size_.fetch_sub(1, std::memory_order::release);
-    size_.notify_one();
     return true;
   }
 
@@ -158,9 +153,8 @@ class lockfree_mpsc_queue final : utils::non_copyable, utils::non_movable {
     std::destroy_at(&reinterpret_cast<T&>(item));
 
     pop_from_ += 1;
-    is_occupied.store(false, std::memory_order::relaxed);
+    is_occupied.store(false, std::memory_order::release);
     size_.fetch_sub(1, std::memory_order::release);
-    size_.notify_one();
     return value;
   }
 

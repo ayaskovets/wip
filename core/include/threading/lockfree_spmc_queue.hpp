@@ -106,7 +106,6 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     push_to_ += 1;
     is_occupied.store(true, std::memory_order::relaxed);
     available_.fetch_sub(1, std::memory_order::release);
-    available_.notify_one();
     return true;
   }
 
@@ -119,7 +118,6 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     push_to_ += 1;
     is_occupied.store(true, std::memory_order::relaxed);
     available_.fetch_sub(1, std::memory_order::release);
-    available_.notify_one();
   }
 
   constexpr bool try_pop(T& value) noexcept {
@@ -137,7 +135,7 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     value = std::move(reinterpret_cast<T&>(item));
     std::destroy_at(&reinterpret_cast<T&>(item));
 
-    is_occupied.store(false, std::memory_order::relaxed);
+    is_occupied.store(false, std::memory_order::release);
     is_occupied.notify_one();
     return true;
   }
@@ -146,11 +144,7 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     const std::size_t available =
         available_.fetch_add(1, std::memory_order::acquire);
     if (available >= *capacity_) {
-      std::size_t actual_available = available;
-      do {
-        available_.wait(actual_available, std::memory_order::acquire);
-      } while ((actual_available = available_.load(
-                    std::memory_order::acquire)) >= available + 1);
+      while (available_.load(std::memory_order::acquire) >= available + 1);
     }
 
     const std::size_t pop_from =
@@ -160,7 +154,7 @@ class lockfree_spmc_queue final : utils::non_copyable, utils::non_movable {
     T value(std::move(reinterpret_cast<T&>(item)));
     std::destroy_at(&reinterpret_cast<T&>(item));
 
-    is_occupied.store(false, std::memory_order::relaxed);
+    is_occupied.store(false, std::memory_order::release);
     is_occupied.notify_one();
     return value;
   }
