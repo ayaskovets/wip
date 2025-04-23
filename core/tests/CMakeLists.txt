@@ -26,7 +26,6 @@ target_sources(${TARGET}
     net/unix/stream/socket_test.cpp
     threading/locked_mpmc_queue_test.cpp
     threading/lockfree_mpsc_queue_test.cpp
-    threading/lockfree_mpsc_queue_test.cpp
     threading/lockfree_spmc_queue_test.cpp
     threading/lockless_mpmc_queue_test.cpp
     threading/waitfree_spsc_queue_test.cpp
