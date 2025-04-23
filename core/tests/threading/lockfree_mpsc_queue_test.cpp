@@ -328,4 +328,53 @@ TEST(lockfree_mpsc_queue, rollover) {
   }
 }
 
+TEST(threading_lockfree_mpsc_queue, queued_producers_nonblocking) {
+  core::threading::lockfree_mpsc_queue<int> queue(2);
+  queue.push(0);
+  queue.push(1);
+
+  std::vector<std::thread> producers(16);
+  std::latch latch(producers.size() + 1);
+  for (std::size_t i = 0; i < producers.size(); ++i) {
+    producers[i] = std::thread([&queue, &latch, i] {
+      latch.count_down();
+      queue.push(i + queue.capacity());
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < producers.size();) {
+    int value;
+    i += queue.try_pop(value);
+  }
+
+  for (auto& producer : producers) {
+    producer.join();
+  }
+}
+
+TEST(threading_lockfree_mpsc_queue, queued_producers_blocking) {
+  core::threading::lockfree_mpsc_queue<int> queue(2);
+  queue.push(0);
+  queue.push(1);
+
+  std::vector<std::thread> producers(16);
+  std::latch latch(producers.size() + 1);
+  for (std::size_t i = 0; i < producers.size(); ++i) {
+    producers[i] = std::thread([&queue, &latch, i] {
+      latch.count_down();
+      queue.push(i + queue.capacity());
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < producers.size(); ++i) {
+    queue.pop();
+  }
+
+  for (auto& producer : producers) {
+    producer.join();
+  }
+}
+
 }  // namespace tests::threading

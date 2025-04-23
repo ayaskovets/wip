@@ -330,4 +330,97 @@ TEST(lockless_mpmc_queue, rollover) {
   }
 }
 
+TEST(threading_lockless_mpmc_queue, queued_producers_nonblocking) {
+  core::threading::lockless_mpmc_queue<int> queue(2);
+  queue.push(0);
+  queue.push(1);
+
+  std::vector<std::thread> producers(16);
+  std::latch latch(producers.size() + 1);
+  for (std::size_t i = 0; i < producers.size(); ++i) {
+    producers[i] = std::thread([&queue, &latch, i] {
+      latch.count_down();
+      queue.push(i + queue.capacity());
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < producers.size();) {
+    int value;
+    i += queue.try_pop(value);
+  }
+
+  for (auto& producer : producers) {
+    producer.join();
+  }
+}
+
+TEST(threading_lockless_mpmc_queue, queued_producers_blocking) {
+  core::threading::lockless_mpmc_queue<int> queue(2);
+  queue.push(0);
+  queue.push(1);
+
+  std::vector<std::thread> producers(16);
+  std::latch latch(producers.size() + 1);
+  for (std::size_t i = 0; i < producers.size(); ++i) {
+    producers[i] = std::thread([&queue, &latch, i] {
+      latch.count_down();
+      queue.push(i + queue.capacity());
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < producers.size(); ++i) {
+    queue.pop();
+  }
+
+  for (auto& producer : producers) {
+    producer.join();
+  }
+}
+
+TEST(threading_lockless_mpmc_queue, queued_consumers_nonblocking) {
+  core::threading::lockless_mpmc_queue<int> queue(2);
+
+  std::vector<std::thread> consumers(16);
+  std::latch latch(consumers.size() + 1);
+  for (std::size_t i = 0; i < consumers.size(); ++i) {
+    consumers[i] = std::thread([&queue, &latch] {
+      latch.count_down();
+      queue.pop();
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < consumers.size();) {
+    i += queue.try_push(i);
+  }
+
+  for (auto& consumer : consumers) {
+    consumer.join();
+  }
+}
+
+TEST(threading_lockless_mpmc_queue, queued_consumers_blocking) {
+  core::threading::lockless_mpmc_queue<int> queue(2);
+
+  std::vector<std::thread> consumers(16);
+  std::latch latch(consumers.size() + 1);
+  for (std::size_t i = 0; i < consumers.size(); ++i) {
+    consumers[i] = std::thread([&queue, &latch] {
+      latch.count_down();
+      queue.pop();
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < consumers.size(); ++i) {
+    queue.push(i);
+  }
+
+  for (auto& consumer : consumers) {
+    consumer.join();
+  }
+}
+
 }  // namespace tests::threading

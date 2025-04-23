@@ -307,18 +307,12 @@ INSTANTIATE_TEST_SUITE_P(
     threading_lockfree_spmc_queue_workload,
     ::testing::Values(std::make_tuple(5 /* items_size */, 4 /* queue_size */,
                                       1 /* producers */, 1 /* consumers */),
-                      std::make_tuple(20 /* items_size */, 16 /* queue_size
-                                                               */
-                                      ,
+                      std::make_tuple(20 /* items_size */, 16 /* queue_size */,
                                       1 /* producers */, 2 /* consumers */),
-                      std::make_tuple(100 /* items_size */, 16 /* queue_size
-                                                                */
-                                      ,
+                      std::make_tuple(100 /* items_size */, 16 /* queue_size */,
                                       1 /* producers */, 4 /* consumers */),
                       std::make_tuple(10000 /* items_size */,
-                                      128 /* queue_size */, 1 /* producers
-                                                               */
-                                      ,
+                                      128 /* queue_size */, 1 /* producers */,
                                       4 /* consumers */)));
 
 }  // namespace tests::threading
@@ -331,6 +325,50 @@ TEST(lockfree_spmc_queue, rollover) {
   for (std::size_t i = 0; i < 100; ++i) {
     EXPECT_TRUE(queue.try_push(i));
     EXPECT_EQ(queue.pop(), i);
+  }
+}
+
+TEST(threading_lockfree_spmc_queue, queued_consumers_nonblocking) {
+  core::threading::lockfree_spmc_queue<int> queue(2);
+
+  std::vector<std::thread> consumers(16);
+  std::latch latch(consumers.size() + 1);
+  for (std::size_t i = 0; i < consumers.size(); ++i) {
+    consumers[i] = std::thread([&queue, &latch] {
+      latch.count_down();
+      queue.pop();
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < consumers.size();) {
+    i += queue.try_push(i);
+  }
+
+  for (auto& consumer : consumers) {
+    consumer.join();
+  }
+}
+
+TEST(threading_lockfree_spmc_queue, queued_consumers_blocking) {
+  core::threading::lockfree_spmc_queue<int> queue(2);
+
+  std::vector<std::thread> consumers(16);
+  std::latch latch(consumers.size() + 1);
+  for (std::size_t i = 0; i < consumers.size(); ++i) {
+    consumers[i] = std::thread([&queue, &latch] {
+      latch.count_down();
+      queue.pop();
+    });
+  }
+
+  latch.arrive_and_wait();
+  for (std::size_t i = 0; i < consumers.size(); ++i) {
+    queue.push(i);
+  }
+
+  for (auto& consumer : consumers) {
+    consumer.join();
   }
 }
 
