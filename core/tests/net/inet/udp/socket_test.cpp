@@ -147,8 +147,7 @@ TEST(net_inet_udp_socket, nonblocking_echo_handshake) {
   core::net::inet::sockaddr peer(core::net::inet::ip::kNonRoutable(),
                                  core::net::inet::port(0));
   EXPECT_EQ(server.send_to(kBuffer, client_sockaddr), kBuffer.size());
-  while (client.receive_from(buffer, peer) != kBuffer.size()) {
-  }
+  while (client.receive_from(buffer, peer) != kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
   EXPECT_EQ(peer, server_sockaddr);
 
@@ -156,8 +155,7 @@ TEST(net_inet_udp_socket, nonblocking_echo_handshake) {
   client.connect(server_sockaddr);
 
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
-  while (server.receive(buffer) != kBuffer.size()) {
-  }
+  while (server.receive(buffer) != kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
 }
 

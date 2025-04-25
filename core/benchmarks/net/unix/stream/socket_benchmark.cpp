@@ -23,13 +23,11 @@ void BM_net_unix_stream_nonblock_handshake(benchmark::State& state) {
     client.set_reuseport(true);
 
     while (client.connect(sockaddr) ==
-           core::net::unix::stream::socket::connection_status::kRefused) {
-    }
+           core::net::unix::stream::socket::connection_status::kRefused);
     core::net::unix::stream::socket peer(
         core::net::unix::stream::socket::kUninitialized());
     while (server.accept(peer) !=
-           core::net::unix::stream::socket::accept_status::kSuccess) {
-    }
+           core::net::unix::stream::socket::accept_status::kSuccess);
   }
 }
 BENCHMARK(BM_net_unix_stream_nonblock_handshake)
@@ -53,8 +51,7 @@ void BM_net_unix_stream_throughput(benchmark::State& state) {
     core::net::unix::stream::socket peer(
         core::net::unix::stream::socket::kUninitialized());
     while (socket.accept(peer) !=
-           core::net::unix::stream::socket::accept_status::kSuccess) {
-    }
+           core::net::unix::stream::socket::accept_status::kSuccess);
 
     for (const auto _ : state) {
       std::size_t received = 0;
@@ -64,8 +61,7 @@ void BM_net_unix_stream_throughput(benchmark::State& state) {
     }
   } else {
     while (socket.connect(sockaddr) !=
-           core::net::unix::stream::socket::connection_status::kSuccess) {
-    }
+           core::net::unix::stream::socket::connection_status::kSuccess);
 
     for (const auto _ : state) {
       std::size_t sent = 0;

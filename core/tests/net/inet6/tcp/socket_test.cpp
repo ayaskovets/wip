@@ -160,13 +160,11 @@ TEST(net_inet6_tcp_socket, nonblocking_echo_handshake) {
   core::net::inet6::tcp::socket peer(
       core::net::inet6::tcp::socket::kUninitialized());
   while (server.accept(peer) !=
-         core::net::inet6::tcp::socket::accept_status::kSuccess) {
-  }
+         core::net::inet6::tcp::socket::accept_status::kSuccess);
 
   std::vector<std::uint8_t> buffer(kBuffer.size());
   EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
-  while (client.receive(buffer) != kBuffer.size()) {
-  }
+  while (client.receive(buffer) != kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
 }
 

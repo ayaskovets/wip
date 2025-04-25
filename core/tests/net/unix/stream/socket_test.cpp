@@ -144,8 +144,7 @@ TEST(net_unix_stream_socket, nonblocking_echo_handshake) {
 
   std::vector<std::uint8_t> buffer(kBuffer.size());
   EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
-  while (client.receive(buffer) != kBuffer.size()) {
-  }
+  while (client.receive(buffer) != kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
 }
 
