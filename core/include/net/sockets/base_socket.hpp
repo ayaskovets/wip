@@ -73,6 +73,9 @@ class base_socket : public io::fd {
   std::size_t receive(std::span<std::uint8_t> bytes) const;
   std::size_t receive_from(std::span<std::uint8_t> bytes,
                            net::sockets::base_sockaddr& sockaddr) const;
+
+ private:
+  using io::fd::fd_;
 };
 
 }  // namespace core::net::sockets
