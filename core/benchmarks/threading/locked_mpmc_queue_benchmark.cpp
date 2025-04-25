@@ -7,21 +7,19 @@
 
 namespace benchmarks::threading {
 
-template <typename ValueConstructor>
+template <typename Value>
 void BM_threading_locked_mpmc_queue_nonblocking_throughput(
     benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
-  const ValueConstructor value{};
+  const Value value{};
 
-  using queue_value_t = ValueConstructor;
-  using allocator_value_t = ValueConstructor;
-  using queue_t =
-      core::threading::locked_mpmc_queue<queue_value_t,
-                                         core::utils::kRuntimeCapacity,
-                                         std::allocator<allocator_value_t>>;
+  using entry_t = Value;
+  using queue_t = core::threading::locked_mpmc_queue<
+      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      std::allocator<entry_t>>;
 
   for (const auto _ : state) {
     state.PauseTiming();
@@ -57,14 +55,14 @@ void BM_threading_locked_mpmc_queue_nonblocking_throughput(
       if (consumers == 1) {
         latch.arrive_and_wait();
         for (std::size_t popped_items_count = 0; popped_items_count < items;) {
-          queue_value_t value;
+          Value value;
           popped_items_count += queue.try_pop(value);
         }
       } else {
         latch.arrive_and_wait();
         while (popped_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
-          queue_value_t value;
+          Value value;
           while (!queue.try_pop(value)) {
           }
         }
@@ -117,21 +115,19 @@ BENCHMARK_TEMPLATE(BM_threading_locked_mpmc_queue_nonblocking_throughput,
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 
-template <typename ValueConstructor>
+template <typename Value>
 void BM_threading_locked_mpmc_queue_blocking_throughput(
     benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
-  const ValueConstructor value{};
+  const Value value{};
 
-  using queue_value_t = ValueConstructor;
-  using allocator_value_t = ValueConstructor;
-  using queue_t =
-      core::threading::locked_mpmc_queue<queue_value_t,
-                                         core::utils::kRuntimeCapacity,
-                                         std::allocator<allocator_value_t>>;
+  using entry_t = Value;
+  using queue_t = core::threading::locked_mpmc_queue<
+      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      std::allocator<entry_t>>;
 
   for (const auto _ : state) {
     state.PauseTiming();
