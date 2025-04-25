@@ -45,8 +45,7 @@ void BM_threading_lockfree_mpmc_queue_nonblocking_throughput(
         latch.arrive_and_wait();
         while (pushed_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
-          while (!queue.try_push(value)) {
-          }
+          while (!queue.try_push(value));
         }
       }
     };
@@ -64,8 +63,7 @@ void BM_threading_lockfree_mpmc_queue_nonblocking_throughput(
         while (popped_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
           Value value;
-          while (!queue.try_pop(value)) {
-          }
+          while (!queue.try_pop(value));
         }
       }
     };

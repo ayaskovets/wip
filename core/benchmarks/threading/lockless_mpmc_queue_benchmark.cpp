@@ -7,22 +7,27 @@
 
 namespace benchmarks::threading {
 
-template <typename ValueConstructor>
+template <typename Value>
 void BM_threading_lockless_mpmc_queue_nonblocking_throughput(
     benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
-  const ValueConstructor value{};
+  const Value value{};
 
-  using queue_value_t = ValueConstructor;
-  struct alignas(core::utils::kCacheLineSize) allocator_value_t final
-      : public std::pair<queue_value_t, std::atomic<std::size_t>> {};
-  using queue_t =
-      core::threading::lockless_mpmc_queue<queue_value_t,
-                                           core::utils::kRuntimeCapacity,
-                                           std::allocator<allocator_value_t>>;
+  class alignas(core::utils::kCacheLineSize) entry_t final {
+   private:
+    Value value_;
+    std::size_t seqnum_;
+
+   public:
+    constexpr Value& value() { return value_; }
+    constexpr std::size_t& seqnum() { return seqnum_; }
+  };
+  using queue_t = core::threading::lockless_mpmc_queue<
+      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      std::allocator<entry_t>>;
 
   for (const auto _ : state) {
     state.PauseTiming();
@@ -47,8 +52,7 @@ void BM_threading_lockless_mpmc_queue_nonblocking_throughput(
         latch.arrive_and_wait();
         while (pushed_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
-          while (!queue.try_push(value)) {
-          }
+          while (!queue.try_push(value));
         }
       }
     };
@@ -58,16 +62,15 @@ void BM_threading_lockless_mpmc_queue_nonblocking_throughput(
       if (consumers == 1) {
         latch.arrive_and_wait();
         for (std::size_t popped_items_count = 0; popped_items_count < items;) {
-          queue_value_t value;
+          Value value;
           popped_items_count += queue.try_pop(value);
         }
       } else {
         latch.arrive_and_wait();
         while (popped_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
-          queue_value_t value;
-          while (!queue.try_pop(value)) {
-          }
+          Value value;
+          while (!queue.try_pop(value));
         }
       }
     };
@@ -93,12 +96,12 @@ BENCHMARK_TEMPLATE(BM_threading_lockless_mpmc_queue_nonblocking_throughput, int)
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
@@ -108,32 +111,37 @@ BENCHMARK_TEMPLATE(BM_threading_lockless_mpmc_queue_nonblocking_throughput,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 
-template <typename ValueConstructor>
+template <typename Value>
 void BM_threading_lockless_mpmc_queue_blocking_throughput(
     benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
-  const ValueConstructor value{};
+  const Value value{};
 
-  using queue_value_t = ValueConstructor;
-  struct alignas(core::utils::kCacheLineSize) allocator_value_t final
-      : public std::pair<queue_value_t, std::atomic<std::size_t>> {};
-  using queue_t =
-      core::threading::lockless_mpmc_queue<queue_value_t,
-                                           core::utils::kRuntimeCapacity,
-                                           std::allocator<allocator_value_t>>;
+  class alignas(core::utils::kCacheLineSize) entry_t final {
+   private:
+    Value value_;
+    std::size_t seqnum_;
+
+   public:
+    constexpr Value& value() { return value_; }
+    constexpr std::size_t& seqnum() { return seqnum_; }
+  };
+  using queue_t = core::threading::lockless_mpmc_queue<
+      Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
+      std::allocator<entry_t>>;
 
   for (const auto _ : state) {
     state.PauseTiming();
@@ -202,12 +210,12 @@ BENCHMARK_TEMPLATE(BM_threading_lockless_mpmc_queue_blocking_throughput, int)
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
@@ -217,12 +225,12 @@ BENCHMARK_TEMPLATE(BM_threading_lockless_mpmc_queue_blocking_throughput,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);

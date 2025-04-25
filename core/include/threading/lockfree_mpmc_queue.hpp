@@ -16,19 +16,21 @@ namespace detail {
 template <typename T, typename Value, typename Index>
 concept lockfree_mpmc_queue_entry = requires(T entry) {
   requires std::atomic<T>::is_always_lock_free;
-  { entry.get_value() } -> std::same_as<Value&>;
-  { entry.get_seqnum() } -> std::same_as<Index&>;
+  { entry.value() } -> std::same_as<Value&>;
+  { entry.seqnum() } -> std::same_as<Index&>;
 };
 
 }  // namespace detail
 
 template <typename Value, typename Index>
-struct lockfree_mpmc_queue_entry final {
-  Value value;
-  Index seqnum;
+class lockfree_mpmc_queue_entry final {
+ private:
+  Value value_;
+  Index seqnum_;
 
-  constexpr Value& get_value() { return value; }
-  constexpr Index& get_seqnum() { return seqnum; }
+ public:
+  constexpr Value& value() { return value_; }
+  constexpr Index& seqnum() { return seqnum_; }
 };
 
 template <typename Value, std::unsigned_integral Index = std::size_t,
@@ -59,8 +61,8 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())
-    requires(Capacity != utils::kDynamicCapacity<Index> &&
-             utils::is_power_of_two(*capacity_) && *capacity_ >= 2)
+    requires(Capacity != utils::kDynamicCapacity<index_t> &&
+             utils::is_power_of_two(Capacity) && Capacity >= 2)
       : allocator_(std::move(allocator)) {
     if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
@@ -68,13 +70,13 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
     std::memset(ring_buffer_, 0, *capacity_ * sizeof(entry_t));
     for (index_t i = 0; i < *capacity_; ++i) {
-      ring_buffer_[i].get_seqnum() = (i << 1);
+      ring_buffer_[i].seqnum() = (i << 1);
     }
   }
 
   constexpr explicit lockfree_mpmc_queue(index_t capacity,
                                          allocator_t allocator = allocator_t())
-    requires(Capacity == utils::kDynamicCapacity<Index>)
+    requires(Capacity == utils::kDynamicCapacity<index_t>)
       : allocator_(std::move(allocator)), capacity_(capacity) {
     if (!(utils::is_power_of_two(*capacity_) && *capacity_ >= 2)) {
       throw std::invalid_argument(
@@ -87,7 +89,7 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
     std::memset(ring_buffer_, 0, *capacity_ * sizeof(entry_t));
     for (index_t i = 0; i < *capacity_; ++i) {
-      ring_buffer_[i].get_seqnum() = (i << 1);
+      ring_buffer_[i].seqnum() = (i << 1);
     }
   }
 
@@ -104,11 +106,11 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
                         ring_buffer_[push_to & (*capacity_ - 1)])
                         .load(std::memory_order::acquire);
 
-    if (entry.get_seqnum() == (push_to << 1)) {
+    if (entry.seqnum() == (push_to << 1)) {
       entry_t desired;
       std::memset(&desired, 0, sizeof(entry_t));
-      desired.get_value() = std::move(value);
-      desired.get_seqnum() = ((push_to << 1) | 1);
+      std::construct_at(&desired.value(), std::move(value));
+      desired.seqnum() = ((push_to << 1) | 1);
 
       if (reinterpret_cast<std::atomic<entry_t>&>(
               ring_buffer_[push_to & (*capacity_ - 1)])
@@ -120,8 +122,8 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
                                          std::memory_order::acquire);
         return true;
       }
-    } else if (entry.get_seqnum() == ((push_to << 1) | 1) ||
-               entry.get_seqnum() == ((push_to + *capacity_) << 1)) {
+    } else if (entry.seqnum() == ((push_to << 1) | 1) ||
+               entry.seqnum() == ((push_to + *capacity_) << 1)) {
       push_to_.compare_exchange_strong(push_to, push_to + 1,
                                        std::memory_order::release,
                                        std::memory_order::acquire);
@@ -137,25 +139,25 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
                         ring_buffer_[pop_from & (*capacity_ - 1)])
                         .load(std::memory_order::acquire);
 
-    if (entry.get_seqnum() == ((pop_from << 1) | 1)) {
+    if (entry.seqnum() == ((pop_from << 1) | 1)) {
       entry_t desired;
       std::memset(&desired, 0, sizeof(entry_t));
-      desired.get_value() = value_t{};
-      desired.get_seqnum() = ((pop_from + *capacity_) << 1);
+      std::construct_at(&desired.value(), value_t{});
+      desired.seqnum() = ((pop_from + *capacity_) << 1);
 
       if (reinterpret_cast<std::atomic<entry_t>&>(
               ring_buffer_[pop_from & (*capacity_ - 1)])
               .compare_exchange_strong(entry, desired,
                                        std::memory_order::release,
                                        std::memory_order::acquire)) {
-        value = std::move(entry.get_value());
+        value = std::move(entry.value());
+        std::destroy_at(&entry.value());
         pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
                                           std::memory_order::release,
                                           std::memory_order::acquire);
         return true;
       }
-    } else if ((entry.get_seqnum() | 1) ==
-               (((pop_from + *capacity_) << 1) | 1)) {
+    } else if ((entry.seqnum() | 1) == (((pop_from + *capacity_) << 1) | 1)) {
       pop_from_.compare_exchange_strong(pop_from, pop_from + 1,
                                         std::memory_order::release,
                                         std::memory_order::acquire);
@@ -180,7 +182,8 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
   [[no_unique_address]] allocator_t allocator_;
   [[no_unique_address]] const utils::conditionally_runtime<
-      index_t, Capacity == utils::kDynamicCapacity<Index>, Capacity> capacity_;
+      index_t, Capacity == utils::kDynamicCapacity<index_t>, Capacity>
+      capacity_;
 };
 
 }  // namespace core::threading

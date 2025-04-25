@@ -252,8 +252,7 @@ TEST_P(threading_locked_mpmc_queue_workload, nonblocking) {
       if (index >= items_size) {
         return;
       }
-      while (!queue.try_push(pushed_items[index])) {
-      }
+      while (!queue.try_push(pushed_items[index]));
     }
   };
 
@@ -265,8 +264,7 @@ TEST_P(threading_locked_mpmc_queue_workload, nonblocking) {
       if (index >= items_size) {
         return;
       }
-      while (!queue.try_pop(popped_items[index])) {
-      }
+      while (!queue.try_pop(popped_items[index]));
     }
   };
 

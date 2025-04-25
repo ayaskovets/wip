@@ -44,8 +44,7 @@ void BM_threading_locked_mpmc_queue_nonblocking_throughput(
         latch.arrive_and_wait();
         while (pushed_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
-          while (!queue.try_push(value)) {
-          }
+          while (!queue.try_push(value));
         }
       }
     };
@@ -63,8 +62,7 @@ void BM_threading_locked_mpmc_queue_nonblocking_throughput(
         while (popped_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
           Value value;
-          while (!queue.try_pop(value)) {
-          }
+          while (!queue.try_pop(value));
         }
       }
     };
@@ -90,12 +88,12 @@ BENCHMARK_TEMPLATE(BM_threading_locked_mpmc_queue_nonblocking_throughput, int)
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
@@ -105,12 +103,12 @@ BENCHMARK_TEMPLATE(BM_threading_locked_mpmc_queue_nonblocking_throughput,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
@@ -196,12 +194,12 @@ BENCHMARK_TEMPLATE(BM_threading_locked_mpmc_queue_blocking_throughput, int)
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
@@ -211,12 +209,12 @@ BENCHMARK_TEMPLATE(BM_threading_locked_mpmc_queue_blocking_throughput,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
             2 /* consumers*/})
-    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
-            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);

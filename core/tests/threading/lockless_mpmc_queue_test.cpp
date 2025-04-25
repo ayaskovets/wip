@@ -9,18 +9,25 @@
 namespace tests::threading {
 
 TEST(threading_lockless_mpmc_queue, size) {
-  static_assert(sizeof(core::threading::lockless_mpmc_queue<int, 10>) == 192);
-  static_assert(alignof(core::threading::lockless_mpmc_queue<int, 10>) == 64);
+  static_assert(
+      sizeof(core::threading::lockless_mpmc_queue<int, std::size_t, 10>) ==
+      192);
+  static_assert(
+      alignof(core::threading::lockless_mpmc_queue<int, std::size_t, 10>) ==
+      64);
   static_assert(sizeof(core::threading::lockless_mpmc_queue<int>) == 192);
   static_assert(alignof(core::threading::lockless_mpmc_queue<int>) == 64);
 }
 
 TEST(threading_lockless_mpmc_queue, capacity) {
   EXPECT_EQ(
-      (core::threading::lockless_mpmc_queue<std::string, 128>().capacity()),
+      (core::threading::lockless_mpmc_queue<std::string, std::size_t, 128>()
+           .capacity()),
       128);
   EXPECT_EQ(
-      (core::threading::lockless_mpmc_queue<std::string, 64>().capacity()), 64);
+      (core::threading::lockless_mpmc_queue<std::string, std::size_t, 64>()
+           .capacity()),
+      64);
   EXPECT_EQ(core::threading::lockless_mpmc_queue<std::string>(128).capacity(),
             128);
   EXPECT_EQ(core::threading::lockless_mpmc_queue<std::string>(64).capacity(),
@@ -31,6 +38,35 @@ TEST(threading_lockless_mpmc_queue, minimal_capacity) {
   EXPECT_ANY_THROW(core::threading::lockless_mpmc_queue<int> queue(0));
   EXPECT_ANY_THROW(core::threading::lockless_mpmc_queue<int> queue(1));
   EXPECT_NO_THROW(core::threading::lockless_mpmc_queue<int> queue(2));
+}
+
+TEST(threading_lockless_mpmc_queue, nonblocking_smoke) {
+  int value;
+  core::threading::lockless_mpmc_queue<int> queue(2);
+
+  EXPECT_FALSE(queue.try_pop(value));
+  EXPECT_TRUE(queue.try_push(1));
+  EXPECT_TRUE(queue.try_push(2));
+  EXPECT_FALSE(queue.try_push(3));
+  EXPECT_TRUE(queue.try_pop(value));
+  EXPECT_EQ(value, 1);
+  EXPECT_TRUE(queue.try_pop(value));
+  EXPECT_EQ(value, 2);
+  EXPECT_FALSE(queue.try_pop(value));
+  EXPECT_TRUE(queue.try_push(4));
+  EXPECT_TRUE(queue.try_pop(value));
+  EXPECT_EQ(value, 4);
+}
+
+TEST(threading_lockless_mpmc_queue, blocking_smoke) {
+  core::threading::lockless_mpmc_queue<int> queue(2);
+
+  queue.push(1);
+  queue.push(2);
+  EXPECT_EQ(queue.pop(), 1);
+  EXPECT_EQ(queue.pop(), 2);
+  queue.push(3);
+  EXPECT_EQ(queue.pop(), 3);
 }
 
 TEST(threading_lockless_mpmc_queue, smoke) {
@@ -160,27 +196,35 @@ class allocator : public std::allocator<T> {
 }  // namespace threading_lockless_mpmc_queue_allocator
 
 TEST(threading_lockless_mpmc_queue, allocator) {
-  using queue_value_t = std::uint32_t;
-  struct alignas(core::utils::kCacheLineSize) allocator_value_t final
-      : public std::pair<queue_value_t, std::atomic<std::size_t>> {};
+  using value_t = double;
+  using index_t = std::size_t;
+  class alignas(core::utils::kCacheLineSize) entry_t final {
+   private:
+    value_t value_;
+    index_t seqnum_;
 
-  EXPECT_TRUE(threading_lockless_mpmc_queue_allocator::allocator<
-              allocator_value_t>::is_clean());
+   public:
+    constexpr value_t& value() { return value_; }
+    constexpr index_t& seqnum() { return seqnum_; }
+  };
+
+  EXPECT_TRUE(
+      threading_lockless_mpmc_queue_allocator::allocator<entry_t>::is_clean());
   {
     core::threading::lockless_mpmc_queue<
-        queue_value_t, 2,
-        threading_lockless_mpmc_queue_allocator::allocator<allocator_value_t>>
+        value_t, index_t, 2,
+        threading_lockless_mpmc_queue_allocator::allocator<entry_t>>
         queue;
 
-    queue.push(1);
-    queue.push(2);
-    EXPECT_EQ(queue.pop(), 1);
-    EXPECT_EQ(queue.pop(), 2);
+    queue.push(1.1);
+    queue.push(2.2);
+    EXPECT_EQ(queue.pop(), 1.1);
+    EXPECT_EQ(queue.pop(), 2.2);
     EXPECT_FALSE(threading_lockless_mpmc_queue_allocator::allocator<
-                 allocator_value_t>::is_clean());
+                 entry_t>::is_clean());
   }
-  EXPECT_TRUE(threading_lockless_mpmc_queue_allocator::allocator<
-              allocator_value_t>::is_clean());
+  EXPECT_TRUE(
+      threading_lockless_mpmc_queue_allocator::allocator<entry_t>::is_clean());
 }
 
 class threading_lockless_mpmc_queue_workload
@@ -212,8 +256,7 @@ TEST_P(threading_lockless_mpmc_queue_workload, nonblocking) {
       if (index >= items_size) {
         return;
       }
-      while (!queue.try_push(pushed_items[index])) {
-      }
+      while (!queue.try_push(pushed_items[index]));
     }
   };
 
@@ -225,8 +268,7 @@ TEST_P(threading_lockless_mpmc_queue_workload, nonblocking) {
       if (index >= items_size) {
         return;
       }
-      while (!queue.try_pop(popped_items[index])) {
-      }
+      while (!queue.try_pop(popped_items[index]));
     }
   };
 

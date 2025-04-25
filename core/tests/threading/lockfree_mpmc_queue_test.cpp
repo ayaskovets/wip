@@ -158,12 +158,14 @@ class allocator : public std::allocator<T> {
 TEST(threading_lockfree_mpmc_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
-  struct entry_t final {
-    value_t value;
-    index_t seqnum;
+  class entry_t final {
+   private:
+    value_t value_;
+    index_t seqnum_;
 
-    constexpr auto& get_value() { return value; }
-    constexpr auto& get_seqnum() { return seqnum; }
+   public:
+    constexpr value_t& value() { return value_; }
+    constexpr index_t& seqnum() { return seqnum_; }
   };
 
   EXPECT_TRUE(
@@ -214,8 +216,7 @@ TEST_P(threading_lockfree_mpmc_queue_workload, nonblocking) {
       if (index >= items_size) {
         return;
       }
-      while (!queue.try_push(pushed_items[index])) {
-      }
+      while (!queue.try_push(pushed_items[index]));
     }
   };
 
@@ -227,8 +228,7 @@ TEST_P(threading_lockfree_mpmc_queue_workload, nonblocking) {
       if (index >= items_size) {
         return;
       }
-      while (!queue.try_pop(popped_items[index])) {
-      }
+      while (!queue.try_pop(popped_items[index]));
     }
   };
 
