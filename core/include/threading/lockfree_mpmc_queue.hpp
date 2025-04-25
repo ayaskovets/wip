@@ -59,7 +59,8 @@ class lockfree_mpmc_queue final : utils::non_copyable, utils::non_movable {
 
  public:
   constexpr explicit lockfree_mpmc_queue(allocator_t allocator = allocator_t())
-    requires(Capacity != utils::kDynamicCapacity<Index>)
+    requires(Capacity != utils::kDynamicCapacity<Index> &&
+             utils::is_power_of_two(*capacity_) && *capacity_ >= 2)
       : allocator_(std::move(allocator)) {
     if (!(ring_buffer_ = allocator_.allocate(Capacity))) [[unlikely]] {
       throw std::runtime_error("failed to allocate memory");
