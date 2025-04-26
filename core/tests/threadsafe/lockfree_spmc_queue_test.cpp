@@ -1,4 +1,4 @@
-#include "threading/lockfree_mpmc_queue.hpp"
+#include "threadsafe/lockfree_spmc_queue.hpp"
 
 #include <gtest/gtest.h>
 
@@ -6,39 +6,43 @@
 #include <numeric>
 #include <thread>
 
-namespace tests::threading {
+namespace tests::threadsafe {
 
-TEST(threading_lockfree_mpmc_queue, size) {
+TEST(threadsafe_lockfree_spmc_queue, size) {
   static_assert(
-      sizeof(core::threading::lockfree_mpmc_queue<int, std::size_t, 10>) ==
-      192);
+      sizeof(core::threadsafe::lockfree_spmc_queue<int, std::size_t, 10>) ==
+      256);
   static_assert(
-      alignof(core::threading::lockfree_mpmc_queue<int, std::size_t, 10>) ==
+      alignof(core::threadsafe::lockfree_spmc_queue<int, std::size_t, 10>) ==
       64);
-  static_assert(sizeof(core::threading::lockfree_mpmc_queue<int>) == 192);
-  static_assert(alignof(core::threading::lockfree_mpmc_queue<int>) == 64);
+  static_assert(sizeof(core::threadsafe::lockfree_spmc_queue<int>) == 256);
+  static_assert(alignof(core::threadsafe::lockfree_spmc_queue<int>) == 64);
 }
 
-TEST(threading_lockfree_mpmc_queue, capacity) {
-  EXPECT_EQ((core::threading::lockfree_mpmc_queue<int, std::size_t, 128>()
-                 .capacity()),
-            128);
+TEST(threadsafe_lockfree_spmc_queue, capacity) {
   EXPECT_EQ(
-      (core::threading::lockfree_mpmc_queue<int, std::size_t, 64>().capacity()),
+      (core::threadsafe::lockfree_spmc_queue<std::string, std::size_t, 128>()
+           .capacity()),
+      128);
+  EXPECT_EQ(
+      (core::threadsafe::lockfree_spmc_queue<std::string, std::size_t, 64>()
+           .capacity()),
       64);
-  EXPECT_EQ(core::threading::lockfree_mpmc_queue<int>(128).capacity(), 128);
-  EXPECT_EQ(core::threading::lockfree_mpmc_queue<int>(64).capacity(), 64);
+  EXPECT_EQ(core::threadsafe::lockfree_spmc_queue<std::string>(128).capacity(),
+            128);
+  EXPECT_EQ(core::threadsafe::lockfree_spmc_queue<std::string>(64).capacity(),
+            64);
 }
 
-TEST(threading_lockfree_mpmc_queue, minimal_capacity) {
-  EXPECT_ANY_THROW(core::threading::lockfree_mpmc_queue<int> queue(0));
-  EXPECT_ANY_THROW(core::threading::lockfree_mpmc_queue<int> queue(1));
-  EXPECT_NO_THROW(core::threading::lockfree_mpmc_queue<int> queue(2));
+TEST(threadsafe_lockfree_spmc_queue, minimal_capacity) {
+  EXPECT_ANY_THROW(core::threadsafe::lockfree_spmc_queue<int> queue(0));
+  EXPECT_ANY_THROW(core::threadsafe::lockfree_spmc_queue<int> queue(1));
+  EXPECT_NO_THROW(core::threadsafe::lockfree_spmc_queue<int> queue(2));
 }
 
-TEST(threading_lockfree_mpmc_queue, nonblocking_smoke) {
+TEST(threadsafe_lockfree_spmc_queue, nonblocking_smoke) {
   int value;
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+  core::threadsafe::lockfree_spmc_queue<int> queue(2);
 
   EXPECT_FALSE(queue.try_pop(value));
   EXPECT_TRUE(queue.try_push(1));
@@ -54,8 +58,8 @@ TEST(threading_lockfree_mpmc_queue, nonblocking_smoke) {
   EXPECT_EQ(value, 4);
 }
 
-TEST(threading_lockfree_mpmc_queue, blocking_smoke) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+TEST(threadsafe_lockfree_spmc_queue, blocking_smoke) {
+  core::threadsafe::lockfree_spmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
@@ -65,9 +69,9 @@ TEST(threading_lockfree_mpmc_queue, blocking_smoke) {
   EXPECT_EQ(queue.pop(), 3);
 }
 
-TEST(threading_lockfree_mpmc_queue, smoke) {
+TEST(threadsafe_lockfree_spmc_queue, smoke) {
   int value;
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+  core::threadsafe::lockfree_spmc_queue<int> queue(2);
 
   EXPECT_FALSE(queue.try_pop(value));
   queue.push(1);
@@ -81,8 +85,8 @@ TEST(threading_lockfree_mpmc_queue, smoke) {
   EXPECT_FALSE(queue.try_pop(value));
 }
 
-TEST(threading_lockfree_mpmc_queue, blocking_push) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+TEST(threadsafe_lockfree_spmc_queue, blocking_push) {
+  core::threadsafe::lockfree_spmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
@@ -99,8 +103,8 @@ TEST(threading_lockfree_mpmc_queue, blocking_push) {
   consumer.join();
 }
 
-TEST(threading_lockfree_mpmc_queue, blocking_pop) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+TEST(threadsafe_lockfree_spmc_queue, blocking_pop) {
+  core::threadsafe::lockfree_spmc_queue<int> queue(2);
 
   std::thread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
@@ -109,17 +113,53 @@ TEST(threading_lockfree_mpmc_queue, blocking_pop) {
   producer.join();
 }
 
-TEST(threading_lockfree_mpmc_queue, capacity_one) {
-  EXPECT_ANY_THROW(core::threading::lockfree_mpmc_queue<int> queue(1));
+TEST(threadsafe_lockfree_spmc_queue, capacity_one) {
+  EXPECT_ANY_THROW(core::threadsafe::lockfree_spmc_queue<int> queue(1));
 }
 
-TEST(threading_lockfree_mpmc_queue, queue_destructor) { GTEST_SKIP(); }
+TEST(threadsafe_lockfree_spmc_queue, queue_destructor) {
+  std::shared_ptr<int> value = std::make_shared<int>();
+  {
+    core::threadsafe::lockfree_spmc_queue<std::shared_ptr<int>> queue(2);
 
-TEST(threading_lockfree_mpmc_queue, item_destructor) { GTEST_SKIP(); }
+    EXPECT_EQ(value.use_count(), 1);
+    queue.push(value);
+    EXPECT_EQ(value.use_count(), 2);
+    queue.push(value);
+  }
+  EXPECT_EQ(value.use_count(), 1);
+}
 
-TEST(threading_lockfree_mpmc_queue, non_copyable_item_type) { GTEST_SKIP(); }
+TEST(threadsafe_lockfree_spmc_queue, item_destructor) {
+  std::shared_ptr<int> value = std::make_shared<int>();
+  core::threadsafe::lockfree_spmc_queue<std::shared_ptr<int>> queue(2);
 
-namespace threading_lockfree_mpmc_queue_allocator {
+  EXPECT_EQ(value.use_count(), 1);
+  queue.push(value);
+  EXPECT_EQ(value.use_count(), 2);
+  queue.push(value);
+  EXPECT_EQ(value.use_count(), 3);
+  queue.pop();
+  EXPECT_EQ(value.use_count(), 2);
+  queue.push(value);
+  EXPECT_EQ(value.use_count(), 3);
+  queue.pop();
+  EXPECT_EQ(value.use_count(), 2);
+  queue.pop();
+  EXPECT_EQ(value.use_count(), 1);
+}
+
+TEST(threadsafe_lockfree_spmc_queue, non_copyable_item_type) {
+  std::unique_ptr<int> value;
+  core::threadsafe::lockfree_spmc_queue<std::unique_ptr<int>> queue(2);
+
+  queue.push(std::move(value));
+  queue.pop();
+  queue.try_push(std::move(value));
+  queue.try_pop(value);
+}
+
+namespace threadsafe_lockfree_spmc_queue_allocator {
 
 template <typename T>
 class allocator : public std::allocator<T> {
@@ -153,49 +193,49 @@ class allocator : public std::allocator<T> {
   static inline std::unordered_map<void*, std::size_t> allocations_;
 };
 
-}  // namespace threading_lockfree_mpmc_queue_allocator
+}  // namespace threadsafe_lockfree_spmc_queue_allocator
 
-TEST(threading_lockfree_mpmc_queue, allocator) {
+TEST(threadsafe_lockfree_spmc_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
-  class entry_t final {
+  class alignas(core::utils::kCacheLineSize) entry_t final {
    private:
     value_t value_;
-    index_t seqnum_;
+    bool empty_;
 
    public:
     constexpr value_t& value() { return value_; }
-    constexpr index_t& seqnum() { return seqnum_; }
+    constexpr bool& empty() { return empty_; }
   };
 
   EXPECT_TRUE(
-      threading_lockfree_mpmc_queue_allocator::allocator<entry_t>::is_clean());
+      threadsafe_lockfree_spmc_queue_allocator::allocator<entry_t>::is_clean());
   {
-    core::threading::lockfree_mpmc_queue<
+    core::threadsafe::lockfree_spmc_queue<
         value_t, index_t, 2,
-        threading_lockfree_mpmc_queue_allocator::allocator<entry_t>>
+        threadsafe_lockfree_spmc_queue_allocator::allocator<entry_t>>
         queue;
 
     queue.push(1.1);
     queue.push(2.2);
     EXPECT_EQ(queue.pop(), 1.1);
     EXPECT_EQ(queue.pop(), 2.2);
-    EXPECT_FALSE(threading_lockfree_mpmc_queue_allocator::allocator<
+    EXPECT_FALSE(threadsafe_lockfree_spmc_queue_allocator::allocator<
                  entry_t>::is_clean());
   }
   EXPECT_TRUE(
-      threading_lockfree_mpmc_queue_allocator::allocator<entry_t>::is_clean());
+      threadsafe_lockfree_spmc_queue_allocator::allocator<entry_t>::is_clean());
 }
 
-class threading_lockfree_mpmc_queue_workload
+class threadsafe_lockfree_spmc_queue_workload
     : public ::testing::TestWithParam<std::tuple<
           std::size_t /* items_size */, std::size_t /* queue_size */,
           std::size_t /* producers */, std::size_t /* consumers */>> {};
 
-TEST_P(threading_lockfree_mpmc_queue_workload, nonblocking) {
+TEST_P(threadsafe_lockfree_spmc_queue_workload, nonblocking) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
-  core::threading::lockfree_mpmc_queue<int> queue(queue_size);
+  core::threadsafe::lockfree_spmc_queue<int> queue(queue_size);
 
   std::latch latch(producers + consumers);
   std::vector<std::thread> threads;
@@ -248,10 +288,10 @@ TEST_P(threading_lockfree_mpmc_queue_workload, nonblocking) {
   EXPECT_EQ(pushed_items, popped_items);
 }
 
-TEST_P(threading_lockfree_mpmc_queue_workload, blocking) {
+TEST_P(threadsafe_lockfree_spmc_queue_workload, blocking) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
-  core::threading::lockfree_mpmc_queue<int> queue(queue_size);
+  core::threadsafe::lockfree_spmc_queue<int> queue(queue_size);
 
   std::latch latch(producers + consumers);
   std::vector<std::thread> threads;
@@ -305,26 +345,24 @@ TEST_P(threading_lockfree_mpmc_queue_workload, blocking) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    threading_lockfree_mpmc_queue_workload,
-    threading_lockfree_mpmc_queue_workload,
+    threadsafe_lockfree_spmc_queue_workload,
+    threadsafe_lockfree_spmc_queue_workload,
     ::testing::Values(std::make_tuple(5 /* items_size */, 4 /* queue_size */,
                                       1 /* producers */, 1 /* consumers */),
-                      std::make_tuple(100 /* items_size */, 16 /* queue_size */,
-                                      4 /* producers */, 1 /* consumers */),
+                      std::make_tuple(20 /* items_size */, 16 /* queue_size */,
+                                      1 /* producers */, 2 /* consumers */),
                       std::make_tuple(100 /* items_size */, 16 /* queue_size */,
                                       1 /* producers */, 4 /* consumers */),
-                      std::make_tuple(30 /* items_size */, 8 /* queue_size */,
-                                      4 /* producers */, 4 /* consumers */),
                       std::make_tuple(10000 /* items_size */,
-                                      128 /* queue_size */, 4 /* producers */,
+                                      128 /* queue_size */, 1 /* producers */,
                                       4 /* consumers */)));
 
-}  // namespace tests::threading
+}  // namespace tests::threadsafe
 
-namespace tests::threading {
+namespace tests::threadsafe {
 
-TEST(lockfree_mpmc_queue, rollover) {
-  core::threading::lockfree_mpmc_queue<int> queue(8);
+TEST(lockfree_spmc_queue, rollover) {
+  core::threadsafe::lockfree_spmc_queue<int> queue(8);
 
   for (std::size_t i = 0; i < 100; ++i) {
     EXPECT_TRUE(queue.try_push(i));
@@ -332,57 +370,8 @@ TEST(lockfree_mpmc_queue, rollover) {
   }
 }
 
-TEST(threading_lockfree_mpmc_queue, queued_producers_nonblocking) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
-  queue.push(0);
-  queue.push(1);
-
-  std::vector<std::thread> producers(16);
-  std::latch latch(producers.size() + 1);
-  for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::thread([&queue, &latch, i] {
-      latch.count_down();
-      queue.push(i + queue.capacity());
-    });
-  }
-
-  latch.arrive_and_wait();
-  for (std::size_t i = 0; i < producers.size();) {
-    int value;
-    i += queue.try_pop(value);
-  }
-
-  for (auto& producer : producers) {
-    producer.join();
-  }
-}
-
-TEST(threading_lockfree_mpmc_queue, queued_producers_blocking) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
-  queue.push(0);
-  queue.push(1);
-
-  std::vector<std::thread> producers(16);
-  std::latch latch(producers.size() + 1);
-  for (std::size_t i = 0; i < producers.size(); ++i) {
-    producers[i] = std::thread([&queue, &latch, i] {
-      latch.count_down();
-      queue.push(i + queue.capacity());
-    });
-  }
-
-  latch.arrive_and_wait();
-  for (std::size_t i = 0; i < producers.size(); ++i) {
-    queue.pop();
-  }
-
-  for (auto& producer : producers) {
-    producer.join();
-  }
-}
-
-TEST(threading_lockfree_mpmc_queue, queued_consumers_nonblocking) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+TEST(threadsafe_lockfree_spmc_queue, queued_consumers_nonblocking) {
+  core::threadsafe::lockfree_spmc_queue<int> queue(2);
 
   std::vector<std::thread> consumers(16);
   std::latch latch(consumers.size() + 1);
@@ -403,8 +392,8 @@ TEST(threading_lockfree_mpmc_queue, queued_consumers_nonblocking) {
   }
 }
 
-TEST(threading_lockfree_mpmc_queue, queued_consumers_blocking) {
-  core::threading::lockfree_mpmc_queue<int> queue(2);
+TEST(threadsafe_lockfree_spmc_queue, queued_consumers_blocking) {
+  core::threadsafe::lockfree_spmc_queue<int> queue(2);
 
   std::vector<std::thread> consumers(16);
   std::latch latch(consumers.size() + 1);
@@ -425,4 +414,4 @@ TEST(threading_lockfree_mpmc_queue, queued_consumers_blocking) {
   }
 }
 
-}  // namespace tests::threading
+}  // namespace tests::threadsafe

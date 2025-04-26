@@ -9,7 +9,7 @@
 #include "utils/mixins.hpp"
 #include "utils/predicates.hpp"
 
-namespace core::threading {
+namespace core::threadsafe {
 
 namespace detail {
 
@@ -192,4 +192,4 @@ class lockless_mpmc_queue final : utils::non_copyable, utils::non_movable {
       capacity_;
 };
 
-}  // namespace core::threading
+}  // namespace core::threadsafe

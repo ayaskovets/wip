@@ -24,11 +24,12 @@ target_sources(${TARGET}
     net/unix/dgram/socket_test.cpp
     net/unix/sockaddr_test.cpp
     net/unix/stream/socket_test.cpp
-    threading/locked_mpmc_queue_test.cpp
-    threading/lockfree_mpsc_queue_test.cpp
-    threading/lockfree_spmc_queue_test.cpp
-    threading/lockless_mpmc_queue_test.cpp
-    threading/waitfree_spsc_queue_test.cpp
+    threadsafe/locked_mpmc_queue_test.cpp
+    threadsafe/lockfree_mpmc_queue_test.cpp
+    threadsafe/lockfree_mpsc_queue_test.cpp
+    threadsafe/lockfree_spmc_queue_test.cpp
+    threadsafe/lockless_mpmc_queue_test.cpp
+    threadsafe/waitfree_spsc_queue_test.cpp
     utils/conditionally_runtime_test.cpp
     utils/predicates_test.cpp
 )

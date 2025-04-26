@@ -9,7 +9,7 @@
 #include "utils/constants.hpp"
 #include "utils/mixins.hpp"
 
-namespace core::threading {
+namespace core::threadsafe {
 
 template <typename Value, std::unsigned_integral Index = std::size_t,
           Index Capacity = utils::kDynamicCapacity<Index>,
@@ -121,4 +121,4 @@ class locked_mpmc_queue final : utils::non_copyable, utils::non_movable {
       capacity_;
 };
 
-}  // namespace core::threading
+}  // namespace core::threadsafe

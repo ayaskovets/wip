@@ -3,12 +3,12 @@
 #include <latch>
 #include <thread>
 
-#include "threading/lockfree_spmc_queue.hpp"
+#include "threadsafe/lockfree_spmc_queue.hpp"
 
-namespace benchmarks::threading {
+namespace benchmarks::threadsafe {
 
 template <typename Value>
-void BM_threading_lockfree_spmc_queue_nonblocking_throughput(
+void BM_threadsafe_lockfree_spmc_queue_nonblocking_throughput(
     benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
@@ -25,7 +25,7 @@ void BM_threading_lockfree_spmc_queue_nonblocking_throughput(
     constexpr Value& value() { return value_; }
     constexpr bool& empty() { return empty_; }
   };
-  using queue_t = core::threading::lockfree_spmc_queue<
+  using queue_t = core::threadsafe::lockfree_spmc_queue<
       Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
@@ -91,7 +91,8 @@ void BM_threading_lockfree_spmc_queue_nonblocking_throughput(
     }
   }
 }
-BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_nonblocking_throughput, int)
+BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_spmc_queue_nonblocking_throughput,
+                   int)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
@@ -101,7 +102,7 @@ BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_nonblocking_throughput, int)
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_nonblocking_throughput,
+BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_spmc_queue_nonblocking_throughput,
                    std::shared_ptr<int>)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
@@ -114,7 +115,7 @@ BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_nonblocking_throughput,
     ->Unit(benchmark::kMillisecond);
 
 template <typename Value>
-void BM_threading_lockfree_spmc_queue_blocking_throughput(
+void BM_threadsafe_lockfree_spmc_queue_blocking_throughput(
     benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
@@ -131,7 +132,7 @@ void BM_threading_lockfree_spmc_queue_blocking_throughput(
     constexpr Value& value() { return value_; }
     constexpr bool& empty() { return empty_; }
   };
-  using queue_t = core::threading::lockfree_spmc_queue<
+  using queue_t = core::threadsafe::lockfree_spmc_queue<
       Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
@@ -197,7 +198,7 @@ void BM_threading_lockfree_spmc_queue_blocking_throughput(
     }
   }
 }
-BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_blocking_throughput, int)
+BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_spmc_queue_blocking_throughput, int)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
@@ -207,7 +208,7 @@ BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_blocking_throughput, int)
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_blocking_throughput,
+BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_spmc_queue_blocking_throughput,
                    std::shared_ptr<int>)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
@@ -219,4 +220,4 @@ BENCHMARK_TEMPLATE(BM_threading_lockfree_spmc_queue_blocking_throughput,
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 
-}  // namespace benchmarks::threading
+}  // namespace benchmarks::threadsafe
