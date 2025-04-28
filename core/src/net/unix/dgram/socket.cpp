@@ -2,14 +2,9 @@
 
 namespace core::net::unix::dgram {
 
-const socket& socket::kUninitialized() noexcept {
-  static socket socket(bool{});
-  return socket;
-}
+socket::socket(utils::uninitialized_t) noexcept
+    : net::unix::base_socket(core::utils::uninitialized_t{}) {}
 
-socket::socket(bool) noexcept
-    : net::unix::socket(net::unix::socket::kUninitialized()) {}
-
-socket::socket() : net::unix::socket(net::sockets::type::kDgram) {}
+socket::socket() : net::unix::base_socket(net::sockets::type::kDgram) {}
 
 }  // namespace core::net::unix::dgram

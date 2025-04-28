@@ -1,18 +1,17 @@
 #pragma once
 
+#include "utils/tags.hpp"
+
 namespace core::io {
 
 class fd {
- protected:
-  static const fd& kUninitialized() noexcept;
-
  public:
   static const fd& kStdin() noexcept;
   static const fd& kStdout() noexcept;
   static const fd& kStderr() noexcept;
 
- private:
-  fd() noexcept;
+ protected:
+  explicit fd(utils::uninitialized_t) noexcept;
 
  public:
   // NOTE: this class is merely a copy-featured RAII wrapper around a file

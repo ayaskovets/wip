@@ -20,9 +20,9 @@ target_sources(${TARGET}
     src/net/inet6/udp/socket.cpp
     src/net/sockets/base_sockaddr.cpp
     src/net/sockets/base_socket.cpp
+    src/net/unix/base_socket.cpp
     src/net/unix/dgram/socket.cpp
     src/net/unix/sockaddr.cpp
-    src/net/unix/socket.cpp
     src/net/unix/stream/socket.cpp
 )
 target_compile_features(${TARGET}

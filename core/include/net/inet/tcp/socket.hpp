@@ -6,12 +6,7 @@ namespace core::net::inet::tcp {
 
 class socket final : public net::sockets::base_socket {
  public:
-  static const socket& kUninitialized() noexcept;
-
- private:
-  socket(bool) noexcept;
-
- public:
+  socket(utils::uninitialized_t) noexcept;
   socket();
 };
 

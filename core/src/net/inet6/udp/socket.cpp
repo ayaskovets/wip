@@ -2,13 +2,8 @@
 
 namespace core::net::inet6::udp {
 
-const socket& socket::kUninitialized() noexcept {
-  static socket socket(bool{});
-  return socket;
-}
-
-socket::socket(bool) noexcept
-    : net::sockets::base_socket(net::sockets::base_socket::kUninitialized()) {}
+socket::socket(utils::uninitialized_t) noexcept
+    : net::sockets::base_socket(core::utils::uninitialized_t{}) {}
 
 socket::socket()
     : net::sockets::base_socket(net::sockets::family::kInet6,

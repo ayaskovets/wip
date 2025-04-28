@@ -85,12 +85,8 @@ constexpr int to_native_protocol(net::sockets::protocol protocol) noexcept {
 
 }  // namespace
 
-const base_socket &base_socket::kUninitialized() {
-  static const base_socket socket;
-  return socket;
-}
-
-base_socket::base_socket() : io::fd(io::fd::kUninitialized()) {}
+base_socket::base_socket(utils::uninitialized_t) noexcept
+    : io::fd(utils::uninitialized_t{}) {}
 
 base_socket::base_socket(net::sockets::family family, net::sockets::type type,
                          net::sockets::protocol protocol)

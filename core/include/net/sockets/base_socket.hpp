@@ -13,12 +13,7 @@ namespace core::net::sockets {
 
 class base_socket : public io::fd {
  protected:
-  static const base_socket& kUninitialized();
-
- private:
-  base_socket();
-
- protected:
+  base_socket(utils::uninitialized_t) noexcept;
   base_socket(net::sockets::family family, net::sockets::type type,
               net::sockets::protocol protocol);
 
@@ -58,8 +53,6 @@ class base_socket : public io::fd {
  public:
   void listen(std::size_t backlog);
 
-  // NOTE: one should use a copy the special kUninitialized value as the out
-  // parameter to avoid creating two sockets on each accept
   enum class accept_status : std::uint8_t {
     kSuccess,
     kEmptyQueue,

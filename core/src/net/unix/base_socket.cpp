@@ -1,4 +1,4 @@
-#include "net/unix/socket.hpp"
+#include "net/unix/base_socket.hpp"
 
 #include <unistd.h>
 
@@ -10,20 +10,16 @@ constexpr int kSyscallError = -1;
 
 }  // namespace
 
-const socket& socket::kUninitialized() noexcept {
-  static const socket socket;
-  return socket;
-}
+base_socket::base_socket(utils::uninitialized_t) noexcept
+    : net::sockets::base_socket(core::utils::uninitialized_t{}) {}
 
-socket::socket() noexcept
-    : net::sockets::base_socket(net::sockets::base_socket::kUninitialized()) {}
-
-socket::socket(net::sockets::type type)
+base_socket::base_socket(net::sockets::type type)
     : net::sockets::base_socket(net::sockets::family::kUnix, type,
                                 net::sockets::protocol::kUnspecified) {}
 
-socket::~socket() {
-  if (*this == kUninitialized()) {
+base_socket::~base_socket() {
+  static const base_socket kUninitialized(utils::uninitialized_t{});
+  if (*this == kUninitialized) {
     return;
   }
 
@@ -35,8 +31,9 @@ socket::~socket() {
   }
 }
 
-void socket::unlink_close() {
-  if (*this == kUninitialized()) {
+void base_socket::unlink_close() {
+  static const base_socket kUninitialized(utils::uninitialized_t{});
+  if (*this == kUninitialized) {
     return;
   }
 
@@ -52,7 +49,7 @@ void socket::unlink_close() {
   net::sockets::base_socket::close();
 }
 
-net::sockets::base_socket::bind_status socket::unlink_bind(
+net::sockets::base_socket::bind_status base_socket::unlink_bind(
     const net::unix::sockaddr& sockaddr) {
   if (::unlink(sockaddr.get_path().data()) == kSyscallError) {
     if (errno != ENOENT) {

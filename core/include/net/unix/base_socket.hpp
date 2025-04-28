@@ -5,16 +5,11 @@
 
 namespace core::net::unix {
 
-class socket : public net::sockets::base_socket {
+class base_socket : public net::sockets::base_socket {
  protected:
-  static const socket& kUninitialized() noexcept;
-
- private:
-  socket() noexcept;
-
- protected:
-  socket(core::net::sockets::type type);
-  ~socket();
+  base_socket(utils::uninitialized_t) noexcept;
+  base_socket(core::net::sockets::type type);
+  ~base_socket();
 
  public:
   void unlink_close();

@@ -1,17 +1,12 @@
 #pragma once
 
-#include "net/unix/socket.hpp"
+#include "net/unix/base_socket.hpp"
 
 namespace core::net::unix::dgram {
 
-class socket final : public net::unix::socket {
+class socket final : public net::unix::base_socket {
  public:
-  static const socket& kUninitialized() noexcept;
-
- private:
-  socket(bool) noexcept;
-
- public:
+  socket(utils::uninitialized_t) noexcept;
   socket();
 };
 
