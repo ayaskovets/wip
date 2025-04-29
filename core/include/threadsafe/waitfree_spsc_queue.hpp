@@ -20,7 +20,7 @@ concept waitfree_spsc_queue_entry = requires(T entry) {
 }  // namespace detail
 
 template <typename Value>
-class alignas(Value) waitfree_spsc_queue_entry final {
+class waitfree_spsc_queue_entry final {
  private:
   Value value_;
 
