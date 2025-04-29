@@ -32,6 +32,7 @@ target_sources(${TARGET}
     threadsafe/waitfree_spsc_queue_test.cpp
     utils/conditionally_runtime_test.cpp
     utils/predicates_test.cpp
+    utils/static_pimpl_test.cpp
 )
 target_compile_features(${TARGET}
     PRIVATE cxx_std_20
