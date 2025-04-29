@@ -45,7 +45,7 @@ TEST(net_unix_stream_socket, not_connected_send_receive) {
   core::net::unix::stream::socket socket;
   socket.set_nonblock(true);
 
-  std::vector<std::uint8_t> bytes{1, 2, 3};
+  std::vector<std::byte> bytes{std::byte(1), std::byte(2), std::byte(3)};
   EXPECT_ANY_THROW(socket.send(bytes));
   EXPECT_ANY_THROW(socket.receive(bytes));
 }
@@ -54,7 +54,7 @@ TEST(net_unix_stream_socket, blocking_send_receive_error) {
   core::net::unix::stream::socket socket;
   socket.set_nonblock(true);
 
-  std::vector<std::uint8_t> bytes;
+  std::vector<std::byte> bytes;
   EXPECT_ANY_THROW(socket.send(bytes));
   EXPECT_ANY_THROW(socket.receive(bytes));
 }
@@ -63,7 +63,7 @@ TEST(net_unix_stream_socket, nonblocking_send_receive_error) {
   core::net::unix::stream::socket socket;
   socket.set_nonblock(true);
 
-  std::vector<std::uint8_t> bytes;
+  std::vector<std::byte> bytes;
   EXPECT_ANY_THROW(socket.send(bytes));
   EXPECT_ANY_THROW(socket.receive(bytes));
 }
@@ -86,7 +86,8 @@ TEST(net_unix_stream_socket, accept_error) {
 }
 
 TEST(net_unix_stream_socket, blocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::unix::sockaddr sockaddr(
       "net_unix_stream_socket_blocking_echo_handshake");
@@ -102,7 +103,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
     EXPECT_EQ(server.accept(peer),
               core::net::unix::stream::socket::accept_status::kSuccess);
 
-    std::vector<std::uint8_t> buffer(kBuffer.size());
+    std::vector<std::byte> buffer(kBuffer.size());
     EXPECT_EQ(peer.receive(buffer), kBuffer.size());
     EXPECT_EQ(buffer, kBuffer);
     EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
@@ -111,7 +112,7 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
   EXPECT_EQ(client.connect(sockaddr),
             core::net::unix::stream::socket::connection_status::kSuccess);
 
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
@@ -119,7 +120,8 @@ TEST(net_unix_stream_socket, blocking_echo_handshake) {
 }
 
 TEST(net_unix_stream_socket, nonblocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::unix::sockaddr sockaddr(
       "net_unix_stream_socket_nonblocking_echo_handshake");
@@ -139,7 +141,7 @@ TEST(net_unix_stream_socket, nonblocking_echo_handshake) {
   EXPECT_EQ(server.accept(peer),
             core::net::unix::stream::socket::accept_status::kSuccess);
 
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
   while (client.receive(buffer) != kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);

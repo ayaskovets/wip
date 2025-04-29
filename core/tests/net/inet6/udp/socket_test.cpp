@@ -19,7 +19,7 @@ TEST(net_inet6_udp_socket, nonblocking_send_receive_error) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  std::vector<std::uint8_t> bytes;
+  std::vector<std::byte> bytes;
   EXPECT_ANY_THROW(socket.send(bytes));
   EXPECT_EQ(socket.receive(bytes), 0);
 }
@@ -76,7 +76,8 @@ TEST(net_inet6_udp_socket, sockaddrs) {
 }
 
 TEST(net_inet6_udp_socket, blocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::inet6::sockaddr server_sockaddr(
       core::net::inet6::ip::kLoopback(), core::net::inet6::port(9995));
@@ -96,7 +97,7 @@ TEST(net_inet6_udp_socket, blocking_echo_handshake) {
   std::thread server_thread([&server, &client_sockaddr, &kBuffer] {
     core::net::inet6::sockaddr peer(core::net::inet6::ip::kAny(),
                                     core::net::inet6::port(0));
-    std::vector<std::uint8_t> buffer(kBuffer.size());
+    std::vector<std::byte> buffer(kBuffer.size());
     EXPECT_EQ(server.receive_from(buffer, peer), kBuffer.size());
     EXPECT_EQ(buffer, kBuffer);
     EXPECT_EQ(peer, client_sockaddr);
@@ -110,7 +111,7 @@ TEST(net_inet6_udp_socket, blocking_echo_handshake) {
 
   core::net::inet6::sockaddr peer(core::net::inet6::ip::kAny(),
                                   core::net::inet6::port(0));
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(client.send_to(kBuffer, server_sockaddr), kBuffer.size());
   EXPECT_EQ(client.receive_from(buffer, peer), kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
@@ -124,7 +125,8 @@ TEST(net_inet6_udp_socket, blocking_echo_handshake) {
 }
 
 TEST(net_inet6_udp_socket, nonblocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::inet6::sockaddr server_sockaddr(
       core::net::inet6::ip::kLoopback(), core::net::inet6::port(9995));
@@ -143,7 +145,7 @@ TEST(net_inet6_udp_socket, nonblocking_echo_handshake) {
   client.set_reuseport(true);
   client.bind(client_sockaddr);
 
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   core::net::inet6::sockaddr peer(core::net::inet6::ip::kNonRoutable(),
                                   core::net::inet6::port(0));
   EXPECT_EQ(server.send_to(kBuffer, client_sockaddr), kBuffer.size());

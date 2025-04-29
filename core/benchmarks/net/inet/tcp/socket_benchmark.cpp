@@ -44,7 +44,7 @@ void BM_net_inet_tcp_throughput(benchmark::State& state) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  std::vector<std::uint8_t> buffer(buffer_size);
+  std::vector<std::byte> buffer(buffer_size);
   if (state.thread_index() == 0) {
     socket.bind(sockaddr);
     socket.listen(1);

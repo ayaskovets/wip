@@ -29,7 +29,7 @@ const ip& ip::kNonRoutable() noexcept {
   return ip;
 }
 
-ip::ip(std::span<const std::uint8_t, 16> bytes, network_byte_order_t) noexcept {
+ip::ip(std::span<const std::byte, 16> bytes, network_byte_order_t) noexcept {
   std::memcpy(data_.data(), bytes.data(), bytes.size());
 }
 
@@ -43,7 +43,7 @@ ip::ip(std::string_view string) {
   }
 }
 
-const std::array<std::uint8_t, 16>& ip::get_bytes(
+const std::array<std::byte, 16>& ip::get_bytes(
     network_byte_order_t) const noexcept {
   return data_;
 }

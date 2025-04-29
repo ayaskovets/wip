@@ -45,13 +45,14 @@ TEST(net_unix_dgram_socket, not_connected_send_receive) {
   core::net::unix::dgram::socket socket;
   socket.set_nonblock(true);
 
-  std::vector<std::uint8_t> bytes{1, 2, 3};
+  std::vector<std::byte> bytes{std::byte(1), std::byte(2), std::byte(3)};
   EXPECT_ANY_THROW(socket.send(bytes));
   EXPECT_EQ(socket.receive(bytes), 0);
 }
 
 TEST(net_unix_dgram_socket, blocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::unix::sockaddr server_sockaddr(core::net::unix::sockaddr(
       "net_unix_dgram_socket_blocking_echo_handshake_server"));
@@ -68,7 +69,7 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
 
   std::thread server_thread([&server, &client_sockaddr, &kBuffer] {
     core::net::unix::sockaddr peer(core::net::unix::sockaddr::kEmpty());
-    std::vector<std::uint8_t> buffer(kBuffer.size());
+    std::vector<std::byte> buffer(kBuffer.size());
     EXPECT_EQ(server.receive_from(buffer, peer), kBuffer.size());
     EXPECT_EQ(buffer, kBuffer);
     EXPECT_EQ(peer, client_sockaddr);
@@ -81,7 +82,7 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
   });
 
   core::net::unix::sockaddr peer(core::net::unix::sockaddr::kEmpty());
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(client.send_to(kBuffer, server_sockaddr), kBuffer.size());
   EXPECT_EQ(client.receive_from(buffer, peer), kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
@@ -95,7 +96,8 @@ TEST(net_unix_dgram_socket, blocking_echo_handshake) {
 }
 
 TEST(net_unix_dgram_socket, nonblocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::unix::sockaddr server_sockaddr(core::net::unix::sockaddr(
       "net_unix_dgram_socket_nonblocking_echo_handshake_server"));
@@ -112,7 +114,7 @@ TEST(net_unix_dgram_socket, nonblocking_echo_handshake) {
   EXPECT_EQ(client.unlink_bind(client_sockaddr),
             core::net::unix::dgram::socket::bind_status::kSuccess);
 
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   core::net::unix::sockaddr peer(core::net::unix::sockaddr::kEmpty());
   EXPECT_EQ(server.send_to(kBuffer, client_sockaddr), kBuffer.size());
   while (client.receive_from(buffer, peer) != kBuffer.size());

@@ -305,7 +305,7 @@ base_socket::accept_status base_socket::accept(base_socket &socket) const {
   return base_socket::accept_status::kSuccess;
 }
 
-std::size_t base_socket::send(std::span<const std::uint8_t> bytes) const {
+std::size_t base_socket::send(std::span<const std::byte> bytes) const {
   const ::ssize_t sent =
       ::send(get_native_handle(), bytes.data(), bytes.size(), 0);
   if (sent == kSyscallError) {
@@ -319,7 +319,7 @@ std::size_t base_socket::send(std::span<const std::uint8_t> bytes) const {
 }
 
 std::size_t base_socket::send_to(
-    std::span<const std::uint8_t> bytes,
+    std::span<const std::byte> bytes,
     const net::sockets::base_sockaddr &sockaddr) const {
   const ::ssize_t sent =
       ::sendto(get_native_handle(), bytes.data(), bytes.size(), 0,
@@ -335,7 +335,7 @@ std::size_t base_socket::send_to(
   return static_cast<std::size_t>(sent);
 }
 
-std::size_t base_socket::receive(std::span<std::uint8_t> bytes) const {
+std::size_t base_socket::receive(std::span<std::byte> bytes) const {
   const ::ssize_t received =
       ::recv(get_native_handle(), bytes.data(), bytes.size(), 0);
   if (received == kSyscallError) {
@@ -349,8 +349,7 @@ std::size_t base_socket::receive(std::span<std::uint8_t> bytes) const {
 }
 
 std::size_t base_socket::receive_from(
-    std::span<std::uint8_t> bytes,
-    net::sockets::base_sockaddr &sockaddr) const {
+    std::span<std::byte> bytes, net::sockets::base_sockaddr &sockaddr) const {
   ::socklen_t socklen = static_cast<::socklen_t>(sockaddr.get_length());
   const ::ssize_t received = ::recvfrom(
       get_native_handle(), bytes.data(), bytes.size(), 0,

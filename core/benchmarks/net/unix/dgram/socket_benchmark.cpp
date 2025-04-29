@@ -17,7 +17,7 @@ void BM_net_unix_dgram_throughput(benchmark::State& state) try {
   core::net::unix::dgram::socket socket;
   socket.set_nonblock(true);
 
-  std::vector<std::uint8_t> buffer(buffer_size);
+  std::vector<std::byte> buffer(buffer_size);
   if (state.thread_index() == 0) {
     socket.unlink_bind(sockaddr);
 

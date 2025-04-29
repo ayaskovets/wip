@@ -18,12 +18,15 @@ TEST(net_inet6_ip, any) {
 }
 
 TEST(net_inet6_ip, construction) {
-  const std::array<std::uint8_t, 16> bytes{0, 0, 0x25, 0x5e, 0, 0, 0, 0,
-                                           0, 0, 0,    0,    0, 0, 0, 0};
+  const std::array<std::byte, 16> bytes{
+      std::byte(0), std::byte(0), std::byte(0x25), std::byte(0x5e),
+      std::byte(0), std::byte(0), std::byte(0),    std::byte(0),
+      std::byte(0), std::byte(0), std::byte(0),    std::byte(0),
+      std::byte(0), std::byte(0), std::byte(0),    std::byte(0)};
   const std::string string("0:255e::");
 
   const core::net::inet6::ip from_bytes(
-      std::span<const std::uint8_t, 16>(bytes),
+      std::span<const std::byte, 16>(bytes),
       core::net::inet6::ip::network_byte_order_t{});
   const core::net::inet6::ip from_string(string);
 

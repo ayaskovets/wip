@@ -60,11 +60,11 @@ class base_socket : public io::fd {
   accept_status accept(base_socket& socket) const;
 
  public:
-  std::size_t send(std::span<const std::uint8_t> bytes) const;
-  std::size_t send_to(std::span<const std::uint8_t> bytes,
+  std::size_t send(std::span<const std::byte> bytes) const;
+  std::size_t send_to(std::span<const std::byte> bytes,
                       const net::sockets::base_sockaddr& sockaddr) const;
-  std::size_t receive(std::span<std::uint8_t> bytes) const;
-  std::size_t receive_from(std::span<std::uint8_t> bytes,
+  std::size_t receive(std::span<std::byte> bytes) const;
+  std::size_t receive_from(std::span<std::byte> bytes,
                            net::sockets::base_sockaddr& sockaddr) const;
 };
 

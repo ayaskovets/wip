@@ -58,7 +58,7 @@ std::variant<net::inet::sockaddr, net::inet6::sockaddr> to_sockaddr(
           reinterpret_cast<const ::sockaddr_in6 *>(addrinfo.ai_addr);
 
       return net::inet6::sockaddr(
-          net::inet6::ip(std::span(reinterpret_cast<const std::uint8_t (&)[16]>(
+          net::inet6::ip(std::span(reinterpret_cast<const std::byte(&)[16]>(
                              sockaddr->sin6_addr)),
                          net::inet6::ip::network_byte_order_t{}),
           net::inet6::port(sockaddr->sin6_port,

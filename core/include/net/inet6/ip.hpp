@@ -16,7 +16,7 @@ class ip final {
   struct network_byte_order_t final {};
 
  public:
-  ip(std::span<const std::uint8_t, 16> bytes, network_byte_order_t) noexcept;
+  ip(std::span<const std::byte, 16> bytes, network_byte_order_t) noexcept;
   explicit ip(std::string_view string);
 
  public:
@@ -24,14 +24,14 @@ class ip final {
   constexpr bool operator!=(const ip&) const = default;
 
  public:
-  const std::array<std::uint8_t, 16>& get_bytes(
+  const std::array<std::byte, 16>& get_bytes(
       network_byte_order_t) const noexcept;
 
  public:
   std::string to_string() const;
 
  private:
-  std::array<std::uint8_t, 16> data_;
+  std::array<std::byte, 16> data_;
 };
 
 }  // namespace core::net::inet6

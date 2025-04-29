@@ -16,9 +16,9 @@ sockaddr::sockaddr(net::inet6::ip ip, net::inet6::port port)
 net::inet6::ip sockaddr::get_ip() const noexcept {
   const ::sockaddr_in6* storage =
       reinterpret_cast<const ::sockaddr_in6*>(get_storage());
-  return net::inet6::ip(std::span(reinterpret_cast<const std::uint8_t (&)[16]>(
-                            storage->sin6_addr)),
-                        net::inet6::ip::network_byte_order_t{});
+  return net::inet6::ip(
+      std::span(reinterpret_cast<const std::byte(&)[16]>(storage->sin6_addr)),
+      net::inet6::ip::network_byte_order_t{});
 }
 
 net::inet6::port sockaddr::get_port() const noexcept {

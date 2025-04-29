@@ -19,7 +19,7 @@ TEST(net_inet_tcp_socket, blocking_send_receive_error) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  std::vector<std::uint8_t> bytes;
+  std::vector<std::byte> bytes;
   EXPECT_ANY_THROW(socket.send(bytes));
   EXPECT_ANY_THROW(socket.receive(bytes));
 }
@@ -30,7 +30,7 @@ TEST(net_inet_tcp_socket, nonblocking_send_receive_error) {
   socket.set_reuseaddr(true);
   socket.set_reuseport(true);
 
-  std::vector<std::uint8_t> bytes;
+  std::vector<std::byte> bytes;
   EXPECT_ANY_THROW(socket.send(bytes));
   EXPECT_ANY_THROW(socket.receive(bytes));
 }
@@ -99,7 +99,8 @@ TEST(net_inet_tcp_socket, accept_error) {
 }
 
 TEST(net_inet_tcp_socket, blocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9995));
@@ -119,7 +120,7 @@ TEST(net_inet_tcp_socket, blocking_echo_handshake) {
     EXPECT_EQ(server.accept(peer),
               core::net::inet::tcp::socket::accept_status::kSuccess);
 
-    std::vector<std::uint8_t> buffer(kBuffer.size());
+    std::vector<std::byte> buffer(kBuffer.size());
     EXPECT_EQ(peer.receive(buffer), kBuffer.size());
     EXPECT_EQ(buffer, kBuffer);
     EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
@@ -128,7 +129,7 @@ TEST(net_inet_tcp_socket, blocking_echo_handshake) {
   EXPECT_EQ(client.connect(sockaddr),
             core::net::inet::tcp::socket::connection_status::kSuccess);
 
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(client.send(kBuffer), kBuffer.size());
   EXPECT_EQ(client.receive(buffer), kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);
@@ -136,7 +137,8 @@ TEST(net_inet_tcp_socket, blocking_echo_handshake) {
 }
 
 TEST(net_inet_tcp_socket, nonblocking_echo_handshake) {
-  const std::vector<std::uint8_t> kBuffer{1, 2, 3};
+  const std::vector<std::byte> kBuffer{std::byte(1), std::byte(2),
+                                       std::byte(3)};
 
   const core::net::inet::sockaddr sockaddr(core::net::inet::ip::kLoopback(),
                                            core::net::inet::port(9996));
@@ -160,7 +162,7 @@ TEST(net_inet_tcp_socket, nonblocking_echo_handshake) {
   while (server.accept(peer) !=
          core::net::inet::tcp::socket::accept_status::kSuccess);
 
-  std::vector<std::uint8_t> buffer(kBuffer.size());
+  std::vector<std::byte> buffer(kBuffer.size());
   EXPECT_EQ(peer.send(kBuffer), kBuffer.size());
   while (client.receive(buffer) != kBuffer.size());
   EXPECT_EQ(buffer, kBuffer);

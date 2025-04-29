@@ -5,9 +5,11 @@
 namespace benchmarks::net::inet6 {
 
 void BM_net_inet6_from_bytes(benchmark::State& state) {
-  const std::array<std::uint8_t, 16> bytes{255, 255, 255, 255, 255, 255,
-                                           255, 255, 255, 255, 255, 255,
-                                           255, 255, 255, 255};
+  const std::array<std::byte, 16> bytes{
+      std::byte(255), std::byte(255), std::byte(255), std::byte(255),
+      std::byte(255), std::byte(255), std::byte(255), std::byte(255),
+      std::byte(255), std::byte(255), std::byte(255), std::byte(255),
+      std::byte(255), std::byte(255), std::byte(255), std::byte(255)};
   for (const auto _ : state) {
     benchmark::DoNotOptimize(core::net::inet6::sockaddr(
         core::net::inet6::ip(std::span(bytes),
