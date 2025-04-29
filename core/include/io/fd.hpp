@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/static_pimpl.hpp"
 #include "utils/tags.hpp"
 
 namespace core::io {
@@ -40,7 +41,11 @@ class fd {
   void close();
 
  protected:
-  int fd_;
+  int get_native_handle() const noexcept;
+
+ private:
+  struct impl;
+  utils::static_pimpl<impl, 4, 4> pimpl_;
 };
 
 }  // namespace core::io

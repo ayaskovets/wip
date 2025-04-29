@@ -14,6 +14,10 @@ constexpr int kInvalidFd = -1;
 
 }  // namespace
 
+struct fd::impl final {
+  int native_handle;
+};
+
 const fd& fd::kStdin() noexcept {
   static const fd fd(STDIN_FILENO);
   return fd;
@@ -29,66 +33,78 @@ const fd& fd::kStderr() noexcept {
   return fd;
 }
 
-fd::fd(utils::uninitialized_t) noexcept : fd_(kInvalidFd) {}
+fd::fd(utils::uninitialized_t) noexcept
+    : pimpl_(impl{.native_handle = kInvalidFd}) {}
 
-fd::fd(int fd) : fd_(fd) {
-  if (fd_ < 0) [[unlikely]] {
+fd::fd(int fd) : pimpl_(impl{.native_handle = fd}) {
+  if (pimpl_->native_handle < 0) [[unlikely]] {
     throw std::invalid_argument(std::format("invalid file descriptor: {}", fd));
   }
 }
 
 fd::fd(const fd& that) {
-  if (that.fd_ == kInvalidFd) [[unlikely]] {
-    fd_ = kInvalidFd;
-  } else if ((fd_ = ::dup(that.fd_)) == kSyscallError) [[unlikely]] {
+  if (that.pimpl_->native_handle == kInvalidFd) [[unlikely]] {
+    pimpl_->native_handle = kInvalidFd;
+  } else if ((pimpl_->native_handle = ::dup(that.pimpl_->native_handle)) ==
+             kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to clone file descriptor: {}",
                                          std::strerror(errno)));
   }
 }
 
 fd& fd::operator=(const fd& that) {
-  if (that.fd_ == kInvalidFd) [[unlikely]] {
-    fd_ = kInvalidFd;
-  } else if (fd_ != that.fd_ && ::dup2(that.fd_, fd_) == kSyscallError)
-      [[unlikely]] {
+  if (that.pimpl_->native_handle == kInvalidFd) [[unlikely]] {
+    pimpl_->native_handle = kInvalidFd;
+  } else if (pimpl_->native_handle != that.pimpl_->native_handle &&
+             ::dup2(that.pimpl_->native_handle, pimpl_->native_handle) ==
+                 kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to clone file descriptor: {}",
                                          std::strerror(errno)));
   }
   return *this;
 }
 
-fd::fd(fd&& that) noexcept : fd_(std::exchange(that.fd_, kInvalidFd)) {}
+fd::fd(fd&& that) noexcept
+    : pimpl_(std::exchange(*that.pimpl_, impl{.native_handle = kInvalidFd})) {}
 
 fd& fd::operator=(fd&& that) {
-  if (fd_ != that.fd_ && fd_ != kInvalidFd &&
-      ::close(std::exchange(fd_, kInvalidFd)) == kSyscallError) [[unlikely]] {
+  if (pimpl_->native_handle != that.pimpl_->native_handle &&
+      pimpl_->native_handle != kInvalidFd &&
+      ::close(std::exchange(pimpl_->native_handle, kInvalidFd)) ==
+          kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to close file descriptor: {}",
                                          std::strerror(errno)));
   }
-  fd_ = std::exchange(that.fd_, kInvalidFd);
+  pimpl_->native_handle = std::exchange(that.pimpl_->native_handle, kInvalidFd);
   return *this;
 }
 
 fd::~fd() noexcept {
-  if (fd_ != kInvalidFd) [[unlikely]] {
-    [[maybe_unused]] const auto _ = ::close(std::exchange(fd_, kInvalidFd));
+  if (pimpl_->native_handle != kInvalidFd) [[unlikely]] {
+    [[maybe_unused]] const auto _ =
+        ::close(std::exchange(pimpl_->native_handle, kInvalidFd));
   }
 }
 
-bool fd::operator==(const fd& that) const noexcept { return fd_ == that.fd_; }
+bool fd::operator==(const fd& that) const noexcept {
+  return pimpl_->native_handle == that.pimpl_->native_handle;
+}
 
 bool fd::operator!=(const fd& that) const noexcept { return !operator==(that); }
 
 void fd::close() {
-  if (fd_ == kInvalidFd) [[unlikely]] {
+  if (pimpl_->native_handle == kInvalidFd) [[unlikely]] {
     throw std::runtime_error(
         std::format("close() called on already closed file descriptor: {}",
                     std::strerror(errno)));
   }
-  if (::close(std::exchange(fd_, kInvalidFd)) == kSyscallError) [[unlikely]] {
+  if (::close(std::exchange(pimpl_->native_handle, kInvalidFd)) ==
+      kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to close file descriptor: {}",
                                          std::strerror(errno)));
   }
 }
+
+int fd::get_native_handle() const noexcept { return pimpl_->native_handle; }
 
 }  // namespace core::io
