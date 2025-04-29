@@ -41,7 +41,7 @@ fd::fd(const fd& that) {
   if (that.fd_ == kInvalidFd) [[unlikely]] {
     fd_ = kInvalidFd;
   } else if ((fd_ = ::dup(that.fd_)) == kSyscallError) [[unlikely]] {
-    throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
+    throw std::runtime_error(std::format("failed to clone file descriptor: {}",
                                          std::strerror(errno)));
   }
 }
@@ -51,7 +51,7 @@ fd& fd::operator=(const fd& that) {
     fd_ = kInvalidFd;
   } else if (fd_ != that.fd_ && ::dup2(that.fd_, fd_) == kSyscallError)
       [[unlikely]] {
-    throw std::runtime_error(std::format("failed to clone file descriptor: {} ",
+    throw std::runtime_error(std::format("failed to clone file descriptor: {}",
                                          std::strerror(errno)));
   }
   return *this;

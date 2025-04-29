@@ -40,7 +40,7 @@ ip::ip(std::uint32_t bytes, network_byte_order_t) noexcept : data_(bytes) {}
 
 ip::ip(std::string_view string) {
   if (string.size() > INET_ADDRSTRLEN) {
-    throw std::invalid_argument(std::format("invalid ip {}: ", string));
+    throw std::invalid_argument(std::format("invalid ip: {}", string));
   }
   if (::inet_pton(AF_INET, string.data(), &data_) != kInetPtonSuccess) {
     throw std::invalid_argument(
