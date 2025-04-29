@@ -20,8 +20,8 @@ class ip final {
   explicit ip(std::string_view string);
 
  public:
-  constexpr bool operator==(const ip& other) const = default;
-  constexpr bool operator!=(const ip& other) const = default;
+  constexpr bool operator==(const ip&) const = default;
+  constexpr bool operator!=(const ip&) const = default;
 
  public:
   const std::array<std::uint8_t, 16>& get_bytes(

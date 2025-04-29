@@ -17,7 +17,7 @@ base_socket::base_socket(net::sockets::type type)
     : net::sockets::base_socket(net::sockets::family::kUnix, type,
                                 net::sockets::protocol::kUnspecified) {}
 
-base_socket::~base_socket() {
+base_socket::~base_socket() noexcept {
   static const base_socket kUninitialized(utils::uninitialized_t{});
   if (*this == kUninitialized) {
     return;

@@ -21,8 +21,8 @@ class ip final {
   explicit ip(std::string_view string);
 
  public:
-  constexpr bool operator==(const ip& other) const = default;
-  constexpr bool operator!=(const ip& other) const = default;
+  constexpr bool operator==(const ip&) const = default;
+  constexpr bool operator!=(const ip&) const = default;
 
  public:
   std::uint32_t get_bytes() const noexcept;
