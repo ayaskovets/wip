@@ -10,31 +10,31 @@ class static_pimpl final {
  public:
   template <typename... Args>
   constexpr explicit static_pimpl(Args&&... args) {
-    std::construct_at(this->operator->(), std::forward<Args>(args)...);
+    std::construct_at(operator->(), std::forward<Args>(args)...);
   }
 
   constexpr static_pimpl(const static_pimpl& that) {
-    std::construct_at(this->operator->(), that.operator*());
+    std::construct_at(operator->(), that.operator*());
   }
 
   constexpr static_pimpl& operator=(const static_pimpl& that) {
-    this->operator*() = that.operator*();
+    operator*() = that.operator*();
     return *this;
   }
 
   constexpr static_pimpl(static_pimpl&& that) {
-    std::construct_at(this->operator->(), std::move(that.operator*()));
+    std::construct_at(operator->(), std::move(that.operator*()));
   }
 
   constexpr static_pimpl& operator=(static_pimpl&& that) {
-    this->operator*() = std::move(that.operator*());
+    operator*() = std::move(that.operator*());
     return *this;
   }
 
   constexpr ~static_pimpl() noexcept {
     static_assert(sizeof(T) == Size);
     static_assert(alignof(T) == Alignment);
-    std::destroy_at(this->operator->());
+    std::destroy_at(operator->());
   }
 
  public:
