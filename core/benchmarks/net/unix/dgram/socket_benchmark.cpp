@@ -5,7 +5,7 @@
 
 namespace benchmarks::net::unix::dgram {
 
-void BM_net_unix_dgram_throughput(benchmark::State& state) try {
+void BM_net_unix_dgram_throughput(benchmark::State& state) {
   static std::atomic_bool sender_done;
 
   const std::size_t data_size = state.range(0);
@@ -47,10 +47,6 @@ void BM_net_unix_dgram_throughput(benchmark::State& state) try {
       }
       sender_done = true;
     }
-  }
-} catch (const std::exception& e) {
-  for (const auto _ : state) {
-    state.SkipWithError(e.what());
   }
 }
 BENCHMARK(BM_net_unix_dgram_throughput)
