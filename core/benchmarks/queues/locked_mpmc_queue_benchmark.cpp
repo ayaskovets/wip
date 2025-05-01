@@ -3,12 +3,12 @@
 #include <latch>
 #include <thread>
 
-#include "threadsafe/lockfree_mpsc_queue.hpp"
+#include "queues/locked_mpmc_queue.hpp"
 
-namespace benchmarks::threadsafe {
+namespace benchmarks::queues {
 
 template <typename Value>
-void BM_threadsafe_lockfree_mpsc_queue_nonblocking_throughput(
+void BM_queues_locked_mpmc_queue_nonblocking_throughput(
     benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
@@ -16,16 +16,8 @@ void BM_threadsafe_lockfree_mpsc_queue_nonblocking_throughput(
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  class alignas(core::utils::kCacheLineSize) entry_t final {
-   private:
-    Value value_;
-    bool empty_;
-
-   public:
-    constexpr Value& value() { return value_; }
-    constexpr bool& empty() { return empty_; }
-  };
-  using queue_t = core::threadsafe::lockfree_mpsc_queue<
+  using entry_t = Value;
+  using queue_t = core::queues::locked_mpmc_queue<
       Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
@@ -108,48 +100,46 @@ void BM_threadsafe_lockfree_mpsc_queue_nonblocking_throughput(
       items / (try_pop_times.load(std::memory_order::relaxed) /
                static_cast<double>(state.iterations())));
 }
-BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_mpsc_queue_nonblocking_throughput,
-                   int)
+BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_nonblocking_throughput, int)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
-            1 /* consumers*/})
+            2 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_mpsc_queue_nonblocking_throughput,
+BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_nonblocking_throughput,
                    std::shared_ptr<int>)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
-            1 /* consumers*/})
+            2 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 
 template <typename Value>
-void BM_threadsafe_lockfree_mpsc_queue_blocking_throughput(
-    benchmark::State& state) {
+void BM_queues_locked_mpmc_queue_blocking_throughput(benchmark::State& state) {
   const std::size_t capacity = state.range(0);
   const std::size_t items = state.range(1);
   const std::size_t producers = state.range(2);
   const std::size_t consumers = state.range(3);
   const Value value{};
 
-  class alignas(core::utils::kCacheLineSize) entry_t final {
-   private:
-    Value value_;
-    bool empty_;
-
-   public:
-    constexpr Value& value() { return value_; }
-    constexpr bool& empty() { return empty_; }
-  };
-  using queue_t = core::threadsafe::lockfree_mpsc_queue<
+  using entry_t = Value;
+  using queue_t = core::queues::locked_mpmc_queue<
       Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
@@ -215,26 +205,34 @@ void BM_threadsafe_lockfree_mpsc_queue_blocking_throughput(
     }
   }
 }
-BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_mpsc_queue_blocking_throughput, int)
+BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_blocking_throughput, int)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
-            1 /* consumers*/})
+            2 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
-BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_mpsc_queue_blocking_throughput,
+BENCHMARK_TEMPLATE(BM_queues_locked_mpmc_queue_blocking_throughput,
                    std::shared_ptr<int>)
     ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
             1 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 2 /* producers*/,
-            1 /* consumers*/})
+            2 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 1 /* producers*/,
+            4 /* consumers*/})
     ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
             1 /* consumers*/})
+    ->Args({1024 /* capacity */, 1048576 /* items*/, 4 /* producers*/,
+            4 /* consumers*/})
     ->MeasureProcessCPUTime()
     ->UseRealTime()
     ->Unit(benchmark::kMillisecond);
 
-}  // namespace benchmarks::threadsafe
+}  // namespace benchmarks::queues

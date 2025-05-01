@@ -1,4 +1,4 @@
-#include "threadsafe/locked_mpmc_queue.hpp"
+#include "queues/lockless_mpmc_queue.hpp"
 
 #include <gtest/gtest.h>
 
@@ -6,39 +6,38 @@
 #include <numeric>
 #include <thread>
 
-namespace tests::threadsafe {
+namespace tests::queues {
 
-TEST(threadsafe_locked_mpmc_queue, size) {
+TEST(queues_lockless_mpmc_queue, size) {
   static_assert(
-      sizeof(core::threadsafe::locked_mpmc_queue<int, std::size_t, 10>) == 216);
+      sizeof(core::queues::lockless_mpmc_queue<int, std::size_t, 10>) == 192);
   static_assert(
-      alignof(core::threadsafe::locked_mpmc_queue<int, std::size_t, 10>) == 8);
-  static_assert(sizeof(core::threadsafe::locked_mpmc_queue<int>) == 224);
-  static_assert(alignof(core::threadsafe::locked_mpmc_queue<int>) == 8);
+      alignof(core::queues::lockless_mpmc_queue<int, std::size_t, 10>) == 64);
+  static_assert(sizeof(core::queues::lockless_mpmc_queue<int>) == 192);
+  static_assert(alignof(core::queues::lockless_mpmc_queue<int>) == 64);
 }
 
-TEST(threadsafe_locked_mpmc_queue, capacity) {
-  EXPECT_EQ(
-      (core::threadsafe::locked_mpmc_queue<std::string, std::size_t, 128>()
-           .capacity()),
-      128);
-  EXPECT_EQ((core::threadsafe::locked_mpmc_queue<std::string, std::size_t, 64>()
+TEST(queues_lockless_mpmc_queue, capacity) {
+  EXPECT_EQ((core::queues::lockless_mpmc_queue<std::string, std::size_t, 128>()
+                 .capacity()),
+            128);
+  EXPECT_EQ((core::queues::lockless_mpmc_queue<std::string, std::size_t, 64>()
                  .capacity()),
             64);
-  EXPECT_EQ(core::threadsafe::locked_mpmc_queue<std::string>(128).capacity(),
+  EXPECT_EQ(core::queues::lockless_mpmc_queue<std::string>(128).capacity(),
             128);
-  EXPECT_EQ(core::threadsafe::locked_mpmc_queue<std::string>(64).capacity(),
-            64);
+  EXPECT_EQ(core::queues::lockless_mpmc_queue<std::string>(64).capacity(), 64);
 }
 
-TEST(threadsafe_locked_mpmc_queue, minimal_capacity) {
-  EXPECT_ANY_THROW(core::threadsafe::locked_mpmc_queue<int> queue(0));
-  EXPECT_NO_THROW(core::threadsafe::locked_mpmc_queue<int> queue(1));
+TEST(queues_lockless_mpmc_queue, minimal_capacity) {
+  EXPECT_ANY_THROW(core::queues::lockless_mpmc_queue<int> queue(0));
+  EXPECT_ANY_THROW(core::queues::lockless_mpmc_queue<int> queue(1));
+  EXPECT_NO_THROW(core::queues::lockless_mpmc_queue<int> queue(2));
 }
 
-TEST(threadsafe_locked_mpmc_queue, nonblocking_smoke) {
+TEST(queues_lockless_mpmc_queue, nonblocking_smoke) {
   int value;
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+  core::queues::lockless_mpmc_queue<int> queue(2);
 
   EXPECT_FALSE(queue.try_pop(value));
   EXPECT_TRUE(queue.try_push(1));
@@ -54,8 +53,8 @@ TEST(threadsafe_locked_mpmc_queue, nonblocking_smoke) {
   EXPECT_EQ(value, 4);
 }
 
-TEST(threadsafe_locked_mpmc_queue, blocking_smoke) {
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+TEST(queues_lockless_mpmc_queue, blocking_smoke) {
+  core::queues::lockless_mpmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
@@ -65,9 +64,9 @@ TEST(threadsafe_locked_mpmc_queue, blocking_smoke) {
   EXPECT_EQ(queue.pop(), 3);
 }
 
-TEST(threadsafe_locked_mpmc_queue, smoke) {
+TEST(queues_lockless_mpmc_queue, smoke) {
   int value;
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+  core::queues::lockless_mpmc_queue<int> queue(2);
 
   EXPECT_FALSE(queue.try_pop(value));
   queue.push(1);
@@ -81,8 +80,8 @@ TEST(threadsafe_locked_mpmc_queue, smoke) {
   EXPECT_FALSE(queue.try_pop(value));
 }
 
-TEST(threadsafe_locked_mpmc_queue, blocking_push) {
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+TEST(queues_lockless_mpmc_queue, blocking_push) {
+  core::queues::lockless_mpmc_queue<int> queue(2);
 
   queue.push(1);
   queue.push(2);
@@ -99,8 +98,8 @@ TEST(threadsafe_locked_mpmc_queue, blocking_push) {
   consumer.join();
 }
 
-TEST(threadsafe_locked_mpmc_queue, blocking_pop) {
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+TEST(queues_lockless_mpmc_queue, blocking_pop) {
+  core::queues::lockless_mpmc_queue<int> queue(2);
 
   std::thread producer([&queue] { EXPECT_TRUE(queue.try_push(42)); });
 
@@ -109,24 +108,14 @@ TEST(threadsafe_locked_mpmc_queue, blocking_pop) {
   producer.join();
 }
 
-TEST(threadsafe_locked_mpmc_queue, capacity_one) {
-  int value;
-  core::threadsafe::locked_mpmc_queue<int> queue(1);
-
-  EXPECT_FALSE(queue.try_pop(value));
-  queue.push(1);
-  EXPECT_FALSE(queue.try_push(3));
-  EXPECT_EQ(queue.pop(), 1);
-  queue.push(4);
-  EXPECT_FALSE(queue.try_push(5));
-  EXPECT_EQ(queue.pop(), 4);
-  EXPECT_FALSE(queue.try_pop(value));
+TEST(queues_lockless_mpmc_queue, capacity_one) {
+  EXPECT_ANY_THROW(core::queues::lockless_mpmc_queue<int> queue(1));
 }
 
-TEST(threadsafe_locked_mpmc_queue, queue_destructor) {
+TEST(queues_lockless_mpmc_queue, queue_destructor) {
   std::shared_ptr<int> value = std::make_shared<int>();
   {
-    core::threadsafe::locked_mpmc_queue<std::shared_ptr<int>> queue(2);
+    core::queues::lockless_mpmc_queue<std::shared_ptr<int>> queue(2);
 
     EXPECT_EQ(value.use_count(), 1);
     queue.push(value);
@@ -136,9 +125,9 @@ TEST(threadsafe_locked_mpmc_queue, queue_destructor) {
   EXPECT_EQ(value.use_count(), 1);
 }
 
-TEST(threadsafe_locked_mpmc_queue, item_destructor) {
+TEST(queues_lockless_mpmc_queue, item_destructor) {
   std::shared_ptr<int> value = std::make_shared<int>();
-  core::threadsafe::locked_mpmc_queue<std::shared_ptr<int>> queue(2);
+  core::queues::lockless_mpmc_queue<std::shared_ptr<int>> queue(2);
 
   EXPECT_EQ(value.use_count(), 1);
   queue.push(value);
@@ -155,9 +144,9 @@ TEST(threadsafe_locked_mpmc_queue, item_destructor) {
   EXPECT_EQ(value.use_count(), 1);
 }
 
-TEST(threadsafe_locked_mpmc_queue, non_copyable_item_type) {
+TEST(queues_lockless_mpmc_queue, non_copyable_item_type) {
   std::unique_ptr<int> value;
-  core::threadsafe::locked_mpmc_queue<std::unique_ptr<int>> queue(2);
+  core::queues::lockless_mpmc_queue<std::unique_ptr<int>> queue(2);
 
   queue.push(std::move(value));
   queue.pop();
@@ -165,7 +154,7 @@ TEST(threadsafe_locked_mpmc_queue, non_copyable_item_type) {
   queue.try_pop(value);
 }
 
-namespace threadsafe_locked_mpmc_queue_allocator {
+namespace queues_lockless_mpmc_queue_allocator {
 
 template <typename T>
 class allocator : public std::allocator<T> {
@@ -199,19 +188,27 @@ class allocator : public std::allocator<T> {
   static inline std::unordered_map<void*, std::size_t> allocations_;
 };
 
-}  // namespace threadsafe_locked_mpmc_queue_allocator
+}  // namespace queues_lockless_mpmc_queue_allocator
 
-TEST(threadsafe_locked_mpmc_queue, allocator) {
+TEST(queues_lockless_mpmc_queue, allocator) {
   using value_t = double;
   using index_t = std::size_t;
-  using entry_t = value_t;
+  class alignas(core::utils::kCacheLineSize) entry_t final {
+   private:
+    value_t value_;
+    index_t seqnum_;
+
+   public:
+    constexpr value_t& value() { return value_; }
+    constexpr index_t& seqnum() { return seqnum_; }
+  };
 
   EXPECT_TRUE(
-      threadsafe_locked_mpmc_queue_allocator::allocator<entry_t>::is_clean());
+      queues_lockless_mpmc_queue_allocator::allocator<entry_t>::is_clean());
   {
-    core::threadsafe::locked_mpmc_queue<
+    core::queues::lockless_mpmc_queue<
         value_t, index_t, 2,
-        threadsafe_locked_mpmc_queue_allocator::allocator<entry_t>>
+        queues_lockless_mpmc_queue_allocator::allocator<entry_t>>
         queue;
 
     queue.push(1.1);
@@ -219,21 +216,21 @@ TEST(threadsafe_locked_mpmc_queue, allocator) {
     EXPECT_EQ(queue.pop(), 1.1);
     EXPECT_EQ(queue.pop(), 2.2);
     EXPECT_FALSE(
-        threadsafe_locked_mpmc_queue_allocator::allocator<entry_t>::is_clean());
+        queues_lockless_mpmc_queue_allocator::allocator<entry_t>::is_clean());
   }
   EXPECT_TRUE(
-      threadsafe_locked_mpmc_queue_allocator::allocator<entry_t>::is_clean());
+      queues_lockless_mpmc_queue_allocator::allocator<entry_t>::is_clean());
 }
 
-class threadsafe_locked_mpmc_queue_workload
+class queues_lockless_mpmc_queue_workload
     : public ::testing::TestWithParam<std::tuple<
           std::size_t /* items_size */, std::size_t /* queue_size */,
           std::size_t /* producers */, std::size_t /* consumers */>> {};
 
-TEST_P(threadsafe_locked_mpmc_queue_workload, nonblocking) {
+TEST_P(queues_lockless_mpmc_queue_workload, nonblocking) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
-  core::threadsafe::locked_mpmc_queue<int> queue(queue_size);
+  core::queues::lockless_mpmc_queue<int> queue(queue_size);
 
   std::latch latch(producers + consumers);
   std::vector<std::thread> threads;
@@ -286,10 +283,10 @@ TEST_P(threadsafe_locked_mpmc_queue_workload, nonblocking) {
   EXPECT_EQ(pushed_items, popped_items);
 }
 
-TEST_P(threadsafe_locked_mpmc_queue_workload, blocking) {
+TEST_P(queues_lockless_mpmc_queue_workload, blocking) {
   const auto& [items_size, queue_size, producers, consumers] = GetParam();
 
-  core::threadsafe::locked_mpmc_queue<int> queue(queue_size);
+  core::queues::lockless_mpmc_queue<int> queue(queue_size);
 
   std::latch latch(producers + consumers);
   std::vector<std::thread> threads;
@@ -343,26 +340,34 @@ TEST_P(threadsafe_locked_mpmc_queue_workload, blocking) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    threadsafe_locked_mpmc_queue_workload,
-    threadsafe_locked_mpmc_queue_workload,
-    ::testing::Values(std::make_tuple(5 /* items_size */, 3 /* queue_size */,
+    queues_lockless_mpmc_queue_workload, queues_lockless_mpmc_queue_workload,
+    ::testing::Values(std::make_tuple(5 /* items_size */, 4 /* queue_size */,
                                       1 /* producers */, 1 /* consumers */),
-                      std::make_tuple(20 /* items_size */, 10 /* queue_size */,
-                                      2 /* producers */, 1 /* consumers */),
-                      std::make_tuple(100 /* items_size */, 10 /* queue_size */,
+                      std::make_tuple(100 /* items_size */, 16 /* queue_size */,
                                       4 /* producers */, 1 /* consumers */),
-                      std::make_tuple(100 /* items_size */, 10 /* queue_size */,
+                      std::make_tuple(100 /* items_size */, 16 /* queue_size */,
                                       1 /* producers */, 4 /* consumers */),
+                      std::make_tuple(30 /* items_size */, 8 /* queue_size */,
+                                      4 /* producers */, 4 /* consumers */),
                       std::make_tuple(10000 /* items_size */,
-                                      100 /* queue_size */, 4 /* producers */,
+                                      128 /* queue_size */, 4 /* producers */,
                                       4 /* consumers */)));
 
-}  // namespace tests::threadsafe
+}  // namespace tests::queues
 
-namespace tests::threadsafe {
+namespace tests::queues {
 
-TEST(threadsafe_locked_mpmc_queue, queued_producers_nonblocking) {
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+TEST(lockless_mpmc_queue, rollover) {
+  core::queues::lockless_mpmc_queue<int> queue(8);
+
+  for (std::size_t i = 0; i < 100; ++i) {
+    EXPECT_TRUE(queue.try_push(i));
+    EXPECT_EQ(queue.pop(), i);
+  }
+}
+
+TEST(queues_lockless_mpmc_queue, queued_producers_nonblocking) {
+  core::queues::lockless_mpmc_queue<int> queue(2);
   queue.push(0);
   queue.push(1);
 
@@ -386,8 +391,8 @@ TEST(threadsafe_locked_mpmc_queue, queued_producers_nonblocking) {
   }
 }
 
-TEST(threadsafe_locked_mpmc_queue, queued_producers_blocking) {
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+TEST(queues_lockless_mpmc_queue, queued_producers_blocking) {
+  core::queues::lockless_mpmc_queue<int> queue(2);
   queue.push(0);
   queue.push(1);
 
@@ -410,8 +415,8 @@ TEST(threadsafe_locked_mpmc_queue, queued_producers_blocking) {
   }
 }
 
-TEST(threadsafe_locked_mpmc_queue, queued_consumers_nonblocking) {
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+TEST(queues_lockless_mpmc_queue, queued_consumers_nonblocking) {
+  core::queues::lockless_mpmc_queue<int> queue(2);
 
   std::vector<std::thread> consumers(16);
   std::latch latch(consumers.size() + 1);
@@ -432,8 +437,8 @@ TEST(threadsafe_locked_mpmc_queue, queued_consumers_nonblocking) {
   }
 }
 
-TEST(threadsafe_locked_mpmc_queue, queued_consumers_blocking) {
-  core::threadsafe::locked_mpmc_queue<int> queue(2);
+TEST(queues_lockless_mpmc_queue, queued_consumers_blocking) {
+  core::queues::lockless_mpmc_queue<int> queue(2);
 
   std::vector<std::thread> consumers(16);
   std::latch latch(consumers.size() + 1);
@@ -454,4 +459,4 @@ TEST(threadsafe_locked_mpmc_queue, queued_consumers_blocking) {
   }
 }
 
-}  // namespace tests::threadsafe
+}  // namespace tests::queues

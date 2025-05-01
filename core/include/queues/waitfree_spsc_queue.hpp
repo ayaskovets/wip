@@ -8,7 +8,7 @@
 #include "utils/constants.hpp"
 #include "utils/mixins.hpp"
 
-namespace core::threadsafe {
+namespace core::queues {
 
 namespace detail {
 
@@ -155,4 +155,4 @@ class waitfree_spsc_queue final : utils::non_copyable, utils::non_movable {
       capacity_;
 };
 
-}  // namespace core::threadsafe
+}  // namespace core::queues
