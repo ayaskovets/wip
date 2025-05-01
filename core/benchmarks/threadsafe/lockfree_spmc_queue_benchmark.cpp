@@ -29,6 +29,9 @@ void BM_threadsafe_lockfree_spmc_queue_nonblocking_throughput(
       Value, std::size_t, core::utils::kDynamicCapacity<std::size_t>,
       std::allocator<entry_t>>;
 
+  std::atomic<std::size_t> try_push_times = 0;
+  std::atomic<std::size_t> try_pop_times = 0;
+
   for (const auto _ : state) {
     state.PauseTiming();
 
@@ -42,35 +45,42 @@ void BM_threadsafe_lockfree_spmc_queue_nonblocking_throughput(
     std::atomic<std::size_t> popped_items_count = 0;
 
     const auto producer = [&latch, &queue, items, producers,
-                           &pushed_items_count, value = value] {
+                           &pushed_items_count, &try_push_times,
+                           value = value] {
       if (producers == 1) {
         latch.arrive_and_wait();
         for (std::size_t pushed_items_count = 0; pushed_items_count < items;) {
+          try_push_times.fetch_add(1, std::memory_order::relaxed);
           pushed_items_count += queue.try_push(value);
         }
       } else {
         latch.arrive_and_wait();
         while (pushed_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
-          while (!queue.try_push(value));
+          do {
+            try_push_times.fetch_add(1, std::memory_order::relaxed);
+          } while (!queue.try_push(value));
         }
       }
     };
 
     const auto consumer = [&latch, &queue, items, consumers,
-                           &popped_items_count] {
+                           &popped_items_count, &try_pop_times] {
       if (consumers == 1) {
         latch.arrive_and_wait();
         for (std::size_t popped_items_count = 0; popped_items_count < items;) {
           Value value;
+          try_pop_times.fetch_add(1, std::memory_order::relaxed);
           popped_items_count += queue.try_pop(value);
         }
       } else {
         latch.arrive_and_wait();
         while (popped_items_count.fetch_add(1, std::memory_order::relaxed) <
                items) {
-          Value value;
-          while (!queue.try_pop(value));
+          Value value{};
+          do {
+            try_pop_times.fetch_add(1, std::memory_order::relaxed);
+          } while (!queue.try_pop(value));
         }
       }
     };
@@ -90,6 +100,13 @@ void BM_threadsafe_lockfree_spmc_queue_nonblocking_throughput(
       thread.join();
     }
   }
+
+  state.counters["successful_push_ratio"] = benchmark::Counter(
+      items / (try_push_times.load(std::memory_order::relaxed) /
+               static_cast<double>(state.iterations())));
+  state.counters["successful_pop_ratio"] = benchmark::Counter(
+      items / (try_pop_times.load(std::memory_order::relaxed) /
+               static_cast<double>(state.iterations())));
 }
 BENCHMARK_TEMPLATE(BM_threadsafe_lockfree_spmc_queue_nonblocking_throughput,
                    int)
