@@ -5,7 +5,11 @@
 
 namespace core::io {
 
+class poller;
 class fd {
+ private:
+  friend class poller;
+
  public:
   static const fd& kStdin() noexcept;
   static const fd& kStdout() noexcept;

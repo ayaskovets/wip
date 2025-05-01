@@ -5,6 +5,7 @@ target_sources(${TARGET}
     PRIVATE
     src/datetime/iso8601.cpp
     src/io/fd.cpp
+    src/io/poller.cpp
     src/logging/logger.cpp
     src/logging/renderer.cpp
     src/logging/writer.cpp
