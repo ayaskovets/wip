@@ -19,7 +19,7 @@ class writer final {
       std::function<void(logging::level level, std::string_view message)>;
 
  public:
-  explicit writer(write_t write) : write_(write) {}
+  explicit writer(write_t write) : write_(std::move(write)) {}
 
  public:
   constexpr void operator()(logging::level level,
