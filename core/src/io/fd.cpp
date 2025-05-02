@@ -53,11 +53,23 @@ fd::fd(const fd& that) {
 }
 
 fd& fd::operator=(const fd& that) {
-  if (that.pimpl_->native_handle == kInvalidFd) [[unlikely]] {
-    pimpl_->native_handle = kInvalidFd;
-  } else if (pimpl_->native_handle != that.pimpl_->native_handle &&
-             ::dup2(that.pimpl_->native_handle, pimpl_->native_handle) ==
-                 kSyscallError) [[unlikely]] {
+  if (pimpl_->native_handle == that.pimpl_->native_handle) {
+    return *this;
+  }
+
+  if (pimpl_->native_handle != kInvalidFd &&
+      that.pimpl_->native_handle != kInvalidFd &&
+      ::dup2(that.pimpl_->native_handle, pimpl_->native_handle) ==
+          kSyscallError) {
+    throw std::runtime_error(std::format("failed to clone file descriptor: {}",
+                                         std::strerror(errno)));
+  } else if (pimpl_->native_handle != kInvalidFd &&
+             ::close(std::exchange(pimpl_->native_handle, kInvalidFd)) ==
+                 kSyscallError) {
+    throw std::runtime_error(std::format("failed to close file descriptor: {}",
+                                         std::strerror(errno)));
+  } else if ((pimpl_->native_handle = ::dup(that.pimpl_->native_handle)) ==
+             kSyscallError) {
     throw std::runtime_error(std::format("failed to clone file descriptor: {}",
                                          std::strerror(errno)));
   }
@@ -68,8 +80,11 @@ fd::fd(fd&& that) noexcept
     : pimpl_(std::exchange(*that.pimpl_, impl{.native_handle = kInvalidFd})) {}
 
 fd& fd::operator=(fd&& that) {
-  if (pimpl_->native_handle != that.pimpl_->native_handle &&
-      pimpl_->native_handle != kInvalidFd &&
+  if (pimpl_->native_handle == that.pimpl_->native_handle) {
+    return *this;
+  }
+
+  if (pimpl_->native_handle != kInvalidFd &&
       ::close(std::exchange(pimpl_->native_handle, kInvalidFd)) ==
           kSyscallError) [[unlikely]] {
     throw std::runtime_error(std::format("failed to close file descriptor: {}",
